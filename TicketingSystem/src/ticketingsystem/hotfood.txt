@@ -1,0 +1,11 @@
+Corn in Cup,5.30
+Chicken Hotdog,12.00
+Beef Hotdog,12.00
+Golden Horn,10.00
+Chicken Meatball,10.00
+Dim-Sum Goreng,11.00
+BBQ Chicky Drums,15.00
+Small Nuggets,9.50
+Large Nuggets,15.80
+Cocktail Sausage,10.00
+Super Fries,10.00
