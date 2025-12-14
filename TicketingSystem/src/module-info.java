@@ -10,6 +10,9 @@ module TicketingSystem {
     requires jdk.jsobject;
     requires jfx.incubator.input;
     requires jfx.incubator.richtext;
+    
+    requires com.google.zxing;
+    requires com.google.zxing.javase;
 
     exports presentation.gui;
     exports presentation.gui.views;
