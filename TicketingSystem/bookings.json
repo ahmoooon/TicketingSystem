@@ -1,12 +1,6 @@
-{
-  "1_2025-12-15_10:00 AM": [
-    {
-      "row": "A",
-      "column": 1
-    },
-    {
-      "row": "A",
-      "column": 2
-    }
-  ]
-}
+{"key":"1_2025-12-15_11:40 AM_Dune:Part1","seats":"A1"}
+{"key":"1_2025-12-15_11:40 AM_BladeRunner2049","seats":"A1,A2"}
+{"key":"2_2025-12-16_10:00 AM_Dune:Part1","seats":"A1"}
+{"key":"2_2025-12-16_11:40 AM_Dune:Part1","seats":"A1"}
+{"key":"1_2025-12-15_10:00 AM_BladeRunner2049","seats":"A1"}
+{"key":"1_2025-12-15_10:00 AM_Dune:Part1","seats":"A3,A1"}

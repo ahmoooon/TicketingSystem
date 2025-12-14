@@ -1,20 +1,3 @@
-[
-  {
-    "hallNum": 1,
-    "hallType": "Standard",
-    "rowAmt": 5,
-    "colAmt": 10
-  },
-  {
-    "hallNum": 2,
-    "hallType": "IMAX",
-    "rowAmt": 8,
-    "colAmt": 15
-  },
-  {
-    "hallNum": 3,
-    "hallType": "Lounge",
-    "rowAmt": 5,
-    "colAmt": 5
-  }
-]
+{"hallNum":1,"hallType":"Standard","rowAmt":5,"colAmt":10}
+{"hallNum":2,"hallType":"IMAX","rowAmt":8,"colAmt":15}
+{"hallNum":3,"hallType":"Lounge","rowAmt":5,"colAmt":5}

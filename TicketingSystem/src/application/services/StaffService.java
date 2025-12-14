@@ -41,20 +41,20 @@ public class StaffService {
         return reportService.getCustomerListReport(customer);
     }
 
-    public String getMoviePurchaseReport(ArrayList<Payment> payment) {
+    public String getMoviePurchaseReport() {
         logger.info("Retrieving Movie Purchase Report.");
-        return reportService.getMoviePurchaseReport(payment);
+        return reportService.getMoviePurchaseReport();
     }
 
-    public String getFoodPurchaseReport(ArrayList<Payment> payment) {
+    public String getFoodPurchaseReport() {
         logger.info("Retrieving Food Purchase Report.");
-        return reportService.getFoodPurchaseReport(payment);
+        return reportService.getFoodPurchaseReport();
     }
     
-//    public String getSalesSummaryReport(ArrayList<Payment> payment) {
-//        logger.info("Retrieving Sales Summary Report (NEW).");
-//        return reportService.generateSalesSummaryReport(payment);
-//    }
+    public String getSalesSummaryReport() {
+        logger.info("Retrieving Sales Summary Report (NEW).");
+        return reportService.generateSalesSummaryReport();
+    }
     
     public boolean deleteCustomerAccount(String name) {
         logger.log(Level.INFO, "Attempting to delete customer account: {0}", name);

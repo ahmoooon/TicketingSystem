@@ -15,6 +15,7 @@ import domain.Customer;
 import domain.Food;
 import domain.Payment;
 import domain.Ticket;
+import infrastructure.repositories.PaymentRepository;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,12 +26,14 @@ import java.util.logging.Logger;
 
 public class ReportService {
     private static final Logger logger = LoggerSetup.getLogger();
+    private final PaymentRepository paymentRepository;
     
     // Date format for report headers
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     
-    public ReportService() {
+    public ReportService(PaymentRepository paymentRepository) {
         logger.info("ReportService initialized.");
+        this.paymentRepository = paymentRepository;
     }
 
     /**
@@ -72,10 +75,11 @@ public class ReportService {
      * @param payment The list of all payments (used to extract tickets).
      * @return The formatted report string.
      */
-    public String getMoviePurchaseReport(ArrayList<Payment> payment) {
+    public String getMoviePurchaseReport() {
         ArrayList<Ticket> ticketArr = new ArrayList<>();
         // Assuming Payment has getTicket() which returns ArrayList<Ticket>
-        for (Payment p : payment) {
+        ArrayList<Payment> payments = paymentRepository.getAllPayments();
+        for (Payment p : payments) {
             ticketArr.addAll(p.getTicket());
         }
         
@@ -117,10 +121,11 @@ public class ReportService {
      * @param payment The list of all payments (used to extract F&B items).
      * @return The formatted report string.
      */
-    public String getFoodPurchaseReport(ArrayList<Payment> payment) {
+    public String getFoodPurchaseReport() {
         ArrayList<Food> foodArr = new ArrayList<>();
+        ArrayList<Payment> payments = paymentRepository.getAllPayments();
         // Assuming Payment has getFood() which returns ArrayList<Food>
-        for (Payment p : payment) {
+        for (Payment p : payments) {
             foodArr.addAll(p.getFood());
         }
         
@@ -161,48 +166,49 @@ public class ReportService {
 //     * @param paymentArr The list of all payments.
 //     * @return The formatted sales summary report string.
 //     */
-//    public String generateSalesSummaryReport(ArrayList<Payment> paymentArr) {
-//        if (paymentArr == null || paymentArr.isEmpty()) {
-//            return "\n*** No Payment Data Available to Generate Report ***\n";
-//        }
-//
-//        double totalRevenue = 0.0;
-//        double totalTicketSales = 0.0;
-//        double totalFoodBeverageSales = 0.0;
-//        int totalTransactions = paymentArr.size();
-//        
-//        // Assuming Payment class has methods like getTicketPrice() and getFoodBeveragePrice()
-//        for (Payment payment : paymentArr) {
-//            double ticketPrice = payment.getTicketPrice();
-//            double fbPrice = payment.getFoodBeveragePrice();
-//            double grandTotal = payment.getTotalAmount();
-//
-//            totalTicketSales += ticketPrice;
-//            totalFoodBeverageSales += fbPrice;
-//            totalRevenue += grandTotal;
-//        }
-//
-//        String report = String.format("""
-//                                      
-//                                      ==============================================
-//                                             CINEMA SALES SUMMARY REPORT
-//                                      ==============================================
-//                                      Date: %s
-//                                      Total Number of Transactions: %d
-//                                      ----------------------------------------------
-//                                      Total Ticket Sales:   RM %.2f
-//                                      Total F&B Sales:      RM %.2f
-//                                      ----------------------------------------------
-//                                      GRAND TOTAL REVENUE:  RM %.2f
-//                                      ==============================================""",
-//            dateFormat.format(new Date()),
-//            totalTransactions,
-//            totalTicketSales,
-//            totalFoodBeverageSales,
-//            totalRevenue
-//        );
-//
-//        logger.info("Sales summary report generated.");
-//        return report;
-//    }
+    public String generateSalesSummaryReport() {
+        ArrayList<Payment> payments = paymentRepository.getAllPayments();
+        if (payments == null || payments.isEmpty()) {
+            return "\n*** No Payment Data Available to Generate Report ***\n";
+        }
+
+        double totalRevenue = 0.0;
+        double totalTicketSales = 0.0;
+        double totalFoodBeverageSales = 0.0;
+        int totalTransactions = payments.size();
+        
+        // Assuming Payment class has methods like getTicketPrice() and getFoodBeveragePrice()
+        for (Payment payment : payments) {
+            double ticketPrice = payment.getTotalTicketPrice();
+            double fbPrice = payment.getTotalFoodPrice();
+            double grandTotal = payment.getTotalPrice();
+
+            totalTicketSales += ticketPrice;
+            totalFoodBeverageSales += fbPrice;
+            totalRevenue += grandTotal;
+        }
+
+        String report = String.format("""
+                                      
+                                      ==============================================
+                                             CINEMA SALES SUMMARY REPORT
+                                      ==============================================
+                                      Date: %s
+                                      Total Number of Transactions: %d
+                                      ----------------------------------------------
+                                      Total Ticket Sales:   RM %.2f
+                                      Total F&B Sales:      RM %.2f
+                                      ----------------------------------------------
+                                      GRAND TOTAL REVENUE:  RM %.2f
+                                      ==============================================""",
+            dateFormat.format(new Date()),
+            totalTransactions,
+            totalTicketSales,
+            totalFoodBeverageSales,
+            totalRevenue
+        );
+
+        logger.info("Sales summary report generated.");
+        return report;
+    }
 }

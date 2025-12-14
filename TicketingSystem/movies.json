@@ -1,37 +1,5 @@
-[
-  {
-    "id": 1,
-    "movieName": "Dune: Part 1",
-    "movieLength": 2.35,
-    "director": "Denis Villeneuve",
-    "releaseDate": "October 22, 2021"
-  },
-  {
-    "id": 2,
-    "movieName": "Blade Runner 2049",
-    "movieLength": 2.43,
-    "director": "Denis Villeneuve",
-    "releaseDate": "October 5, 2017"
-  },
-  {
-    "id": 3,
-    "movieName": "Infinity Pool",
-    "movieLength": 1.58,
-    "director": "Brandon Cronenberg",
-    "releaseDate": "January 27, 2023"
-  },
-  {
-    "id": 4,
-    "movieName": "Crimes of the Future",
-    "movieLength": 1.47,
-    "director": "David Cronenberg",
-    "releaseDate": "May 25, 2022"
-  },
-  {
-    "id": 5,
-    "movieName": "Asteroid City",
-    "movieLength": 1.45,
-    "director": "Wes Anderson",
-    "releaseDate": "June 15, 2023"
-  }
-]
+{"id":1,"movieName":"Dune: Part 1","movieLength":2.35,"director":"Denis Villeneuve","releaseDate":"October 22, 2021"}
+{"id":2,"movieName":"Blade Runner 2049","movieLength":2.43,"director":"Denis Villeneuve","releaseDate":"October 5, 2017"}
+{"id":3,"movieName":"Infinity Pool","movieLength":1.58,"director":"Brandon Cronenberg","releaseDate":"January 27, 2023"}
+{"id":4,"movieName":"Crimes of the Future","movieLength":1.47,"director":"David Cronenberg","releaseDate":"May 25, 2022"}
+{"id":5,"movieName":"Asteroid City","movieLength":1.45,"director":"Wes Anderson","releaseDate":"June 15, 2023"}

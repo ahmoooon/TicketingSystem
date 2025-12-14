@@ -27,7 +27,7 @@ public class StaffController {
         this.staffService = staffService;
     }
 
-    public void staffMainMenu(ArrayList<Payment> paymentArr, ArrayList<Customer> customerList) {
+    public void staffMainMenu(ArrayList<Customer> customerList) {
         boolean logout = false;
         
         do {
@@ -38,7 +38,7 @@ public class StaffController {
             int choice = Utility.checkError(sc, 1, 3);
             
             switch (choice) {
-                case 1 -> reportModuleUI(paymentArr, customerList);
+                case 1 -> reportModuleUI(customerList);
                 case 2 -> deleteCustomerUI();
                 case 3 -> logout = true;
             }
@@ -69,7 +69,7 @@ public class StaffController {
         }
     }
     
-    public void reportModuleUI(ArrayList<Payment> paymentArr, ArrayList<Customer> customerList) {
+    public void reportModuleUI(ArrayList<Customer> customerList) {
         int reportChoice = 0;
         boolean back = false;
         String reportOutput = ""; // Variable to hold the final formatted string
@@ -87,13 +87,13 @@ public class StaffController {
                     reportOutput = staffService.getCustomerListReport(customerList);
                     break;
                 case 2: // Movie Purchase Record
-                    reportOutput = staffService.getMoviePurchaseReport(paymentArr);
+                    reportOutput = staffService.getMoviePurchaseReport();
                     break;
                 case 3: // Food Purchase Record
-                    reportOutput = staffService.getFoodPurchaseReport(paymentArr);
+                    reportOutput = staffService.getFoodPurchaseReport();
                     break;
                 case 4: // Sales Summary Report (NEW)
-//                    reportOutput = staffService.getSalesSummaryReport(paymentArr);
+                    reportOutput = staffService.getSalesSummaryReport();
                     break;
                 case 5:
                     back = true;

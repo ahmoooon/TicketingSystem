@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DataFileHandler {
+
     private static final Logger logger = LoggerSetup.getLogger();
 
     // --- Customer/Payment Persistence (One JSON Object Per Line) ---
@@ -27,7 +28,7 @@ public class DataFileHandler {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
             for (String json : jsonList) {
                 writer.write(json);
-                writer.newLine(); 
+                writer.newLine();
             }
             logger.log(Level.INFO, "Data saved successfully to: {0}", filename);
         } catch (IOException e) {
@@ -54,7 +55,6 @@ public class DataFileHandler {
     }
 
     // --- Food Inventory Loading (Single JSON Array File) ---
-
     private static String readEntireFile(String filename) {
         StringBuilder content = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -86,29 +86,50 @@ public class DataFileHandler {
         for (String itemStr : itemStrings) {
             Map<String, Object> item = new HashMap<>();
 
-            if (!itemStr.startsWith("{")) itemStr = "{" + itemStr;
-            if (!itemStr.endsWith("}")) itemStr = itemStr + "}";
+            if (!itemStr.startsWith("{")) {
+                itemStr = "{" + itemStr;
+            }
+            if (!itemStr.endsWith("}")) {
+                itemStr = itemStr + "}";
+            }
 
+            // DataFileHandler.java - loadFoodInventoryData() (Inside the loop)
+            // ...
             try {
-                // Simple manual parsing assuming the format: {"name":"X", "price":Y}
-                int nameStart = itemStr.indexOf("\"name\":\"") + 8;
+                // Find the full string value, including the quotes, for "name"
+                int nameKeyStart = itemStr.indexOf("\"name\"");
+                int nameValueStart = itemStr.indexOf(":", nameKeyStart) + 1; // Find the colon after "name" and move one character right
 
-                // --- FIX APPLIED HERE ---
-                // Changed "\",\"price\"" to "\", \"price\"" to match the actual JSON format (note the space)
-                int nameEnd = itemStr.indexOf("\", \"price\""); 
+                // --- Core Fix ---
+                // Find the start quote of the name value
+                int quote1 = itemStr.indexOf("\"", nameValueStart);
+                if (quote1 == -1) {
+                    throw new IllegalStateException("Name value quote not found.");
+                }
 
-                String name = itemStr.substring(nameStart, nameEnd);
+                // Find the end quote of the name value (looking after the start quote)
+                int quote2 = itemStr.indexOf("\"", quote1 + 1);
+                if (quote2 == -1) {
+                    throw new IllegalStateException("Name value end quote not found.");
+                }
 
+                // The name is the substring BETWEEN the two quotes.
+                String name = itemStr.substring(quote1 + 1, quote2);
+                // --- End Core Fix ---
+
+                // Extract price as before (this looks safe)
                 int priceStart = itemStr.indexOf("\"price\":") + 8;
                 int priceEnd = itemStr.lastIndexOf("}");
                 String priceStr = itemStr.substring(priceStart, priceEnd);
                 double price = Double.parseDouble(priceStr);
 
-                item.put("name", name);
+                // We clean the name here to remove any potential hidden characters like the colon
+                // that your manual parsing might have accidentally included in the FoodService.
+                item.put("name", name.trim());
                 item.put("price", price);
                 inventory.add(item);
 
-            } catch (NumberFormatException e) {
+            } catch (NumberFormatException | IllegalStateException e) {
                 logger.log(Level.SEVERE, "Failed to parse item from file " + filename + ": " + itemStr, e);
             }
         }

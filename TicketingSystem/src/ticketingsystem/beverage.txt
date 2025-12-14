@@ -1,4 +1,0 @@
-Regular Soft Drink,6.00
-Large Soft Drink,7.00
-Mineral Water,4.00
-Cold Milo,7.00

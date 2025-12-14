@@ -25,6 +25,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import domain.Food;
 import domain.Payment;
+import infrastructure.repositories.PaymentRepository;
 import java.util.Optional;
 import java.util.logging.Logger;
 // Removed unnecessary domain imports that are now handled by BookingCliHandler
@@ -69,10 +70,13 @@ public class MainApplication {
         Scanner sc = new Scanner(System.in);
         Logger logger = LoggerSetup.getLogger();
         
+        logger.info("=== CINEMA TICKETING SYSTEM STARTING ===");
+        
         // Infrastructure Layer Setup (Concrete implementations)
         MovieRepository movieRepository = new FileMovieRepository();
         ShowtimeRepository showtimeRepository = new FileShowtimeRepository();
         SeatRepository seatRepository = new FileSeatRepository();
+        PaymentRepository paymentRepository = new PaymentRepository();
 
         // Application Layer Setup (Services injected with Repositories)
         BookingService bookingService = new BookingService(
@@ -84,7 +88,7 @@ public class MainApplication {
         PasswordService passwordService = new PasswordService();
         OtpService otpService = new OtpService();
         AuthService authService = new AuthService(passwordService, otpService);
-        ReportService reportService = new ReportService(); 
+        ReportService reportService = new ReportService(paymentRepository); 
         StaffService staffService = new StaffService(reportService, customerService);
         FoodService foodService = new FoodService();
         PaymentService payService = new PaymentService(); 
@@ -92,7 +96,7 @@ public class MainApplication {
         // Presentation Layer Setup (CLI Handlers/Controllers injected with Services/Scanner)
         BookingCliHandler bookingHandler = new BookingCliHandler(bookingService, sc);
         StaffController staffController = new StaffController(sc, staffService);
-        PaymentCliHandler payHandler = new PaymentCliHandler(payService, sc);
+        PaymentCliHandler payHandler = new PaymentCliHandler(payService, paymentRepository, sc);
         AuthController authController = new AuthController(
             sc, authService, customerService, otpService, staffController
         );
@@ -135,15 +139,17 @@ public class MainApplication {
                     foodController.startOrdering(currentFoodOrders);
                     break;
                 case 3: // Payment
-                    Payment paid = payHandler.handlePaymentModule(currentTicketOrders, currentFoodOrders, currentUser, paymentHistory);
+                    Payment paid = payHandler.handlePaymentMenu(currentTicketOrders, currentFoodOrders, currentUser, paymentHistory);
 
                     if (paid != null) {
                         if (paid.getPaymentMade()) {
+                            // SUCCESS: Clear cart and add to history
                             paymentHistory.add(paid);
                             currentTicketOrders.clear();
                             currentFoodOrders.clear();
                         } else {
                             System.out.println("\n <$> Payment hasn't been done! <$> ");
+                            logger.info("Payment completed. Cart cleared.");
                         }
                     }
                     break;
@@ -160,6 +166,10 @@ public class MainApplication {
                         sc.close();
                         return;
                     }
+                    // Clear cart on logout for security
+                    currentTicketOrders.clear();
+                    currentFoodOrders.clear();
+                    logger.info("Cart cleared on logout.");
                     break;
             }
         }

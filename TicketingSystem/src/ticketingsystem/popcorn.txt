@@ -1,8 +1,0 @@
-Regular Popcorn,5.30
-Large Popcorn,9.30
-Regular Caramel Popcorn,12.00
-Large Caramel Popcorn,16.00
-Regular Sea Salt Popcorn,12.00
-Large Sea Salt Popcorn,16.00
-Regular Mix Popcorn,12.00
-Large Mix Popcorn,16.00

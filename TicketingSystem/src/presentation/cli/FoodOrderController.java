@@ -44,7 +44,7 @@ public class FoodOrderController {
 
         do {
             System.out.println("\n----------< Food & Beverage Menu >----------");
-            System.out.println("\t|| 1 | Order Popcorn         ||\n\t|| 2 | Order Beverage        ||\n\t|| 3 | Order Hot Food        ||\n\t|| 4 | View Orders           ||\n\t|| 5 | Remove Order          ||\n\t|| 6 | Exit to Main Menu     ||\n");
+            System.out.println("\t|| 1 | Order Beverage         ||\n\t|| 2 | Order Popcorn        ||\n\t|| 3 | Order Hot Food        ||\n\t|| 4 | View Orders           ||\n\t|| 5 | Remove Order          ||\n\t|| 6 | Exit to Main Menu     ||\n");
             System.out.print("\nChoose one of the option from menu above ~ ");
 
             // Assuming Utility.checkError is available
@@ -52,12 +52,12 @@ public class FoodOrderController {
             
             switch (choice) {
                 case 1 -> {
-                    orders = handleOrderItem(orders, "Popcorn");
-                    logger.fine("User selected Popcorn order.");
-                }
-                case 2 -> {
                     orders = handleOrderItem(orders, "Beverage");
                     logger.fine("User selected Beverage order.");
+                }
+                case 2 -> {
+                    orders = handleOrderItem(orders, "Popcorn");
+                    logger.fine("User selected Popcorn order.");
                 }
                 case 3 -> { // Hot Food
                     orders = handleOrderItem(orders, "HotFood");
@@ -86,11 +86,11 @@ public class FoodOrderController {
             return orders;
         }
         
-        System.out.println("\n----------< Order " + type + " >----------");
+        System.out.println("\n----------------< Order " + type + " >-----------------");
         for (Food item : menu) {
-            System.out.println(item.toString()); 
+            System.out.println(item.toString());
         }
-        System.out.println("=====================================================");
+        System.out.println("===================================================");
         System.out.print("Enter Choice (0: Back) ~ ");
 
         // Determine max valid food number for error checking
@@ -160,7 +160,7 @@ public class FoodOrderController {
         }
         
         System.out.println("\t------------------------------------------------------");
-        System.out.printf("\t| %-39s | %-7.2f |\n", "TOTAL F&B", subTotal);
+        System.out.printf("\t| %-40s | %-7.2f |\n", "TOTAL F&B", subTotal);
         System.out.println("\t======================================================");
         
         // Calculate total using FoodService (redundant but good practice to check)

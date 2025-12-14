@@ -153,7 +153,7 @@ public class AuthController {
             System.out.println("\nWelcome Staff!");
             
             // Staff is logged in, transfer control to StaffController menu loop
-            staffController.staffMainMenu(null, customerService.getCustomerList());
+            staffController.staffMainMenu(customerService.getCustomerList());
             
             // Execution returns here when the staff logs out.
             return Optional.of(AuthService.STAFF_ID); 
