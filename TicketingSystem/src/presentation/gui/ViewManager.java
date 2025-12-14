@@ -5,6 +5,8 @@ import domain.Customer;
 import domain.Food;
 import domain.Ticket;
 import infrastructure.repositories.PaymentRepository;
+import infrastructure.repositories.CartManager;
+import infrastructure.repositories.FileSeatRepository;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import presentation.gui.views.*;
@@ -24,6 +26,10 @@ public class ViewManager {
     private final PaymentRepository paymentRepository;
     private final OtpService otpService;
     
+    // NEW: Cart management
+    private final CartManager cartManager;
+    private final FileSeatRepository seatRepository;
+    
     private Optional<Customer> currentUser = Optional.empty();
     private ArrayList<Ticket> ticketCart = new ArrayList<>();
     private ArrayList<Food> foodCart = new ArrayList<>();
@@ -32,7 +38,8 @@ public class ViewManager {
                       CustomerService customerService, BookingService bookingService,
                       FoodService foodService, PaymentService paymentService,
                       StaffService staffService, PaymentRepository paymentRepository,
-                      OtpService otpService) {
+                      OtpService otpService, CartManager cartManager,
+                      FileSeatRepository seatRepository) {
         this.primaryStage = primaryStage;
         this.authService = authService;
         this.customerService = customerService;
@@ -42,6 +49,8 @@ public class ViewManager {
         this.staffService = staffService;
         this.paymentRepository = paymentRepository;
         this.otpService = otpService;
+        this.cartManager = cartManager;
+        this.seatRepository = seatRepository;
     }
     
     public void showLoginView() {
@@ -52,6 +61,15 @@ public class ViewManager {
     public void showMainMenu(Customer customer) {
         this.currentUser = Optional.of(customer);
         customerService.setLoggedInCustomer(customer);
+        
+        // RESTORE CART from persistence
+        CartManager.CartData savedCart = cartManager.loadCart(customer);
+        if (savedCart != null) {
+            this.ticketCart = savedCart.tickets;
+            this.foodCart = savedCart.food;
+            System.out.println("✓ Restored cart: " + ticketCart.size() + " tickets, " + foodCart.size() + " food items");
+        }
+        
         MainMenuView mainMenuView = new MainMenuView(this, customer);
         setScene(mainMenuView, "YSCM Cinema - Main Menu");
     }
@@ -73,7 +91,7 @@ public class ViewManager {
     
     public void showPaymentView() {
         PaymentView paymentView = new PaymentView(
-            this, paymentService, paymentRepository, 
+            this, paymentService, paymentRepository, seatRepository,
             ticketCart, foodCart, currentUser
         );
         setScene(paymentView, "YSCM Cinema - Payment");
@@ -92,15 +110,62 @@ public class ViewManager {
         primaryStage.setTitle(title);
     }
     
+    /**
+     * UPDATED: Save cart after any booking/food changes
+     */
+    public void saveCurrentCart() {
+        currentUser.ifPresent(customer -> {
+            cartManager.saveCart(customer, ticketCart, foodCart);
+        });
+    }
+    
+    /**
+     * UPDATED: Clear cart and release seat reservations
+     */
     public void clearCart() {
+        // Release seat reservations
+        seatRepository.clearAllCartReservations();
+        
+        // Clear cart data
         ticketCart.clear();
         foodCart.clear();
+        
+        // Remove from persistence
+        currentUser.ifPresent(cartManager::clearCart);
+        
+        System.out.println("✓ Cart cleared and seats released");
+    }
+    
+    /**
+     * NEW: Cancel specific ticket from cart
+     */
+    public void cancelTicket(Ticket ticket) {
+        // Release seats from cart reservation
+        for (domain.Seat seat : ticket.getSeat()) {
+            seatRepository.cancelCartReservation(
+                ticket.getShowtime(), 
+                java.util.List.of(seat.getId())
+            );
+        }
+        
+        // Remove from cart
+        ticketCart.remove(ticket);
+        
+        // Save updated cart
+        saveCurrentCart();
+        
+        System.out.println("✓ Ticket cancelled and seats released");
     }
     
     public void logout() {
+        // Save cart before logout
+        saveCurrentCart();
+        
         currentUser = Optional.empty();
         customerService.setLoggedInCustomer(null);
-        clearCart();
+        
+        System.out.println("✓ Logged out (cart saved)");
+        
         showLoginView();
     }
     

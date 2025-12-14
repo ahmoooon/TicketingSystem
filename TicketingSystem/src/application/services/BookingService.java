@@ -3,11 +3,13 @@ package application.services;
 
 import application.dto.BookingRequest;
 import application.dto.BookingResult;
+import domain.CinemaHall;
 import domain.Movie;
 import domain.Showtime;
 import domain.repositories.MovieRepository;
 import domain.repositories.ShowtimeRepository;
 import domain.repositories.SeatRepository;
+import infrastructure.repositories.FileSeatRepository;
 import infrastructure.repositories.SeatUnavailableException;
 
 import java.time.LocalDate;
@@ -32,17 +34,16 @@ public class BookingService {
     
     /**
      * The core use case: Orchestrates movie, showtime, and seat reservation.
-     * Replaces the business logic originally in TicketingSystem.bookingModule().
      */
     public BookingResult bookTickets(BookingRequest request) {
-        // 1. Validation (Initial simple check - can be expanded)
+        // 1. Validation
         validateBookingRequest(request);
         
-        // 2. Get Movie (Failure is communicated via Exception/Optional)
+        // 2. Get Movie
         Movie movie = movieRepository.findById(request.getMovieId())
             .orElseThrow(() -> new IllegalArgumentException("Movie with ID " + request.getMovieId() + " not found."));
         
-        // 3. Get Showtime (Ensures the date, time, and hall combination is valid)
+        // 3. Get Showtime
         Showtime showtime = showtimeRepository.findAvailableShowtime(
             movie,
             request.getDate(), 
@@ -61,13 +62,44 @@ public class BookingService {
             return new BookingResult(movie, showtime, reservedSeats); 
             
         } catch (SeatUnavailableException e) {
-            // Re-throw the explicit infrastructure exception (critical for testing)
+            // Re-throw the explicit infrastructure exception
             throw e; 
         }
     }
+    
     /**
-     * Retrieves a single movie by its ID, serving the Presentation layer (CLI).
-     * This method was missing and is now added.
+     * NEW: Retrieves all available cinema halls.
+     */
+    public List<CinemaHall> getAllHalls() {
+        if (seatRepository instanceof FileSeatRepository) {
+            return ((FileSeatRepository) seatRepository).getAllHalls();
+        }
+        return List.of(); // Empty list if wrong repository type
+    }
+    
+    /**
+     * NEW: Retrieves halls of a specific type.
+     */
+    public List<CinemaHall> getHallsByType(String hallType) {
+        if (seatRepository instanceof FileSeatRepository) {
+            return ((FileSeatRepository) seatRepository).getHallsByType(hallType);
+        }
+        return List.of();
+    }
+    
+    /**
+     * NEW: Retrieves seat availability for a specific showtime.
+     */
+    public List<Seat> getSeatsByShowtime(Movie movie, LocalDate date, String time, int hallId) {
+        Showtime showtime = showtimeRepository.findAvailableShowtime(
+            movie, date, time, hallId
+        ).orElseThrow(() -> new IllegalArgumentException("Showtime not found"));
+        
+        return seatRepository.findSeatsByShowtime(showtime);
+    }
+    
+    /**
+     * Retrieves a single movie by its ID.
      */
     public Movie getMovieById(int movieId) {
         return movieRepository.findById(movieId)
@@ -75,7 +107,7 @@ public class BookingService {
     }
     
     /**
-     * Retrieves all movies for display (used by the CLI handler).
+     * Retrieves all movies for display.
      */
     public List<Movie> getAvailableMovies() {
         return movieRepository.findAll();
@@ -95,10 +127,11 @@ public class BookingService {
         if (request.getMovieId() <= 0) {
             throw new IllegalArgumentException("Invalid movie ID.");
         }
+        
+        // Check for duplicate seats in request
         java.util.Set<domain.valueobjects.SeatId> uniqueSeats = new java.util.HashSet<>(request.getSeatIds());
-    
         if (uniqueSeats.size() != request.getSeatIds().size()) {
-            throw new IllegalArgumentException("Duplicate seats detected in selection. You cannot book the same seat twice.");
+            throw new IllegalArgumentException("Duplicate seats detected in selection.");
         }
     }
 }

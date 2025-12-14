@@ -16,10 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-/**
- * REFACTORED: Uses DataFileHandler approach for consistency.
- * FIXED: Booking key now properly isolates different movies/showtimes.
- */
 public class FileSeatRepository implements SeatRepository {
 
     private static final String BOOKINGS_FILE = "bookings.json";
@@ -27,22 +23,93 @@ public class FileSeatRepository implements SeatRepository {
     private static final Logger logger = LoggerSetup.getLogger();
     
     private final List<CinemaHall> hallList;
-    private ConcurrentHashMap<String, List<SeatId>> bookings;
+    private ConcurrentHashMap<String, List<SeatId>> confirmedBookings; // ONLY paid bookings
+    private ConcurrentHashMap<String, List<SeatId>> cartReservations;  // Temporary cart holds
 
     public FileSeatRepository() {
         this.hallList = loadHalls();
-        this.bookings = loadBookings();
+        this.confirmedBookings = loadBookings();
+        this.cartReservations = new ConcurrentHashMap<>();
         
-        logger.log(Level.INFO, "FileSeatRepository initialized. Halls: {0}, Bookings: {1}", 
-                   new Object[]{hallList.size(), bookings.size()});
+        logger.log(Level.INFO, "FileSeatRepository initialized. Halls: {0}, Confirmed Bookings: {1}", 
+                   new Object[]{hallList.size(), confirmedBookings.size()});
     }
     
-    // === HALLS LOADING (Using DataFileHandler) ===
+    // === NEW METHODS: Cart Management ===
     
     /**
-     * Loads hall configurations from JSON file.
-     * Format: {"hallNum":1,"hallType":"Standard","rowAmt":5,"colAmt":10}
+     * Temporarily reserves seats for a cart (NOT written to file)
      */
+    public void addToCartReservation(Showtime showtime, List<SeatId> seatIds) {
+        String key = generateKey(showtime);
+        List<SeatId> currentCart = cartReservations.getOrDefault(key, new ArrayList<>());
+        currentCart.addAll(seatIds);
+        cartReservations.put(key, currentCart);
+        
+        logger.info("Added " + seatIds.size() + " seats to cart reservation: " + key);
+    }
+    
+    /**
+     * Confirms cart reservation as a paid booking (written to file)
+     */
+    public void confirmCartReservation(Showtime showtime, List<SeatId> seatIds) {
+        String key = generateKey(showtime);
+        
+        // Move from cart to confirmed
+        List<SeatId> confirmed = confirmedBookings.getOrDefault(key, new ArrayList<>());
+        confirmed.addAll(seatIds);
+        confirmedBookings.put(key, confirmed);
+        
+        // Remove from cart
+        List<SeatId> cart = cartReservations.get(key);
+        if (cart != null) {
+            cart.removeAll(seatIds);
+            if (cart.isEmpty()) {
+                cartReservations.remove(key);
+            }
+        }
+        
+        saveBookings(); // NOW we write to file
+        logger.info("Confirmed " + seatIds.size() + " seats as paid booking: " + key);
+    }
+    
+    /**
+     * Cancels cart reservation (releases seats)
+     */
+    public void cancelCartReservation(Showtime showtime, List<SeatId> seatIds) {
+        String key = generateKey(showtime);
+        List<SeatId> cart = cartReservations.get(key);
+        
+        if (cart != null) {
+            cart.removeAll(seatIds);
+            if (cart.isEmpty()) {
+                cartReservations.remove(key);
+            }
+            logger.info("Cancelled " + seatIds.size() + " seats from cart: " + key);
+        }
+    }
+    
+    /**
+     * Clears all cart reservations for a customer (on logout)
+     */
+    public void clearAllCartReservations() {
+        int count = cartReservations.size();
+        cartReservations.clear();
+        logger.info("Cleared all cart reservations (" + count + " entries)");
+    }
+    
+    // === EXISTING METHODS (Updated) ===
+    
+    public List<CinemaHall> getAllHalls() {
+        return new ArrayList<>(hallList);
+    }
+    
+    public List<CinemaHall> getHallsByType(String hallType) {
+        return hallList.stream()
+            .filter(h -> h.getHallType().equals(hallType))
+            .collect(Collectors.toList());
+    }
+    
     private List<CinemaHall> loadHalls() {
         List<String> jsonLines = DataFileHandler.loadFromJsonFile(HALLS_FILE);
         
@@ -57,9 +124,6 @@ public class FileSeatRepository implements SeatRepository {
             .collect(Collectors.toList());
     }
     
-    /**
-     * Parses a single CinemaHall from JSON string.
-     */
     private CinemaHall parseHallFromJson(String json) {
         try {
             int hallNum = extractInt(json, "hallNum");
@@ -74,17 +138,16 @@ public class FileSeatRepository implements SeatRepository {
         }
     }
     
-    /**
-     * Creates default hall configuration if file doesn't exist.
-     */
     private List<CinemaHall> createDefaultHalls() {
         List<CinemaHall> defaults = List.of(
             new CinemaHall(1, CinemaHall.HALL_TYPE_STANDARD, 5, 10),
-            new CinemaHall(2, CinemaHall.HALL_TYPE_IMAX, 8, 15),
-            new CinemaHall(3, CinemaHall.HALL_TYPE_LOUNGE, 5, 5)
+            new CinemaHall(2, CinemaHall.HALL_TYPE_STANDARD, 5, 10),
+            new CinemaHall(3, CinemaHall.HALL_TYPE_STANDARD, 5, 10),
+            new CinemaHall(4, CinemaHall.HALL_TYPE_IMAX, 8, 15),
+            new CinemaHall(5, CinemaHall.HALL_TYPE_IMAX, 8, 15),
+            new CinemaHall(6, CinemaHall.HALL_TYPE_LOUNGE, 5, 5)
         );
         
-        // Save defaults to file
         List<String> jsonLines = defaults.stream()
             .map(this::hallToJsonString)
             .collect(Collectors.toList());
@@ -93,9 +156,6 @@ public class FileSeatRepository implements SeatRepository {
         return defaults;
     }
     
-    /**
-     * Converts CinemaHall to JSON string.
-     */
     private String hallToJsonString(CinemaHall hall) {
         return String.format(
             "{\"hallNum\":%d,\"hallType\":\"%s\",\"rowAmt\":%d,\"colAmt\":%d}",
@@ -106,12 +166,6 @@ public class FileSeatRepository implements SeatRepository {
         );
     }
     
-    // === BOOKINGS LOADING (Using DataFileHandler) ===
-    
-    /**
-     * Loads existing seat bookings from JSON file.
-     * Format: {"key":"1_2025-12-15_10:00 AM_1","seats":"A1,A2,B3"}
-     */
     private ConcurrentHashMap<String, List<SeatId>> loadBookings() {
         List<String> jsonLines = DataFileHandler.loadFromJsonFile(BOOKINGS_FILE);
         ConcurrentHashMap<String, List<SeatId>> map = new ConcurrentHashMap<>();
@@ -129,14 +183,10 @@ public class FileSeatRepository implements SeatRepository {
             }
         }
         
-        logger.log(Level.INFO, "Loaded {0} booking records.", map.size());
+        logger.log(Level.INFO, "Loaded {0} confirmed booking records.", map.size());
         return map;
     }
     
-    /**
-     * Parses seat IDs from comma-separated string.
-     * Example: "A1,A2,B3" -> List of SeatId objects
-     */
     private List<SeatId> parseSeatIds(String seatsStr) {
         List<SeatId> seatIds = new ArrayList<>();
         
@@ -157,20 +207,14 @@ public class FileSeatRepository implements SeatRepository {
         return seatIds;
     }
     
-    /**
-     * Saves current bookings to JSON file.
-     */
     private void saveBookings() {
-        List<String> jsonLines = bookings.entrySet().stream()
+        List<String> jsonLines = confirmedBookings.entrySet().stream()
             .map(entry -> bookingToJsonString(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
         
         DataFileHandler.saveToJsonFile(jsonLines, BOOKINGS_FILE);
     }
     
-    /**
-     * Converts a booking entry to JSON string.
-     */
     private String bookingToJsonString(String key, List<SeatId> seats) {
         String seatsStr = seats.stream()
             .map(SeatId::toDisplayString)
@@ -179,36 +223,22 @@ public class FileSeatRepository implements SeatRepository {
         return String.format("{\"key\":\"%s\",\"seats\":\"%s\"}", key, seatsStr);
     }
     
-    // === CORE REPOSITORY METHODS ===
-    
-    /**
-     * FIXED: Key now includes movieId to prevent cross-movie booking conflicts.
-     * 
-     * Critical Fix: Previously, bookings were keyed by only (hall, date, time).
-     * This meant seats booked for "Dune at 10 AM in Hall 1" would block
-     * "Blade Runner at 10 AM in Hall 1" (if they somehow had the same showtime).
-     * 
-     * While in reality, only ONE movie should play at a given hall/time,
-     * the system should explicitly track this to prevent data corruption.
-     */
     private String generateKey(Showtime showtime) {
-        // Include movie name as part of the key for clarity
         return showtime.getHallId() + "_" + 
                showtime.getDate() + "_" + 
-               showtime.time() + "_" + 
-               showtime.getMovieName().replaceAll("\\s+", ""); // Remove spaces
+               showtime.time();
     }
     
-    private CinemaHall getHallByType(String type) {
+    private CinemaHall getHallById(int hallId) {
         return hallList.stream()
-            .filter(h -> h.getHallType().equals(type))
+            .filter(h -> h.getHallId() == hallId)
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Hall type not found: " + type));
+            .orElseThrow(() -> new IllegalArgumentException("Hall ID not found: " + hallId));
     }
     
     @Override
     public Optional<Seat> findSeat(Showtime showtime, SeatId seatId) {
-        CinemaHall hall = getHallByType(showtime.getHallType());
+        CinemaHall hall = getHallById(showtime.getHallId());
 
         if (isValidForHall(seatId, hall)) {
             String status = isSeatBooked(showtime, seatId) ? "Booked" : "Available";
@@ -227,47 +257,52 @@ public class FileSeatRepository implements SeatRepository {
     
     private boolean isSeatBooked(Showtime showtime, SeatId seatId) {
         String key = generateKey(showtime);
-        List<SeatId> bookedList = bookings.getOrDefault(key, new ArrayList<>());
-        return bookedList.contains(seatId);
+        
+        // Check BOTH confirmed bookings AND cart reservations
+        List<SeatId> confirmed = confirmedBookings.getOrDefault(key, new ArrayList<>());
+        List<SeatId> cart = cartReservations.getOrDefault(key, new ArrayList<>());
+        
+        return confirmed.contains(seatId) || cart.contains(seatId);
     }
 
     @Override
     public List<Seat> reserveSeats(Showtime showtime, List<SeatId> seatIds) {
         String key = generateKey(showtime);
         
-        logger.log(Level.INFO, "Reserving seats with key: {0}", key);
+        logger.log(Level.INFO, "Reserving seats for cart: {0}", key);
         
-        // 1. Check for conflicts
-        List<SeatId> currentBooked = bookings.getOrDefault(key, new ArrayList<>());
+        // Check conflicts with BOTH confirmed AND other carts
+        List<SeatId> confirmed = confirmedBookings.getOrDefault(key, new ArrayList<>());
+        List<SeatId> otherCarts = cartReservations.getOrDefault(key, new ArrayList<>());
+        
+        List<SeatId> allBooked = new ArrayList<>();
+        allBooked.addAll(confirmed);
+        allBooked.addAll(otherCarts);
+        
         List<SeatId> conflicts = seatIds.stream()
-            .filter(currentBooked::contains)
+            .filter(allBooked::contains)
             .collect(Collectors.toList());
 
         if (!conflicts.isEmpty()) {
-            logger.log(Level.WARNING, "Seat booking conflict detected: {0}", conflicts);
-            throw new SeatUnavailableException("The following seats are already booked: " + conflicts);
+            logger.log(Level.WARNING, "Seat booking conflict: {0}", conflicts);
+            throw new SeatUnavailableException("Seats already booked: " + conflicts);
         }
 
-        // 2. Reserve (Update Memory)
-        currentBooked.addAll(seatIds);
-        bookings.put(key, currentBooked);
+        // Add to CART (not confirmed bookings)
+        addToCartReservation(showtime, seatIds);
         
-        // 3. Persist (Update JSON File)
-        saveBookings();
-        
-        logger.log(Level.INFO, "Successfully reserved {0} seats.", seatIds.size());
+        logger.log(Level.INFO, "Successfully reserved {0} seats in cart.", seatIds.size());
 
-        // 4. Return result
+        CinemaHall hall = getHallById(showtime.getHallId());
         return seatIds.stream()
-            .map(id -> findSeat(showtime, id).orElseThrow(() -> 
-                new RuntimeException("Error forming seat object")))
+            .map(id -> new Seat(id, "Single", "Reserved", hall))
             .collect(Collectors.toList());
     }
     
     @Override
     public List<Seat> findSeatsByShowtime(Showtime showtime) {
         List<Seat> allSeats = new ArrayList<>();
-        CinemaHall hall = getHallByType(showtime.getHallType());
+        CinemaHall hall = getHallById(showtime.getHallId());
         
         char maxRow = (char) ('A' + hall.getRowAmt() - 1);
         int maxCol = hall.getMaxSeatCol();
@@ -282,8 +317,6 @@ public class FileSeatRepository implements SeatRepository {
         }
         return allSeats;
     }
-    
-    // === Helper Methods for JSON Parsing ===
     
     private int extractInt(String json, String key) {
         String searchKey = "\"" + key + "\":";

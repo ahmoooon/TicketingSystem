@@ -123,6 +123,9 @@ public class FoodOrderView extends BorderPane {
                 // Add or merge with existing order
                 foodService.addOrMergeOrder(foodCart, orderItem, selected.getPrice());
                 
+                // SAVE CART to persistence
+                viewManager.saveCurrentCart();
+                
                 cartListView.getItems().setAll(foodCart);
                 showInfo("Success", "Item added to cart!");
                 

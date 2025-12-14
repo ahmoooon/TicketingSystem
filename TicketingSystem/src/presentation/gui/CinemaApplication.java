@@ -10,8 +10,9 @@ public class CinemaApplication extends Application {
     
     private MovieRepository movieRepository;
     private ShowtimeRepository showtimeRepository;
-    private SeatRepository seatRepository;
+    private FileSeatRepository seatRepository; // Changed to concrete type
     private PaymentRepository paymentRepository;
+    private CartManager cartManager; // NEW
     
     private BookingService bookingService;
     private CustomerService customerService;
@@ -27,11 +28,14 @@ public class CinemaApplication extends Application {
     
     @Override
     public void start(Stage primaryStage) {
+        // Initialize repositories
         movieRepository = new FileMovieRepository();
         showtimeRepository = new FileShowtimeRepository();
-        seatRepository = new FileSeatRepository();
+        seatRepository = new FileSeatRepository(); // Concrete type for cart methods
         paymentRepository = new PaymentRepository();
+        cartManager = new CartManager(); // NEW: Cart persistence
         
+        // Initialize services
         customerService = new CustomerService();
         passwordService = new PasswordService();
         otpService = new OtpService();
@@ -42,6 +46,7 @@ public class CinemaApplication extends Application {
         foodService = new FoodService();
         paymentService = new PaymentService();
         
+        // Initialize view manager with cart manager
         viewManager = new ViewManager(
             primaryStage,
             authService,
@@ -51,7 +56,9 @@ public class CinemaApplication extends Application {
             paymentService,
             staffService,
             paymentRepository,
-            otpService
+            otpService,
+            cartManager,      // NEW
+            seatRepository    // NEW
         );
         
         viewManager.showLoginView();

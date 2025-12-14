@@ -26,12 +26,16 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.WriterException;
+import domain.valueobjects.SeatId;
+import infrastructure.repositories.FileSeatRepository;
+import java.util.List;
 
 public class PaymentView extends BorderPane {
     
     private final ViewManager viewManager;
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
+    private final FileSeatRepository seatRepository;
     private final ArrayList<Ticket> tickets;
     private final ArrayList<Food> foods;
     private final Optional<Customer> customer;
@@ -39,11 +43,12 @@ public class PaymentView extends BorderPane {
     private TabPane tabPane;
     
     public PaymentView(ViewManager viewManager, PaymentService paymentService,
-                      PaymentRepository paymentRepository, ArrayList<Ticket> tickets,
-                      ArrayList<Food> foods, Optional<Customer> customer) {
+                      PaymentRepository paymentRepository, FileSeatRepository seatRepository,
+                      ArrayList<Ticket> tickets, ArrayList<Food> foods, Optional<Customer> customer) {
         this.viewManager = viewManager;
         this.paymentService = paymentService;
         this.paymentRepository = paymentRepository;
+        this.seatRepository = seatRepository; // NEW
         this.tickets = tickets;
         this.foods = foods;
         this.customer = customer;
@@ -179,6 +184,14 @@ public class PaymentView extends BorderPane {
             
             if (result.isSuccess()) {
                 Payment payment = new Payment(customer, tickets, foods, total, true);
+                // CONFIRM BOOKINGS
+                for (Ticket ticket : tickets) {
+                    List<SeatId> seatIds = new ArrayList<>();
+                    for (Seat seat : ticket.getSeat()) {
+                        seatIds.add(seat.getId());
+                    }
+                    seatRepository.confirmCartReservation(ticket.getShowtime(), seatIds);
+                }
                 paymentRepository.savePayment(payment);
                 
                 showInfo("Payment Successful", 
