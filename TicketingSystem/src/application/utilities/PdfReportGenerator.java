@@ -31,6 +31,30 @@ public class PdfReportGenerator {
     private static final float LINE_HEIGHT = 15;
     private static final int MAX_CHARS_PER_LINE = 85;
     
+    // Static initializer to disable font cache and suppress warnings
+    static {
+        try {
+            // Disable PDFBox font cache to avoid corrupted font issues
+            System.setProperty("pdfbox.fontcache", "false");
+            
+            // Disable system font loading entirely - use only PDF base fonts
+            System.setProperty("sun.font.fontmanager", "sun.awt.X11FontManager");
+            
+            // Suppress PDFBox font warnings
+            Logger pdfboxLogger = Logger.getLogger("org.apache.fontbox");
+            pdfboxLogger.setLevel(Level.SEVERE); // Only show severe errors
+            
+            Logger pdfboxTTFLogger = Logger.getLogger("org.apache.fontbox.ttf");
+            pdfboxTTFLogger.setLevel(Level.SEVERE);
+            
+            Logger pdfboxTTFParser = Logger.getLogger("org.apache.fontbox.ttf.TTFParser");
+            pdfboxTTFParser.setLevel(Level.SEVERE);
+        } catch (Exception e) {
+            // Ignore any errors in static initialization
+            System.err.println("Warning: Could not configure PDF font settings: " + e.getMessage());
+        }
+    }
+    
     /**
      * Generates a PDF report from text content and saves it to the specified file.
      * 
@@ -51,18 +75,17 @@ public class PdfReportGenerator {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
             
-            PDPageContentStream contentStream = new PDPageContentStream(document, page);
-            
-            // Current Y position (starts from top)
-            float yPosition = page.getMediaBox().getHeight() - MARGIN;
-            
-            // Write header
-            yPosition = writeHeader(contentStream, page, reportTitle, yPosition);
-            
-            // Write content
-            yPosition = writeContent(document, contentStream, page, lines, yPosition);
-            
-            contentStream.close();
+            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+                
+                // Current Y position (starts from top)
+                float yPosition = page.getMediaBox().getHeight() - MARGIN;
+                
+                // Write header
+                yPosition = writeHeader(contentStream, page, reportTitle, yPosition);
+                
+                // Write content
+                writeContent(document, contentStream, page, lines, yPosition);
+            }
             
             // Save document
             document.save(outputFile);
@@ -128,13 +151,36 @@ public class PdfReportGenerator {
                 currentPage = new PDPage(PDRectangle.A4);
                 document.addPage(currentPage);
                 
-                contentStream = new PDPageContentStream(document, currentPage);
-                contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.COURIER), FONT_SIZE_NORMAL);
+                PDPageContentStream newContentStream = new PDPageContentStream(document, currentPage);
+                newContentStream.setFont(new PDType1Font(Standard14Fonts.FontName.COURIER), FONT_SIZE_NORMAL);
                 
                 yPosition = currentPage.getMediaBox().getHeight() - MARGIN;
+                
+                return writeContentContinued(newContentStream, lines, lines.indexOf(line), yPosition);
             }
             
             // Write line
+            contentStream.beginText();
+            contentStream.newLineAtOffset(MARGIN, yPosition);
+            contentStream.showText(line);
+            contentStream.endText();
+            
+            yPosition -= LINE_HEIGHT;
+        }
+        
+        return yPosition;
+    }
+    
+    /**
+     * Helper method to continue writing content on new page
+     */
+    private static float writeContentContinued(PDPageContentStream contentStream, 
+                                              List<String> lines, int startIndex, float yPosition) 
+            throws IOException {
+        
+        for (int i = startIndex; i < lines.size(); i++) {
+            String line = lines.get(i);
+            
             contentStream.beginText();
             contentStream.newLineAtOffset(MARGIN, yPosition);
             contentStream.showText(line);
