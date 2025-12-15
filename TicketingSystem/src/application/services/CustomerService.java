@@ -21,22 +21,27 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class CustomerService {
-    private static final String CUSTOMER_FILE = "customer_data.json"; 
+    private final String customerFile;
     // <<< Logger Initialization added >>>
     private static final Logger logger = LoggerSetup.getLogger();
     private Customer loggedInCustomer = null;
     private ArrayList<Customer> customerList;
-    
+
     public CustomerService() {
+        this("customer_data.json");
+    }
+
+    // 👇 test-friendly constructor
+    public CustomerService(String customerFile) {
+        this.customerFile = customerFile;
         this.customerList = loadCustomers();
         logger.log(Level.INFO, "CustomerService initialized with {0} existing customers.", this.customerList.size());
-        // Ensure Staff ID is not in the customer list
         this.customerList.removeIf(c -> c.getName().equalsIgnoreCase(AuthService.STAFF_ID));
     }
     
     // --- Persistence Logic ---
     private ArrayList<Customer> loadCustomers() {
-        List<String> jsonLines = DataFileHandler.loadFromJsonFile(CUSTOMER_FILE);
+        List<String> jsonLines = DataFileHandler.loadFromJsonFile(customerFile);
         return jsonLines.stream()
             .map(Customer::fromJsonString) 
             .filter(c -> c != null)       
@@ -60,7 +65,7 @@ public class CustomerService {
             .map(Customer::toJsonString) 
             .collect(Collectors.toList());
             
-        DataFileHandler.saveToJsonFile(jsonLines, CUSTOMER_FILE);
+        DataFileHandler.saveToJsonFile(jsonLines, customerFile);
     }
     
     // --- Core Management Logic ---

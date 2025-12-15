@@ -57,8 +57,8 @@ public class CinemaApplication extends Application {
             staffService,
             paymentRepository,
             otpService,
-            cartManager,      // NEW
-            seatRepository    // NEW
+            cartManager,    
+            seatRepository
         );
         
         viewManager.showLoginView();
