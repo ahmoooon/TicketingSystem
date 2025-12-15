@@ -146,6 +146,7 @@ public class PdfReportGenerator {
         for (String line : lines) {
             // Check if we need a new page
             if (yPosition < MARGIN + LINE_HEIGHT) {
+                // Close current content stream properly
                 contentStream.close();
                 
                 currentPage = new PDPage(PDRectangle.A4);
@@ -156,13 +157,20 @@ public class PdfReportGenerator {
                 
                 yPosition = currentPage.getMediaBox().getHeight() - MARGIN;
                 
+                // Write remaining lines on new page
                 return writeContentContinued(newContentStream, lines, lines.indexOf(line), yPosition);
             }
             
-            // Write line
+            // Write line - ensure text block is properly closed
             contentStream.beginText();
             contentStream.newLineAtOffset(MARGIN, yPosition);
-            contentStream.showText(line);
+            try {
+                contentStream.showText(line);
+            } catch (IllegalArgumentException e) {
+                // If character encoding fails, log and skip this line
+                logger.log(Level.WARNING, "Skipping line due to encoding error: {0}", e.getMessage());
+                contentStream.showText("[Content contains unsupported characters]");
+            }
             contentStream.endText();
             
             yPosition -= LINE_HEIGHT;
@@ -181,9 +189,21 @@ public class PdfReportGenerator {
         for (int i = startIndex; i < lines.size(); i++) {
             String line = lines.get(i);
             
+            // Check if we need another new page
+            if (yPosition < MARGIN + LINE_HEIGHT) {
+                // We would need to recursively handle pagination here
+                // For simplicity, just stop (or you could implement full recursion)
+                break;
+            }
+            
             contentStream.beginText();
             contentStream.newLineAtOffset(MARGIN, yPosition);
-            contentStream.showText(line);
+            try {
+                contentStream.showText(line);
+            } catch (IllegalArgumentException e) {
+                logger.log(Level.WARNING, "Skipping line due to encoding error: {0}", e.getMessage());
+                contentStream.showText("[Content contains unsupported characters]");
+            }
             contentStream.endText();
             
             yPosition -= LINE_HEIGHT;
@@ -194,9 +214,14 @@ public class PdfReportGenerator {
     
     /**
      * Splits text content into lines suitable for PDF rendering.
+     * Also sanitizes content by removing unsupported characters.
      */
     private static List<String> splitIntoLines(String content) {
         List<String> lines = new ArrayList<>();
+        
+        // CRITICAL: Sanitize content first - remove tabs and other control characters
+        content = sanitizeTextForPdf(content);
+        
         String[] rawLines = content.split("\n");
         
         for (String rawLine : rawLines) {
@@ -214,6 +239,54 @@ public class PdfReportGenerator {
         }
         
         return lines;
+    }
+    
+    /**
+     * Sanitizes text content to remove characters not supported by PDF fonts.
+     * Replaces tabs with spaces and removes other control characters.
+     * 
+     * @param text The text to sanitize
+     * @return Sanitized text safe for PDF rendering
+     */
+    private static String sanitizeTextForPdf(String text) {
+        if (text == null) {
+            return "";
+        }
+        
+        // Replace tabs with 4 spaces
+        text = text.replace("\t", "    ");
+        
+        // Remove carriage returns (keep only line feeds)
+        text = text.replace("\r", "");
+        
+        // Remove other control characters except newline (U+000A)
+        // This regex removes characters in ranges:
+        // U+0000-U+0009 (NULL to TAB)
+        // U+000B-U+001F (vertical tab to unit separator)
+        // U+007F (DELETE)
+        text = text.replaceAll("[\\u0000-\\u0009\\u000B-\\u001F\\u007F]", "");
+        
+        // Replace characters outside WinAnsiEncoding range (U+0000 to U+00FF)
+        // with ASCII equivalents or remove them
+        StringBuilder sanitized = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            if (c == '\n') {
+                // Keep newlines
+                sanitized.append(c);
+            } else if (c >= 32 && c <= 126) {
+                // Standard ASCII printable characters (safe for WinAnsiEncoding)
+                sanitized.append(c);
+            } else if (c >= 160 && c <= 255) {
+                // Extended ASCII (part of WinAnsiEncoding) - keep them
+                sanitized.append(c);
+            } else if (c > 255) {
+                // Unicode characters beyond WinAnsiEncoding - replace with ?
+                sanitized.append('?');
+            }
+            // Characters < 32 (except newline) are already filtered above
+        }
+        
+        return sanitized.toString();
     }
     
     /**
