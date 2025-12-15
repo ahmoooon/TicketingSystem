@@ -1,34 +1,28 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package application.services;
 
-/**
- *
- * @author zhili
- */
-// ReportService.java - Business Logic Layer (Reporting Logic and Formatting)
-
 import application.utilities.LoggerSetup;
+import application.utilities.PdfReportGenerator;
 import domain.Customer;
 import domain.Food;
 import domain.Payment;
 import domain.Ticket;
 import infrastructure.repositories.PaymentRepository;
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-// Assuming Customer, Payment, Ticket, and Food classes exist
-// and that 'checkError' is handled by the Controller.
-
+/**
+ * Service for generating business reports.
+ * Supports both text and PDF output formats.
+ */
 public class ReportService {
     private static final Logger logger = LoggerSetup.getLogger();
     private final PaymentRepository paymentRepository;
     
-    // Date format for report headers
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     
     public ReportService(PaymentRepository paymentRepository) {
@@ -36,10 +30,10 @@ public class ReportService {
         this.paymentRepository = paymentRepository;
     }
 
+    // ========== TEXT REPORT METHODS (Existing) ==========
+    
     /**
-     * Generates a detailed list of all registered customers (Original Case 1).
-     * @param customer The list of all customers.
-     * @return The formatted report string.
+     * Generates a detailed list of all registered customers.
      */
     public String getCustomerListReport(ArrayList<Customer> customer) {
         if (customer.isEmpty()) {
@@ -58,7 +52,6 @@ public class ReportService {
         report.append("=========================================================\n");
         
         for (Customer c : customer) {
-            // Using printf for alignment, matching your original format
             report.append(String.format("%d   %s\t\t\t\t%s\n", ++count, c.getName(), c.getPassword()));
         }
         
@@ -71,13 +64,10 @@ public class ReportService {
     }
 
     /**
-     * Generates a detailed report of all movie ticket purchases (Original Case 2).
-     * @param payment The list of all payments (used to extract tickets).
-     * @return The formatted report string.
+     * Generates a detailed report of all movie ticket purchases.
      */
     public String getMoviePurchaseReport() {
         ArrayList<Ticket> ticketArr = new ArrayList<>();
-        // Assuming Payment has getTicket() which returns ArrayList<Ticket>
         ArrayList<Payment> payments = paymentRepository.getAllPayments();
         for (Payment p : payments) {
             ticketArr.addAll(p.getTicket());
@@ -99,7 +89,6 @@ public class ReportService {
         report.append("No. Movie Name                         Unit             Total Price\n");
         report.append("=============================================================\n");
 
-        // NOTE: Assuming Ticket class has getMovieName(), getTicketAmt(), and ticketPrice()
         for (Ticket t : ticketArr) {
             if (t.getMovieName() != null) {
                 double totalPrice = t.ticketPrice() * t.getTicketAmt();
@@ -117,14 +106,11 @@ public class ReportService {
     }
 
     /**
-     * Generates a detailed report of all F&B purchases (Original Case 3).
-     * @param payment The list of all payments (used to extract F&B items).
-     * @return The formatted report string.
+     * Generates a detailed report of all F&B purchases.
      */
     public String getFoodPurchaseReport() {
         ArrayList<Food> foodArr = new ArrayList<>();
         ArrayList<Payment> payments = paymentRepository.getAllPayments();
-        // Assuming Payment has getFood() which returns ArrayList<Food>
         for (Payment p : payments) {
             foodArr.addAll(p.getFood());
         }
@@ -145,7 +131,6 @@ public class ReportService {
         report.append("No. Food Name                          Unit             Total Price\n");
         report.append("=============================================================\n");
 
-        // NOTE: Assuming Food class has getName(), getQty(), and getPrice() (which returns total price for that item)
         for (Food f : foodArr) {
             if (f.getName() != null) {
                 report.append(String.format("%d    %s\t\t%d\t\t%.2f\n", ++count, f.getName(), f.getQty(), f.getPrice()));
@@ -161,11 +146,9 @@ public class ReportService {
         return report.toString();
     }
     
-//    /**
-//     * Generates the new consolidated Sales Summary Report (New Feature).
-//     * @param paymentArr The list of all payments.
-//     * @return The formatted sales summary report string.
-//     */
+    /**
+     * Generates the consolidated Sales Summary Report.
+     */
     public String generateSalesSummaryReport() {
         ArrayList<Payment> payments = paymentRepository.getAllPayments();
         if (payments == null || payments.isEmpty()) {
@@ -177,7 +160,6 @@ public class ReportService {
         double totalFoodBeverageSales = 0.0;
         int totalTransactions = payments.size();
         
-        // Assuming Payment class has methods like getTicketPrice() and getFoodBeveragePrice()
         for (Payment payment : payments) {
             double ticketPrice = payment.getTotalTicketPrice();
             double fbPrice = payment.getTotalFoodPrice();
@@ -210,5 +192,57 @@ public class ReportService {
 
         logger.info("Sales summary report generated.");
         return report;
+    }
+    
+    // ========== PDF EXPORT METHODS (New) ==========
+    
+    /**
+     * Exports Customer List Report to PDF.
+     * 
+     * @param customer List of customers
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportCustomerListToPdf(ArrayList<Customer> customer, File outputFile) 
+            throws IOException {
+        String reportContent = getCustomerListReport(customer);
+        PdfReportGenerator.generatePdfReport(reportContent, outputFile, "Customer List Report");
+        logger.info("Customer list exported to PDF: " + outputFile.getName());
+    }
+    
+    /**
+     * Exports Movie Purchase Report to PDF.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportMoviePurchaseToPdf(File outputFile) throws IOException {
+        String reportContent = getMoviePurchaseReport();
+        PdfReportGenerator.generatePdfReport(reportContent, outputFile, "Movie Purchase Report");
+        logger.info("Movie purchase report exported to PDF: " + outputFile.getName());
+    }
+    
+    /**
+     * Exports Food Purchase Report to PDF.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportFoodPurchaseToPdf(File outputFile) throws IOException {
+        String reportContent = getFoodPurchaseReport();
+        PdfReportGenerator.generatePdfReport(reportContent, outputFile, "Food Purchase Report");
+        logger.info("Food purchase report exported to PDF: " + outputFile.getName());
+    }
+    
+    /**
+     * Exports Sales Summary Report to PDF.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportSalesSummaryToPdf(File outputFile) throws IOException {
+        String reportContent = generateSalesSummaryReport();
+        PdfReportGenerator.generatePdfReport(reportContent, outputFile, "Sales Summary Report");
+        logger.info("Sales summary report exported to PDF: " + outputFile.getName());
     }
 }

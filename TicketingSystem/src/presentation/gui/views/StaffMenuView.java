@@ -10,8 +10,11 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
 import presentation.gui.ViewManager;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -21,6 +24,10 @@ public class StaffMenuView extends BorderPane {
     private final StaffService staffService;
     private final CustomerService customerService;
     private TableView<Customer> customerTable;
+    
+    // Track current report for PDF export
+    private String currentReportContent = "";
+    private String currentReportType = "";
     
     public StaffMenuView(ViewManager viewManager, StaffService staffService, 
                         CustomerService customerService) {
@@ -120,35 +127,63 @@ public class StaffMenuView extends BorderPane {
         Label reportTitle = new Label("Reports");
         reportTitle.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         
-        Button customerListBtn = createReportButton("Customer List Report");
-        Button moviePurchaseBtn = createReportButton("Movie Purchase Report");
-        Button foodPurchaseBtn = createReportButton("Food Purchase Report");
-        Button salesSummaryBtn = createReportButton("Sales Summary Report");
+        // Report buttons with icons
+        Button customerListBtn = createReportButton("📋 Customer List Report");
+        Button moviePurchaseBtn = createReportButton("🎬 Movie Purchase Report");
+        Button foodPurchaseBtn = createReportButton("🍿 Food Purchase Report");
+        Button salesSummaryBtn = createReportButton("💰 Sales Summary Report");
+        
+        // PDF Export button (disabled until report is generated)
+        Button exportPdfBtn = new Button("📄 Export to PDF");
+        exportPdfBtn.setPrefWidth(250);
+        exportPdfBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;");
+        exportPdfBtn.setDisable(true);
         
         TextArea reportArea = new TextArea();
         reportArea.setEditable(false);
         reportArea.setPrefHeight(400);
         reportArea.setStyle("-fx-font-family: monospace; -fx-font-size: 11;");
         
+        // Report generation handlers
         customerListBtn.setOnAction(e -> {
             String report = staffService.getCustomerListReport(customerService.getCustomerList());
             reportArea.setText(report);
+            currentReportContent = report;
+            currentReportType = "CustomerList";
+            exportPdfBtn.setDisable(false);
         });
         
         moviePurchaseBtn.setOnAction(e -> {
             String report = staffService.getMoviePurchaseReport();
             reportArea.setText(report);
+            currentReportContent = report;
+            currentReportType = "MoviePurchase";
+            exportPdfBtn.setDisable(false);
         });
         
         foodPurchaseBtn.setOnAction(e -> {
             String report = staffService.getFoodPurchaseReport();
             reportArea.setText(report);
+            currentReportContent = report;
+            currentReportType = "FoodPurchase";
+            exportPdfBtn.setDisable(false);
         });
         
         salesSummaryBtn.setOnAction(e -> {
             String report = staffService.getSalesSummaryReport();
             reportArea.setText(report);
+            currentReportContent = report;
+            currentReportType = "SalesSummary";
+            exportPdfBtn.setDisable(false);
         });
+        
+        // PDF Export handler
+        exportPdfBtn.setOnAction(e -> handlePdfExport());
+        
+        // Add helpful instruction label
+        Label instructionLabel = new Label("💡 Generate a report first, then click 'Export to PDF'");
+        instructionLabel.setStyle("-fx-font-size: 10; -fx-text-fill: #7f8c8d; -fx-font-style: italic;");
+        instructionLabel.setWrapText(true);
         
         VBox rightPanel = new VBox(10,
             reportTitle,
@@ -156,6 +191,9 @@ public class StaffMenuView extends BorderPane {
             moviePurchaseBtn,
             foodPurchaseBtn,
             salesSummaryBtn,
+            new Separator(),
+            exportPdfBtn,
+            instructionLabel,
             new Separator(),
             new Label("Report Output:"),
             reportArea
@@ -171,6 +209,80 @@ public class StaffMenuView extends BorderPane {
         button.setPrefWidth(250);
         button.setStyle("-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;");
         return button;
+    }
+    
+    /**
+     * Handles PDF export with file chooser dialog.
+     */
+    private void handlePdfExport() {
+        if (currentReportContent.isEmpty() || currentReportType.isEmpty()) {
+            showError("No Report", "Please generate a report first before exporting to PDF");
+            return;
+        }
+        
+        // File chooser dialog
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save PDF Report");
+        fileChooser.setInitialFileName(generateFileName());
+        
+        // Add PDF extension filter
+        FileChooser.ExtensionFilter pdfFilter = 
+            new FileChooser.ExtensionFilter("PDF Files (*.pdf)", "*.pdf");
+        fileChooser.getExtensionFilters().add(pdfFilter);
+        
+        // Set initial directory to user's documents folder
+        String userHome = System.getProperty("user.home");
+        File documentsDir = new File(userHome, "Documents");
+        if (documentsDir.exists()) {
+            fileChooser.setInitialDirectory(documentsDir);
+        }
+        
+        // Show save dialog
+        File selectedFile = fileChooser.showSaveDialog(getScene().getWindow());
+        
+        if (selectedFile != null) {
+            // Ensure .pdf extension
+            if (!selectedFile.getName().toLowerCase().endsWith(".pdf")) {
+                selectedFile = new File(selectedFile.getAbsolutePath() + ".pdf");
+            }
+            
+            try {
+                // Call appropriate export method based on report type
+                switch (currentReportType) {
+                    case "CustomerList":
+                        staffService.exportCustomerListToPdf(
+                            customerService.getCustomerList(), 
+                            selectedFile
+                        );
+                        break;
+                    case "MoviePurchase":
+                        staffService.exportMoviePurchaseToPdf(selectedFile);
+                        break;
+                    case "FoodPurchase":
+                        staffService.exportFoodPurchaseToPdf(selectedFile);
+                        break;
+                    case "SalesSummary":
+                        staffService.exportSalesSummaryToPdf(selectedFile);
+                        break;
+                }
+                
+                // Success notification
+                showInfo("PDF Exported", 
+                    "Report successfully exported to:\n" + selectedFile.getAbsolutePath());
+                
+            } catch (IOException ex) {
+                showError("Export Failed", 
+                    "Failed to export PDF: " + ex.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Generates a default filename based on report type and current date.
+     */
+    private String generateFileName() {
+        String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date());
+        return String.format("YSCM_Cinema_%s_%s.pdf", currentReportType, timestamp);
     }
     
     private void refreshCustomerTable() {
