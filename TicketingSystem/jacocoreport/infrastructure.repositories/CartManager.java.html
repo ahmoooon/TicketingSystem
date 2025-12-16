@@ -27,14 +27,14 @@ import java.util.stream.Collectors;
 public class CartManager {
     
     private static final String CART_FILE = &quot;customer_carts.json&quot;;
-<span class="nc" id="L30">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L30">    private static final Logger logger = LoggerSetup.getLogger();</span>
     
     private ConcurrentHashMap&lt;Integer, CartData&gt; customerCarts;
     
-<span class="nc" id="L34">    public CartManager() {</span>
-<span class="nc" id="L35">        this.customerCarts = loadCarts();</span>
-<span class="nc" id="L36">        logger.info(&quot;CartManager initialized with &quot; + customerCarts.size() + &quot; saved carts&quot;);</span>
-<span class="nc" id="L37">    }</span>
+<span class="fc" id="L34">    public CartManager() {</span>
+<span class="fc" id="L35">        this.customerCarts = loadCarts();</span>
+<span class="fc" id="L36">        logger.info(&quot;CartManager initialized with &quot; + customerCarts.size() + &quot; saved carts&quot;);</span>
+<span class="fc" id="L37">    }</span>
     
     /**
      * Inner class to hold cart data for serialization
@@ -45,194 +45,194 @@ public class CartManager {
         public ArrayList&lt;Food&gt; food;
         public long timestamp; // For expiration
         
-<span class="nc" id="L48">        public CartData(int customerId, ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; food) {</span>
-<span class="nc" id="L49">            this.customerId = customerId;</span>
-<span class="nc" id="L50">            this.tickets = tickets;</span>
-<span class="nc" id="L51">            this.food = food;</span>
-<span class="nc" id="L52">            this.timestamp = System.currentTimeMillis();</span>
-<span class="nc" id="L53">        }</span>
+<span class="fc" id="L48">        public CartData(int customerId, ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; food) {</span>
+<span class="fc" id="L49">            this.customerId = customerId;</span>
+<span class="fc" id="L50">            this.tickets = tickets;</span>
+<span class="fc" id="L51">            this.food = food;</span>
+<span class="fc" id="L52">            this.timestamp = System.currentTimeMillis();</span>
+<span class="fc" id="L53">        }</span>
     }
     
     /**
      * Saves current cart for a customer
      */
     public void saveCart(Customer customer, ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; food) {
-<span class="nc bnc" id="L60" title="All 2 branches missed.">        if (customer == null) return;</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (customer == null) return;</span>
         
-<span class="nc" id="L62">        CartData cartData = new CartData(customer.getId(), tickets, food);</span>
-<span class="nc" id="L63">        customerCarts.put(customer.getId(), cartData);</span>
-<span class="nc" id="L64">        persistCarts();</span>
+<span class="fc" id="L62">        CartData cartData = new CartData(customer.getId(), tickets, food);</span>
+<span class="fc" id="L63">        customerCarts.put(customer.getId(), cartData);</span>
+<span class="fc" id="L64">        persistCarts();</span>
         
-<span class="nc" id="L66">        logger.info(&quot;Cart saved for customer: &quot; + customer.getName());</span>
-<span class="nc" id="L67">    }</span>
+<span class="fc" id="L66">        logger.info(&quot;Cart saved for customer: &quot; + customer.getName());</span>
+<span class="fc" id="L67">    }</span>
     
     /**
      * Loads cart for a customer on login
      */
     public CartData loadCart(Customer customer) {
-<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (customer == null) return null;</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (customer == null) return null;</span>
         
-<span class="nc" id="L75">        CartData cart = customerCarts.get(customer.getId());</span>
+<span class="fc" id="L75">        CartData cart = customerCarts.get(customer.getId());</span>
         
-<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (cart != null) {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (cart != null) {</span>
             // Check if cart is expired (24 hours)
-<span class="nc" id="L79">            long hoursSinceCreation = (System.currentTimeMillis() - cart.timestamp) / (1000 * 60 * 60);</span>
-<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (hoursSinceCreation &gt; 24) {</span>
+<span class="fc" id="L79">            long hoursSinceCreation = (System.currentTimeMillis() - cart.timestamp) / (1000 * 60 * 60);</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">            if (hoursSinceCreation &gt; 24) {</span>
 <span class="nc" id="L81">                logger.info(&quot;Cart expired for customer: &quot; + customer.getName());</span>
 <span class="nc" id="L82">                clearCart(customer);</span>
 <span class="nc" id="L83">                return null;</span>
             }
             
-<span class="nc" id="L86">            logger.info(&quot;Cart loaded for customer: &quot; + customer.getName());</span>
+<span class="fc" id="L86">            logger.info(&quot;Cart loaded for customer: &quot; + customer.getName());</span>
         }
         
-<span class="nc" id="L89">        return cart;</span>
+<span class="fc" id="L89">        return cart;</span>
     }
     
     /**
      * Clears cart for a customer (after payment or cancellation)
      */
     public void clearCart(Customer customer) {
-<span class="nc bnc" id="L96" title="All 2 branches missed.">        if (customer == null) return;</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        if (customer == null) return;</span>
         
-<span class="nc" id="L98">        customerCarts.remove(customer.getId());</span>
-<span class="nc" id="L99">        persistCarts();</span>
+<span class="fc" id="L98">        customerCarts.remove(customer.getId());</span>
+<span class="fc" id="L99">        persistCarts();</span>
         
-<span class="nc" id="L101">        logger.info(&quot;Cart cleared for customer: &quot; + customer.getName());</span>
-<span class="nc" id="L102">    }</span>
+<span class="fc" id="L101">        logger.info(&quot;Cart cleared for customer: &quot; + customer.getName());</span>
+<span class="fc" id="L102">    }</span>
     
     /**
      * Gets all seat IDs from a customer's cart (for checking conflicts)
      */
     public List&lt;SeatId&gt; getCartSeatIds(Customer customer) {
-<span class="nc" id="L108">        CartData cart = loadCart(customer);</span>
-<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (cart == null) return new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L108">        CartData cart = loadCart(customer);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (cart == null) return new ArrayList&lt;&gt;();</span>
         
-<span class="nc" id="L111">        List&lt;SeatId&gt; seatIds = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L112" title="All 2 branches missed.">        for (Ticket ticket : cart.tickets) {</span>
-<span class="nc bnc" id="L113" title="All 2 branches missed.">            for (Seat seat : ticket.getSeat()) {</span>
-<span class="nc" id="L114">                seatIds.add(seat.getId());</span>
-<span class="nc" id="L115">            }</span>
-<span class="nc" id="L116">        }</span>
-<span class="nc" id="L117">        return seatIds;</span>
+<span class="fc" id="L111">        List&lt;SeatId&gt; seatIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        for (Ticket ticket : cart.tickets) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            for (Seat seat : ticket.getSeat()) {</span>
+<span class="fc" id="L114">                seatIds.add(seat.getId());</span>
+<span class="fc" id="L115">            }</span>
+<span class="fc" id="L116">        }</span>
+<span class="fc" id="L117">        return seatIds;</span>
     }
     
     // === PERSISTENCE LOGIC ===
     
     private void persistCarts() {
-<span class="nc" id="L123">        List&lt;String&gt; jsonLines = customerCarts.values().stream()</span>
-<span class="nc" id="L124">            .map(this::cartToJsonString)</span>
-<span class="nc" id="L125">            .collect(Collectors.toList());</span>
+<span class="fc" id="L123">        List&lt;String&gt; jsonLines = customerCarts.values().stream()</span>
+<span class="fc" id="L124">            .map(this::cartToJsonString)</span>
+<span class="fc" id="L125">            .collect(Collectors.toList());</span>
         
-<span class="nc" id="L127">        DataFileHandler.saveToJsonFile(jsonLines, CART_FILE);</span>
-<span class="nc" id="L128">    }</span>
+<span class="fc" id="L127">        DataFileHandler.saveToJsonFile(jsonLines, CART_FILE);</span>
+<span class="fc" id="L128">    }</span>
     
     private ConcurrentHashMap&lt;Integer, CartData&gt; loadCarts() {
-<span class="nc" id="L131">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(CART_FILE);</span>
-<span class="nc" id="L132">        ConcurrentHashMap&lt;Integer, CartData&gt; carts = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L131">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(CART_FILE);</span>
+<span class="fc" id="L132">        ConcurrentHashMap&lt;Integer, CartData&gt; carts = new ConcurrentHashMap&lt;&gt;();</span>
         
-<span class="nc bnc" id="L134" title="All 2 branches missed.">        for (String line : jsonLines) {</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        for (String line : jsonLines) {</span>
             try {
-<span class="nc" id="L136">                CartData cart = parseCartFromJson(line);</span>
-<span class="nc bnc" id="L137" title="All 2 branches missed.">                if (cart != null) {</span>
-<span class="nc" id="L138">                    carts.put(cart.customerId, cart);</span>
+<span class="fc" id="L136">                CartData cart = parseCartFromJson(line);</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">                if (cart != null) {</span>
+<span class="fc" id="L138">                    carts.put(cart.customerId, cart);</span>
                 }
 <span class="nc" id="L140">            } catch (Exception e) {</span>
 <span class="nc" id="L141">                logger.log(Level.WARNING, &quot;Failed to parse cart: &quot; + line, e);</span>
-<span class="nc" id="L142">            }</span>
-<span class="nc" id="L143">        }</span>
+<span class="fc" id="L142">            }</span>
+<span class="fc" id="L143">        }</span>
         
-<span class="nc" id="L145">        return carts;</span>
+<span class="fc" id="L145">        return carts;</span>
     }
     
     // === JSON SERIALIZATION ===
     
     private String cartToJsonString(CartData cart) {
-<span class="nc" id="L151">        StringBuilder sb = new StringBuilder();</span>
-<span class="nc" id="L152">        sb.append(&quot;{&quot;);</span>
-<span class="nc" id="L153">        sb.append(&quot;\&quot;customerId\&quot;:&quot;).append(cart.customerId).append(&quot;,&quot;);</span>
-<span class="nc" id="L154">        sb.append(&quot;\&quot;timestamp\&quot;:&quot;).append(cart.timestamp).append(&quot;,&quot;);</span>
+<span class="fc" id="L151">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L152">        sb.append(&quot;{&quot;);</span>
+<span class="fc" id="L153">        sb.append(&quot;\&quot;customerId\&quot;:&quot;).append(cart.customerId).append(&quot;,&quot;);</span>
+<span class="fc" id="L154">        sb.append(&quot;\&quot;timestamp\&quot;:&quot;).append(cart.timestamp).append(&quot;,&quot;);</span>
         
         // Serialize tickets
-<span class="nc" id="L157">        sb.append(&quot;\&quot;tickets\&quot;:[&quot;);</span>
-<span class="nc bnc" id="L158" title="All 2 branches missed.">        for (int i = 0; i &lt; cart.tickets.size(); i++) {</span>
-<span class="nc" id="L159">            Ticket t = cart.tickets.get(i);</span>
-<span class="nc" id="L160">            sb.append(ticketToJson(t));</span>
-<span class="nc bnc" id="L161" title="All 2 branches missed.">            if (i &lt; cart.tickets.size() - 1) sb.append(&quot;,&quot;);</span>
+<span class="fc" id="L157">        sb.append(&quot;\&quot;tickets\&quot;:[&quot;);</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        for (int i = 0; i &lt; cart.tickets.size(); i++) {</span>
+<span class="fc" id="L159">            Ticket t = cart.tickets.get(i);</span>
+<span class="fc" id="L160">            sb.append(ticketToJson(t));</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">            if (i &lt; cart.tickets.size() - 1) sb.append(&quot;,&quot;);</span>
         }
-<span class="nc" id="L163">        sb.append(&quot;],&quot;);</span>
+<span class="fc" id="L163">        sb.append(&quot;],&quot;);</span>
         
         // Serialize food
-<span class="nc" id="L166">        sb.append(&quot;\&quot;food\&quot;:[&quot;);</span>
-<span class="nc bnc" id="L167" title="All 2 branches missed.">        for (int i = 0; i &lt; cart.food.size(); i++) {</span>
-<span class="nc" id="L168">            Food f = cart.food.get(i);</span>
-<span class="nc" id="L169">            sb.append(foodToJson(f));</span>
-<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (i &lt; cart.food.size() - 1) sb.append(&quot;,&quot;);</span>
+<span class="fc" id="L166">        sb.append(&quot;\&quot;food\&quot;:[&quot;);</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        for (int i = 0; i &lt; cart.food.size(); i++) {</span>
+<span class="fc" id="L168">            Food f = cart.food.get(i);</span>
+<span class="fc" id="L169">            sb.append(foodToJson(f));</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            if (i &lt; cart.food.size() - 1) sb.append(&quot;,&quot;);</span>
         }
-<span class="nc" id="L172">        sb.append(&quot;]&quot;);</span>
+<span class="fc" id="L172">        sb.append(&quot;]&quot;);</span>
         
-<span class="nc" id="L174">        sb.append(&quot;}&quot;);</span>
-<span class="nc" id="L175">        return sb.toString();</span>
+<span class="fc" id="L174">        sb.append(&quot;}&quot;);</span>
+<span class="fc" id="L175">        return sb.toString();</span>
     }
     
     private String ticketToJson(Ticket ticket) {
-<span class="nc" id="L179">        Showtime s = ticket.getShowtime();</span>
-<span class="nc" id="L180">        StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L179">        Showtime s = ticket.getShowtime();</span>
+<span class="fc" id="L180">        StringBuilder sb = new StringBuilder();</span>
         
-<span class="nc" id="L182">        sb.append(&quot;{&quot;);</span>
-<span class="nc" id="L183">        sb.append(&quot;\&quot;movieName\&quot;:\&quot;&quot;).append(ticket.getMovieName()).append(&quot;\&quot;,&quot;);</span>
-<span class="nc" id="L184">        sb.append(&quot;\&quot;date\&quot;:\&quot;&quot;).append(s.getDate().toString()).append(&quot;\&quot;,&quot;);</span>
-<span class="nc" id="L185">        sb.append(&quot;\&quot;time\&quot;:\&quot;&quot;).append(s.time()).append(&quot;\&quot;,&quot;);</span>
-<span class="nc" id="L186">        sb.append(&quot;\&quot;hallId\&quot;:&quot;).append(ticket.getHallId()).append(&quot;,&quot;);</span>
-<span class="nc" id="L187">        sb.append(&quot;\&quot;hallType\&quot;:\&quot;&quot;).append(ticket.getHallType()).append(&quot;\&quot;,&quot;);</span>
+<span class="fc" id="L182">        sb.append(&quot;{&quot;);</span>
+<span class="fc" id="L183">        sb.append(&quot;\&quot;movieName\&quot;:\&quot;&quot;).append(ticket.getMovieName()).append(&quot;\&quot;,&quot;);</span>
+<span class="fc" id="L184">        sb.append(&quot;\&quot;date\&quot;:\&quot;&quot;).append(s.getDate().toString()).append(&quot;\&quot;,&quot;);</span>
+<span class="fc" id="L185">        sb.append(&quot;\&quot;time\&quot;:\&quot;&quot;).append(s.time()).append(&quot;\&quot;,&quot;);</span>
+<span class="fc" id="L186">        sb.append(&quot;\&quot;hallId\&quot;:&quot;).append(ticket.getHallId()).append(&quot;,&quot;);</span>
+<span class="fc" id="L187">        sb.append(&quot;\&quot;hallType\&quot;:\&quot;&quot;).append(ticket.getHallType()).append(&quot;\&quot;,&quot;);</span>
         
         // Seats
-<span class="nc" id="L190">        sb.append(&quot;\&quot;seats\&quot;:\&quot;&quot;);</span>
-<span class="nc bnc" id="L191" title="All 2 branches missed.">        for (int i = 0; i &lt; ticket.getSeat().size(); i++) {</span>
-<span class="nc" id="L192">            sb.append(ticket.getSeat().get(i).getId().toDisplayString());</span>
-<span class="nc bnc" id="L193" title="All 2 branches missed.">            if (i &lt; ticket.getSeat().size() - 1) sb.append(&quot;,&quot;);</span>
+<span class="fc" id="L190">        sb.append(&quot;\&quot;seats\&quot;:\&quot;&quot;);</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        for (int i = 0; i &lt; ticket.getSeat().size(); i++) {</span>
+<span class="fc" id="L192">            sb.append(ticket.getSeat().get(i).getId().toDisplayString());</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (i &lt; ticket.getSeat().size() - 1) sb.append(&quot;,&quot;);</span>
         }
-<span class="nc" id="L195">        sb.append(&quot;\&quot;,&quot;);</span>
+<span class="fc" id="L195">        sb.append(&quot;\&quot;,&quot;);</span>
         
-<span class="nc" id="L197">        sb.append(&quot;\&quot;price\&quot;:&quot;).append(ticket.getTotalPrice());</span>
-<span class="nc" id="L198">        sb.append(&quot;}&quot;);</span>
+<span class="fc" id="L197">        sb.append(&quot;\&quot;price\&quot;:&quot;).append(ticket.getTotalPrice());</span>
+<span class="fc" id="L198">        sb.append(&quot;}&quot;);</span>
         
-<span class="nc" id="L200">        return sb.toString();</span>
+<span class="fc" id="L200">        return sb.toString();</span>
     }
     
     private String foodToJson(Food food) {
-<span class="nc" id="L204">        return String.format(&quot;{\&quot;name\&quot;:\&quot;%s\&quot;,\&quot;qty\&quot;:%d,\&quot;price\&quot;:%.2f}&quot;,</span>
-<span class="nc" id="L205">            food.getName(), food.getQty(), food.getPrice());</span>
+<span class="fc" id="L204">        return String.format(&quot;{\&quot;name\&quot;:\&quot;%s\&quot;,\&quot;qty\&quot;:%d,\&quot;price\&quot;:%.2f}&quot;,</span>
+<span class="fc" id="L205">            food.getName(), food.getQty(), food.getPrice());</span>
     }
     
     private CartData parseCartFromJson(String json) {
         try {
-<span class="nc" id="L210">            int customerId = extractInt(json, &quot;customerId&quot;);</span>
-<span class="nc" id="L211">            long timestamp = extractLong(json, &quot;timestamp&quot;);</span>
+<span class="fc" id="L210">            int customerId = extractInt(json, &quot;customerId&quot;);</span>
+<span class="fc" id="L211">            long timestamp = extractLong(json, &quot;timestamp&quot;);</span>
             
             // Parse tickets
-<span class="nc" id="L214">            ArrayList&lt;Ticket&gt; tickets = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L215">            String ticketsArray = extractArrayString(json, &quot;tickets&quot;);</span>
-<span class="nc" id="L216">            List&lt;String&gt; ticketObjs = splitObjects(ticketsArray);</span>
+<span class="fc" id="L214">            ArrayList&lt;Ticket&gt; tickets = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L215">            String ticketsArray = extractArrayString(json, &quot;tickets&quot;);</span>
+<span class="fc" id="L216">            List&lt;String&gt; ticketObjs = splitObjects(ticketsArray);</span>
             
-<span class="nc bnc" id="L218" title="All 2 branches missed.">            for (String tJson : ticketObjs) {</span>
-<span class="nc" id="L219">                Ticket t = parseTicketFromJson(tJson);</span>
-<span class="nc bnc" id="L220" title="All 2 branches missed.">                if (t != null) tickets.add(t);</span>
-<span class="nc" id="L221">            }</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">            for (String tJson : ticketObjs) {</span>
+<span class="fc" id="L219">                Ticket t = parseTicketFromJson(tJson);</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">                if (t != null) tickets.add(t);</span>
+<span class="fc" id="L221">            }</span>
             
             // Parse food
-<span class="nc" id="L224">            ArrayList&lt;Food&gt; foods = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L225">            String foodArray = extractArrayString(json, &quot;food&quot;);</span>
-<span class="nc" id="L226">            List&lt;String&gt; foodObjs = splitObjects(foodArray);</span>
+<span class="fc" id="L224">            ArrayList&lt;Food&gt; foods = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L225">            String foodArray = extractArrayString(json, &quot;food&quot;);</span>
+<span class="fc" id="L226">            List&lt;String&gt; foodObjs = splitObjects(foodArray);</span>
             
-<span class="nc bnc" id="L228" title="All 2 branches missed.">            for (String fJson : foodObjs) {</span>
-<span class="nc" id="L229">                Food f = parseFoodFromJson(fJson);</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">                if (f != null) foods.add(f);</span>
-<span class="nc" id="L231">            }</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">            for (String fJson : foodObjs) {</span>
+<span class="fc" id="L229">                Food f = parseFoodFromJson(fJson);</span>
+<span class="pc bpc" id="L230" title="1 of 2 branches missed.">                if (f != null) foods.add(f);</span>
+<span class="fc" id="L231">            }</span>
             
-<span class="nc" id="L233">            CartData cart = new CartData(customerId, tickets, foods);</span>
-<span class="nc" id="L234">            cart.timestamp = timestamp;</span>
-<span class="nc" id="L235">            return cart;</span>
+<span class="fc" id="L233">            CartData cart = new CartData(customerId, tickets, foods);</span>
+<span class="fc" id="L234">            cart.timestamp = timestamp;</span>
+<span class="fc" id="L235">            return cart;</span>
             
 <span class="nc" id="L237">        } catch (Exception e) {</span>
 <span class="nc" id="L238">            logger.log(Level.SEVERE, &quot;Failed to parse cart&quot;, e);</span>
@@ -242,36 +242,36 @@ public class CartManager {
     
     private Ticket parseTicketFromJson(String json) {
         try {
-<span class="nc" id="L245">            String movieName = extractString(json, &quot;movieName&quot;);</span>
-<span class="nc" id="L246">            String dateStr = extractString(json, &quot;date&quot;);</span>
-<span class="nc" id="L247">            String timeStr = extractString(json, &quot;time&quot;);</span>
-<span class="nc" id="L248">            int hallId = extractInt(json, &quot;hallId&quot;);</span>
-<span class="nc" id="L249">            String hallType = extractString(json, &quot;hallType&quot;);</span>
-<span class="nc" id="L250">            String seatsStr = extractString(json, &quot;seats&quot;);</span>
+<span class="fc" id="L245">            String movieName = extractString(json, &quot;movieName&quot;);</span>
+<span class="fc" id="L246">            String dateStr = extractString(json, &quot;date&quot;);</span>
+<span class="fc" id="L247">            String timeStr = extractString(json, &quot;time&quot;);</span>
+<span class="fc" id="L248">            int hallId = extractInt(json, &quot;hallId&quot;);</span>
+<span class="fc" id="L249">            String hallType = extractString(json, &quot;hallType&quot;);</span>
+<span class="fc" id="L250">            String seatsStr = extractString(json, &quot;seats&quot;);</span>
             
             // Reconstruct entities
-<span class="nc" id="L253">            Movie movie = new Movie(0, movieName, 0, &quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L253">            Movie movie = new Movie(0, movieName, 0, &quot;&quot;, &quot;&quot;);</span>
             
-<span class="nc" id="L255">            String[] dateParts = dateStr.split(&quot;-&quot;);</span>
-<span class="nc" id="L256">            int year = Integer.parseInt(dateParts[0]);</span>
-<span class="nc" id="L257">            int month = Integer.parseInt(dateParts[1]);</span>
-<span class="nc" id="L258">            int day = Integer.parseInt(dateParts[2]);</span>
+<span class="fc" id="L255">            String[] dateParts = dateStr.split(&quot;-&quot;);</span>
+<span class="fc" id="L256">            int year = Integer.parseInt(dateParts[0]);</span>
+<span class="fc" id="L257">            int month = Integer.parseInt(dateParts[1]);</span>
+<span class="fc" id="L258">            int day = Integer.parseInt(dateParts[2]);</span>
             
-<span class="nc" id="L260">            CinemaHall hall = new CinemaHall(hallId, hallType, 0, 0);</span>
-<span class="nc" id="L261">            Showtime showtime = new Showtime(movie, year, month, day, timeStr, hall);</span>
+<span class="fc" id="L260">            CinemaHall hall = new CinemaHall(hallId, hallType, 0, 0);</span>
+<span class="fc" id="L261">            Showtime showtime = new Showtime(movie, year, month, day, timeStr, hall);</span>
             
             // Parse seats
-<span class="nc" id="L264">            ArrayList&lt;Seat&gt; seats = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (!seatsStr.isEmpty()) {</span>
-<span class="nc" id="L266">                String[] seatIds = seatsStr.split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L267" title="All 2 branches missed.">                for (String id : seatIds) {</span>
-<span class="nc" id="L268">                    char row = id.charAt(0);</span>
-<span class="nc" id="L269">                    int col = Integer.parseInt(id.substring(1));</span>
-<span class="nc" id="L270">                    seats.add(new Seat(new SeatId(row, col), &quot;Single&quot;, &quot;Reserved&quot;, hall));</span>
+<span class="fc" id="L264">            ArrayList&lt;Seat&gt; seats = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">            if (!seatsStr.isEmpty()) {</span>
+<span class="fc" id="L266">                String[] seatIds = seatsStr.split(&quot;,&quot;);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">                for (String id : seatIds) {</span>
+<span class="fc" id="L268">                    char row = id.charAt(0);</span>
+<span class="fc" id="L269">                    int col = Integer.parseInt(id.substring(1));</span>
+<span class="fc" id="L270">                    seats.add(new Seat(new SeatId(row, col), &quot;Single&quot;, &quot;Reserved&quot;, hall));</span>
                 }
             }
             
-<span class="nc" id="L274">            return new Ticket(showtime, seats.size(), hall, seats);</span>
+<span class="fc" id="L274">            return new Ticket(showtime, seats.size(), hall, seats);</span>
             
 <span class="nc" id="L276">        } catch (Exception e) {</span>
 <span class="nc" id="L277">            logger.log(Level.WARNING, &quot;Failed to parse ticket&quot;, e);</span>
@@ -281,16 +281,16 @@ public class CartManager {
     
     private Food parseFoodFromJson(String json) {
         try {
-<span class="nc" id="L284">            String name = extractString(json, &quot;name&quot;);</span>
-<span class="nc" id="L285">            int qty = extractInt(json, &quot;qty&quot;);</span>
-<span class="nc" id="L286">            double price = extractDouble(json, &quot;price&quot;);</span>
+<span class="fc" id="L284">            String name = extractString(json, &quot;name&quot;);</span>
+<span class="fc" id="L285">            int qty = extractInt(json, &quot;qty&quot;);</span>
+<span class="fc" id="L286">            double price = extractDouble(json, &quot;price&quot;);</span>
             
-<span class="nc" id="L288">            domain.Popcorn food = new domain.Popcorn();</span>
-<span class="nc" id="L289">            food.setName(name);</span>
-<span class="nc" id="L290">            food.setQty(qty);</span>
-<span class="nc" id="L291">            food.setPrice(price);</span>
+<span class="fc" id="L288">            domain.Popcorn food = new domain.Popcorn();</span>
+<span class="fc" id="L289">            food.setName(name);</span>
+<span class="fc" id="L290">            food.setQty(qty);</span>
+<span class="fc" id="L291">            food.setPrice(price);</span>
             
-<span class="nc" id="L293">            return food;</span>
+<span class="fc" id="L293">            return food;</span>
 <span class="nc" id="L294">        } catch (Exception e) {</span>
 <span class="nc" id="L295">            return null;</span>
         }
@@ -299,65 +299,65 @@ public class CartManager {
     // === PARSING HELPERS ===
     
     private int extractInt(String json, String key) {
-<span class="nc" id="L302">        String val = extractValue(json, key);</span>
-<span class="nc bnc" id="L303" title="All 2 branches missed.">        return val.isEmpty() ? 0 : Integer.parseInt(val);</span>
+<span class="fc" id="L302">        String val = extractValue(json, key);</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        return val.isEmpty() ? 0 : Integer.parseInt(val);</span>
     }
     
     private long extractLong(String json, String key) {
-<span class="nc" id="L307">        String val = extractValue(json, key);</span>
-<span class="nc bnc" id="L308" title="All 2 branches missed.">        return val.isEmpty() ? 0L : Long.parseLong(val);</span>
+<span class="fc" id="L307">        String val = extractValue(json, key);</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">        return val.isEmpty() ? 0L : Long.parseLong(val);</span>
     }
     
     private double extractDouble(String json, String key) {
-<span class="nc" id="L312">        String val = extractValue(json, key);</span>
-<span class="nc bnc" id="L313" title="All 2 branches missed.">        return val.isEmpty() ? 0.0 : Double.parseDouble(val);</span>
+<span class="fc" id="L312">        String val = extractValue(json, key);</span>
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        return val.isEmpty() ? 0.0 : Double.parseDouble(val);</span>
     }
     
     private String extractString(String json, String key) {
-<span class="nc" id="L317">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
-<span class="nc" id="L318">        int start = json.indexOf(search);</span>
-<span class="nc bnc" id="L319" title="All 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
-<span class="nc" id="L320">        start += search.length();</span>
-<span class="nc" id="L321">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
-<span class="nc" id="L322">        return json.substring(start, end);</span>
+<span class="fc" id="L317">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
+<span class="fc" id="L318">        int start = json.indexOf(search);</span>
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
+<span class="fc" id="L320">        start += search.length();</span>
+<span class="fc" id="L321">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
+<span class="fc" id="L322">        return json.substring(start, end);</span>
     }
     
     private String extractValue(String json, String key) {
-<span class="nc" id="L326">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
-<span class="nc" id="L327">        int start = json.indexOf(search);</span>
-<span class="nc bnc" id="L328" title="All 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
-<span class="nc" id="L329">        start += search.length();</span>
-<span class="nc" id="L330">        int endComma = json.indexOf(&quot;,&quot;, start);</span>
-<span class="nc" id="L331">        int endBrace = json.indexOf(&quot;}&quot;, start);</span>
-<span class="nc bnc" id="L332" title="All 4 branches missed.">        if (endComma == -1 &amp;&amp; endBrace == -1) return &quot;&quot;;</span>
-<span class="nc bnc" id="L333" title="All 4 branches missed.">        int end = (endComma == -1) ? endBrace : (endBrace == -1 ? endComma : Math.min(endComma, endBrace));</span>
-<span class="nc" id="L334">        return json.substring(start, end).trim();</span>
+<span class="fc" id="L326">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
+<span class="fc" id="L327">        int start = json.indexOf(search);</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
+<span class="fc" id="L329">        start += search.length();</span>
+<span class="fc" id="L330">        int endComma = json.indexOf(&quot;,&quot;, start);</span>
+<span class="fc" id="L331">        int endBrace = json.indexOf(&quot;}&quot;, start);</span>
+<span class="pc bpc" id="L332" title="1 of 4 branches missed.">        if (endComma == -1 &amp;&amp; endBrace == -1) return &quot;&quot;;</span>
+<span class="pc bpc" id="L333" title="1 of 4 branches missed.">        int end = (endComma == -1) ? endBrace : (endBrace == -1 ? endComma : Math.min(endComma, endBrace));</span>
+<span class="fc" id="L334">        return json.substring(start, end).trim();</span>
     }
     
     private String extractArrayString(String json, String key) {
-<span class="nc" id="L338">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:[&quot;;</span>
-<span class="nc" id="L339">        int start = json.indexOf(search);</span>
-<span class="nc bnc" id="L340" title="All 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
-<span class="nc" id="L341">        start += search.length();</span>
-<span class="nc" id="L342">        int end = json.indexOf(&quot;]&quot;, start);</span>
-<span class="nc" id="L343">        return json.substring(start, end);</span>
+<span class="fc" id="L338">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:[&quot;;</span>
+<span class="fc" id="L339">        int start = json.indexOf(search);</span>
+<span class="pc bpc" id="L340" title="1 of 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
+<span class="fc" id="L341">        start += search.length();</span>
+<span class="fc" id="L342">        int end = json.indexOf(&quot;]&quot;, start);</span>
+<span class="fc" id="L343">        return json.substring(start, end);</span>
     }
     
     private List&lt;String&gt; splitObjects(String arrayContent) {
-<span class="nc" id="L347">        List&lt;String&gt; objs = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L348">        int braceCount = 0;</span>
-<span class="nc" id="L349">        StringBuilder current = new StringBuilder();</span>
+<span class="fc" id="L347">        List&lt;String&gt; objs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L348">        int braceCount = 0;</span>
+<span class="fc" id="L349">        StringBuilder current = new StringBuilder();</span>
         
-<span class="nc bnc" id="L351" title="All 2 branches missed.">        for (char c : arrayContent.toCharArray()) {</span>
-<span class="nc bnc" id="L352" title="All 2 branches missed.">            if (c == '{') braceCount++;</span>
-<span class="nc bnc" id="L353" title="All 2 branches missed.">            if (c == '}') braceCount--;</span>
-<span class="nc bnc" id="L354" title="All 4 branches missed.">            if (braceCount &gt; 0 || c == '}') current.append(c);</span>
-<span class="nc bnc" id="L355" title="All 6 branches missed.">            if (braceCount == 0 &amp;&amp; c == '}' &amp;&amp; current.length() &gt; 0) {</span>
-<span class="nc" id="L356">                objs.add(current.toString());</span>
-<span class="nc" id="L357">                current.setLength(0);</span>
+<span class="fc bfc" id="L351" title="All 2 branches covered.">        for (char c : arrayContent.toCharArray()) {</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">            if (c == '{') braceCount++;</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">            if (c == '}') braceCount--;</span>
+<span class="fc bfc" id="L354" title="All 4 branches covered.">            if (braceCount &gt; 0 || c == '}') current.append(c);</span>
+<span class="pc bpc" id="L355" title="1 of 6 branches missed.">            if (braceCount == 0 &amp;&amp; c == '}' &amp;&amp; current.length() &gt; 0) {</span>
+<span class="fc" id="L356">                objs.add(current.toString());</span>
+<span class="fc" id="L357">                current.setLength(0);</span>
             }
         }
-<span class="nc" id="L360">        return objs;</span>
+<span class="fc" id="L360">        return objs;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 <span class="nc" id="L20">public class FoodFactory {</span>
-<span class="nc" id="L21">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L21">    private static final Logger logger = LoggerSetup.getLogger();</span>
 
     /**
      * Creates a concrete Food item for the static inventory menu.
@@ -30,13 +30,13 @@ import java.util.logging.Logger;
      * @return A new concrete Food object.
      */
     public static Food createMenuItem(String type, String name, double price) {
-<span class="nc bnc" id="L33" title="All 4 branches missed.">        switch (type.toUpperCase()) {</span>
+<span class="pc bpc" id="L33" title="1 of 4 branches missed.">        switch (type.toUpperCase()) {</span>
             case &quot;POPCORN&quot;:
-<span class="nc" id="L35">                return new Popcorn(name, price);</span>
+<span class="fc" id="L35">                return new Popcorn(name, price);</span>
             case &quot;BEVERAGE&quot;:
-<span class="nc" id="L37">                return new Beverage(name, price);</span>
+<span class="fc" id="L37">                return new Beverage(name, price);</span>
             case &quot;HOTFOOD&quot;:
-<span class="nc" id="L39">                return new HotFood(name, price);</span>
+<span class="fc" id="L39">                return new HotFood(name, price);</span>
             default:
 <span class="nc" id="L41">                logger.log(Level.SEVERE, &quot;Attempted to create unknown food type: {0}&quot;, type);</span>
 <span class="nc" id="L42">                throw new IllegalArgumentException(&quot;Unknown food type: &quot; + type);</span>

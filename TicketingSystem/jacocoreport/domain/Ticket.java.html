@@ -5,89 +5,89 @@ import java.util.ArrayList;
 
 public class Ticket {
 
-<span class="nc" id="L8">    private static int lastTicketID = 1;</span>
+<span class="fc" id="L8">    private static int lastTicketID = 1;</span>
     private final int ticketID; // Recommended: make final
     private final int ticketAmt; // Recommended: make final
     private final Showtime showtime; // Recommended: make final
     private final CinemaHall cinema; // Recommended: make final
     private final ArrayList&lt;Seat&gt; seat; // Recommended: make final
 
-<span class="nc" id="L15">    public Ticket() {</span>
-<span class="nc" id="L16">        this.ticketID = lastTicketID; // Still needs an ID, even if default</span>
-<span class="nc" id="L17">        this.ticketAmt = 0;</span>
-<span class="nc" id="L18">        this.showtime = null;</span>
-<span class="nc" id="L19">        this.cinema = null;</span>
-<span class="nc" id="L20">        this.seat = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L21">    }</span>
+<span class="fc" id="L15">    public Ticket() {</span>
+<span class="fc" id="L16">        this.ticketID = lastTicketID; // Still needs an ID, even if default</span>
+<span class="fc" id="L17">        this.ticketAmt = 0;</span>
+<span class="fc" id="L18">        this.showtime = null;</span>
+<span class="fc" id="L19">        this.cinema = null;</span>
+<span class="fc" id="L20">        this.seat = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L21">    }</span>
 
-<span class="nc" id="L23">    public Ticket(Showtime showtime, int ticketAmt, CinemaHall cinema, ArrayList&lt;Seat&gt; seat) {</span>
-<span class="nc" id="L24">        this.showtime = showtime;</span>
-<span class="nc" id="L25">        this.ticketAmt = ticketAmt;</span>
-<span class="nc" id="L26">        this.cinema = cinema;</span>
-<span class="nc" id="L27">        this.seat = seat;</span>
-<span class="nc" id="L28">        this.ticketID = lastTicketID;</span>
-<span class="nc" id="L29">        lastTicketID++;</span>
-<span class="nc" id="L30">    }</span>
+<span class="fc" id="L23">    public Ticket(Showtime showtime, int ticketAmt, CinemaHall cinema, ArrayList&lt;Seat&gt; seat) {</span>
+<span class="fc" id="L24">        this.showtime = showtime;</span>
+<span class="fc" id="L25">        this.ticketAmt = ticketAmt;</span>
+<span class="fc" id="L26">        this.cinema = cinema;</span>
+<span class="fc" id="L27">        this.seat = seat;</span>
+<span class="fc" id="L28">        this.ticketID = lastTicketID;</span>
+<span class="fc" id="L29">        lastTicketID++;</span>
+<span class="fc" id="L30">    }</span>
 
     public int getTicketID() {
-<span class="nc" id="L33">        return ticketID;</span>
+<span class="fc" id="L33">        return ticketID;</span>
     }
 
     public Showtime getShowtime() {
-<span class="nc" id="L37">        return showtime;</span>
+<span class="fc" id="L37">        return showtime;</span>
     }
     
     public LocalDate getSchedule() {
-<span class="nc" id="L41">        return showtime.getDate();</span>
+<span class="fc" id="L41">        return showtime.getDate();</span>
     }
 
     public String time() {
-<span class="nc" id="L45">        return showtime.getShowtime(); // FIXED: Method added to Showtime</span>
+<span class="fc" id="L45">        return showtime.getShowtime(); // FIXED: Method added to Showtime</span>
     }
 
     public int getTicketAmt() {
-<span class="nc" id="L49">        return ticketAmt;</span>
+<span class="fc" id="L49">        return ticketAmt;</span>
     }
 
     public CinemaHall getCinemaHall() {
-<span class="nc" id="L53">        return cinema;</span>
+<span class="fc" id="L53">        return cinema;</span>
     }
     
     public String getHallType(){
-<span class="nc" id="L57">        return cinema.getHallType();</span>
+<span class="fc" id="L57">        return cinema.getHallType();</span>
     }
 
     public int getHallId() {
-<span class="nc" id="L61">        return cinema.getHallId(); // FIXED: Uses the refactored method name</span>
+<span class="fc" id="L61">        return cinema.getHallId(); // FIXED: Uses the refactored method name</span>
     }
 
     public ArrayList&lt;Seat&gt; getSeat() {
-<span class="nc" id="L65">        return seat;</span>
+<span class="fc" id="L65">        return seat;</span>
     }
 
     // FIX: This calculation is wrong in the original code. It only returns the price 
     // of the *first* seat. It should calculate the sum.
     public double ticketPrice() {
-<span class="nc" id="L71">        double totalPrice = 0;</span>
-<span class="nc bnc" id="L72" title="All 4 branches missed.">        if (seat == null || seat.isEmpty()) return 0;</span>
+<span class="fc" id="L71">        double totalPrice = 0;</span>
+<span class="fc bfc" id="L72" title="All 4 branches covered.">        if (seat == null || seat.isEmpty()) return 0;</span>
         
         // This calculates the price based on ONE seat's price logic 
         // (which is tied to the hall type, meaning all seats in the same hall cost the same).
         // Returning the price of the first seat is conceptually correct for the unit price:
-<span class="nc" id="L77">        return seat.get(0).calculatePrice(); </span>
+<span class="fc" id="L77">        return seat.get(0).calculatePrice(); </span>
     }
     
     public double getTotalPrice() {
-<span class="nc bnc" id="L81" title="All 4 branches missed.">        if (seat == null || seat.isEmpty()) return 0;</span>
-<span class="nc" id="L82">        return seat.size() * ticketPrice(); // Total price is unit price * quantity</span>
+<span class="pc bpc" id="L81" title="2 of 4 branches missed.">        if (seat == null || seat.isEmpty()) return 0;</span>
+<span class="fc" id="L82">        return seat.size() * ticketPrice(); // Total price is unit price * quantity</span>
     }
 
     public String getMovieName() {
-<span class="nc" id="L86">        return showtime.getMovieName(); // FIXED: Method added to Showtime</span>
+<span class="fc" id="L86">        return showtime.getMovieName(); // FIXED: Method added to Showtime</span>
     }
 
     public String toString() {
-<span class="nc" id="L90">        return &quot;\nTicket ID       : &quot; + ticketID</span>
+<span class="fc" id="L90">        return &quot;\nTicket ID       : &quot; + ticketID</span>
                 + &quot;\nTicket amount   : &quot; + ticketAmt
                 + showtime
                 + &quot;\n\nHall          : &quot; + cinema;

@@ -1,15 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package application.services;
 
 /**
  *
  * @author zhili
  */
-// CustomerService.java - Business Logic Layer (Domain Management)
-// CustomerService.java - Business Logic Layer (Domain Management)
 import application.utilities.LoggerSetup;
 import domain.Customer;
 import infrastructure.repositories.DataFileHandler;
@@ -22,7 +16,6 @@ import java.util.stream.Collectors;
 
 public class CustomerService {
     private final String customerFile;
-    // <<< Logger Initialization added >>>
     private static final Logger logger = LoggerSetup.getLogger();
     private Customer loggedInCustomer = null;
     private ArrayList<Customer> customerList;
@@ -31,7 +24,6 @@ public class CustomerService {
         this("customer_data.json");
     }
 
-    // 👇 test-friendly constructor
     public CustomerService(String customerFile) {
         this.customerFile = customerFile;
         this.customerList = loadCustomers();
@@ -39,7 +31,6 @@ public class CustomerService {
         this.customerList.removeIf(c -> c.getName().equalsIgnoreCase(AuthService.STAFF_ID));
     }
     
-    // --- Persistence Logic ---
     private ArrayList<Customer> loadCustomers() {
         List<String> jsonLines = DataFileHandler.loadFromJsonFile(customerFile);
         return jsonLines.stream()
@@ -55,7 +46,7 @@ public class CustomerService {
         }
     }
 
-    // NEW: Getter for the currently logged-in user
+    // Getter for the currently logged-in user
     public Optional<Customer> getLoggedInCustomer() {
         return Optional.ofNullable(loggedInCustomer);
     }

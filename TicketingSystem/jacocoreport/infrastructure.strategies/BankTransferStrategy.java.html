@@ -12,14 +12,14 @@ import application.strategies.PaymentStrategy;
 public class BankTransferStrategy implements PaymentStrategy {
     private final String accountNumber;
 
-<span class="nc" id="L15">    public BankTransferStrategy(String accountNumber) {</span>
-<span class="nc" id="L16">        this.accountNumber = accountNumber;</span>
-<span class="nc" id="L17">    }</span>
+<span class="fc" id="L15">    public BankTransferStrategy(String accountNumber) {</span>
+<span class="fc" id="L16">        this.accountNumber = accountNumber;</span>
+<span class="fc" id="L17">    }</span>
 
     @Override
     public boolean validate() {
         // Logic extracted from original code: length 9 and numeric
-<span class="nc bnc" id="L22" title="All 6 branches missed.">        return accountNumber != null &amp;&amp; accountNumber.length() == 9 &amp;&amp; accountNumber.matches(&quot;\\d+&quot;);</span>
+<span class="fc bfc" id="L22" title="All 6 branches covered.">        return accountNumber != null &amp;&amp; accountNumber.length() == 9 &amp;&amp; accountNumber.matches(&quot;\\d+&quot;);</span>
     }
 
     @Override
@@ -27,6 +27,6 @@ public class BankTransferStrategy implements PaymentStrategy {
         // Business logic for bank transfer (logging, API calls, etc.)
         // For CLI simulation, the output is handled by the result message, 
         // but we can simulate the &quot;processing&quot; here if needed.
-<span class="nc" id="L30">    }</span>
+<span class="fc" id="L30">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

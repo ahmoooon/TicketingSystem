@@ -14,7 +14,7 @@ import java.util.Scanner;
 import java.util.logging.Logger;
 
 <span class="nc" id="L16">public class Utility {</span>
-<span class="nc" id="L17">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L17">    private static final Logger logger = LoggerSetup.getLogger();</span>
 
     /**
      * Ensures user input is an integer within a specified valid range.
@@ -24,28 +24,28 @@ import java.util.logging.Logger;
      * @return A valid integer input from the user.
      */
     public static int checkError(Scanner sc, int min, int max) {
-<span class="nc" id="L27">        int choice = -1;</span>
-<span class="nc" id="L28">        boolean validInput = false;</span>
+<span class="fc" id="L27">        int choice = -1;</span>
+<span class="fc" id="L28">        boolean validInput = false;</span>
 
         do {
             try {
-<span class="nc" id="L32">                choice = sc.nextInt();</span>
-<span class="nc" id="L33">                sc.nextLine(); // Consume the newline left behind</span>
+<span class="fc" id="L32">                choice = sc.nextInt();</span>
+<span class="fc" id="L33">                sc.nextLine(); // Consume the newline left behind</span>
 
-<span class="nc bnc" id="L35" title="All 4 branches missed.">                if (choice &gt;= min &amp;&amp; choice &lt;= max) {</span>
-<span class="nc" id="L36">                    validInput = true;</span>
+<span class="fc bfc" id="L35" title="All 4 branches covered.">                if (choice &gt;= min &amp;&amp; choice &lt;= max) {</span>
+<span class="fc" id="L36">                    validInput = true;</span>
                 } else {
-<span class="nc" id="L38">                    System.out.printf(&quot;\n &lt;!&gt; Please enter a value between %d and %d only. &lt;!&gt;\n&quot;, min, max);</span>
-<span class="nc" id="L39">                    logger.warning(String.format(&quot;Invalid input received: %d. Expected range: [%d, %d]&quot;, choice, min, max));</span>
+<span class="fc" id="L38">                    System.out.printf(&quot;\n &lt;!&gt; Please enter a value between %d and %d only. &lt;!&gt;\n&quot;, min, max);</span>
+<span class="fc" id="L39">                    logger.warning(String.format(&quot;Invalid input received: %d. Expected range: [%d, %d]&quot;, choice, min, max));</span>
                 }
-<span class="nc" id="L41">            } catch (InputMismatchException e) {</span>
-<span class="nc" id="L42">                System.out.println(&quot;\n &lt;!&gt; Invalid input! Please enter a number. &lt;!&gt;&quot;);</span>
-<span class="nc" id="L43">                sc.nextLine(); // Clear the invalid input from the scanner buffer</span>
-<span class="nc" id="L44">                logger.warning(&quot;Non-integer input detected.&quot;);</span>
-<span class="nc" id="L45">            }</span>
-<span class="nc bnc" id="L46" title="All 2 branches missed.">        } while (!validInput);</span>
+<span class="fc" id="L41">            } catch (InputMismatchException e) {</span>
+<span class="fc" id="L42">                System.out.println(&quot;\n &lt;!&gt; Invalid input! Please enter a number. &lt;!&gt;&quot;);</span>
+<span class="fc" id="L43">                sc.nextLine(); // Clear the invalid input from the scanner buffer</span>
+<span class="fc" id="L44">                logger.warning(&quot;Non-integer input detected.&quot;);</span>
+<span class="fc" id="L45">            }</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        } while (!validInput);</span>
 
-<span class="nc" id="L48">        return choice;</span>
+<span class="fc" id="L48">        return choice;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

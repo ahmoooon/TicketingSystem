@@ -14,20 +14,20 @@ import java.util.stream.Collectors;
 public class FileMovieRepository implements MovieRepository {
     
     private static final String MOVIE_FILE = &quot;movies.json&quot;;
-<span class="nc" id="L17">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L17">    private static final Logger logger = LoggerSetup.getLogger();</span>
     
     private List&lt;Movie&gt; movieList;
 
-<span class="nc" id="L21">    public FileMovieRepository() {</span>
-<span class="nc" id="L22">        loadData();</span>
+<span class="fc" id="L21">    public FileMovieRepository() {</span>
+<span class="fc" id="L22">        loadData();</span>
         // --- ADD DEBUG LINE 1 HERE ---
-<span class="nc bnc" id="L24" title="All 2 branches missed.">        System.out.println(&quot;[DEBUG] Movies loaded from file: &quot; + (movieList != null ? movieList.size() : 0)); </span>
-<span class="nc" id="L25">    }</span>
+<span class="pc bpc" id="L24" title="1 of 2 branches missed.">        System.out.println(&quot;[DEBUG] Movies loaded from file: &quot; + (movieList != null ? movieList.size() : 0)); </span>
+<span class="fc" id="L25">    }</span>
 
     private void loadData() {
-<span class="nc" id="L28">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(MOVIE_FILE);</span>
+<span class="fc" id="L28">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(MOVIE_FILE);</span>
         
-<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (jsonLines.isEmpty()) {</span>
+<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if (jsonLines.isEmpty()) {</span>
             // --- ADD DEBUG LINE 2 HERE ---
 <span class="nc" id="L32">            System.out.println(&quot;[DEBUG] List is empty. Seeding default data...&quot;);</span>
             
@@ -35,27 +35,27 @@ public class FileMovieRepository implements MovieRepository {
 <span class="nc" id="L35">            movieList = createDefaultMovies();</span>
 <span class="nc" id="L36">            saveMovies(); </span>
         } else {
-<span class="nc" id="L38">            movieList = jsonLines.stream()</span>
-<span class="nc" id="L39">                .map(this::parseMovieFromJson)</span>
-<span class="nc bnc" id="L40" title="All 2 branches missed.">                .filter(m -&gt; m != null)</span>
-<span class="nc" id="L41">                .collect(Collectors.toList());</span>
+<span class="fc" id="L38">            movieList = jsonLines.stream()</span>
+<span class="fc" id="L39">                .map(this::parseMovieFromJson)</span>
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">                .filter(m -&gt; m != null)</span>
+<span class="fc" id="L41">                .collect(Collectors.toList());</span>
         }
         
-<span class="nc" id="L44">        logger.log(Level.INFO, &quot;Loaded {0} movies from {1}&quot;, </span>
-<span class="nc" id="L45">                   new Object[]{movieList.size(), MOVIE_FILE});</span>
-<span class="nc" id="L46">    }</span>
+<span class="fc" id="L44">        logger.log(Level.INFO, &quot;Loaded {0} movies from {1}&quot;, </span>
+<span class="fc" id="L45">                   new Object[]{movieList.size(), MOVIE_FILE});</span>
+<span class="fc" id="L46">    }</span>
     
     // ... (Keep the rest of the methods extractInt, extractString etc. exactly the same) ...
 
     private Movie parseMovieFromJson(String json) {
         try {
-<span class="nc" id="L52">            int id = extractInt(json, &quot;id&quot;);</span>
-<span class="nc" id="L53">            String movieName = extractString(json, &quot;movieName&quot;);</span>
-<span class="nc" id="L54">            double movieLength = extractDouble(json, &quot;movieLength&quot;);</span>
-<span class="nc" id="L55">            String director = extractString(json, &quot;director&quot;);</span>
-<span class="nc" id="L56">            String releaseDate = extractString(json, &quot;releaseDate&quot;);</span>
+<span class="fc" id="L52">            int id = extractInt(json, &quot;id&quot;);</span>
+<span class="fc" id="L53">            String movieName = extractString(json, &quot;movieName&quot;);</span>
+<span class="fc" id="L54">            double movieLength = extractDouble(json, &quot;movieLength&quot;);</span>
+<span class="fc" id="L55">            String director = extractString(json, &quot;director&quot;);</span>
+<span class="fc" id="L56">            String releaseDate = extractString(json, &quot;releaseDate&quot;);</span>
             
-<span class="nc" id="L58">            return new Movie(id, movieName, movieLength, director, releaseDate);</span>
+<span class="fc" id="L58">            return new Movie(id, movieName, movieLength, director, releaseDate);</span>
             
 <span class="nc" id="L60">        } catch (Exception e) {</span>
 <span class="nc" id="L61">            logger.log(Level.SEVERE, &quot;Failed to parse movie JSON: {0}. Error: {1}&quot;, </span>
@@ -95,37 +95,37 @@ public class FileMovieRepository implements MovieRepository {
     
     @Override
     public List&lt;Movie&gt; findAll() {
-<span class="nc" id="L98">        return new ArrayList&lt;&gt;(movieList);</span>
+<span class="fc" id="L98">        return new ArrayList&lt;&gt;(movieList);</span>
     }
 
     @Override
     public Optional&lt;Movie&gt; findById(int id) {
-<span class="nc" id="L103">        return movieList.stream()</span>
-<span class="nc bnc" id="L104" title="All 2 branches missed.">                .filter(m -&gt; m.getId() == id)</span>
-<span class="nc" id="L105">                .findFirst();</span>
+<span class="fc" id="L103">        return movieList.stream()</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                .filter(m -&gt; m.getId() == id)</span>
+<span class="fc" id="L105">                .findFirst();</span>
     }
     
     private int extractInt(String json, String key) {
-<span class="nc" id="L109">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
-<span class="nc" id="L110">        int start = json.indexOf(searchKey) + searchKey.length();</span>
-<span class="nc" id="L111">        int end = json.indexOf(&quot;,&quot;, start);</span>
-<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
-<span class="nc" id="L113">        return Integer.parseInt(json.substring(start, end).trim());</span>
+<span class="fc" id="L109">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
+<span class="fc" id="L110">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="fc" id="L111">        int end = json.indexOf(&quot;,&quot;, start);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
+<span class="fc" id="L113">        return Integer.parseInt(json.substring(start, end).trim());</span>
     }
     
     private double extractDouble(String json, String key) {
-<span class="nc" id="L117">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
-<span class="nc" id="L118">        int start = json.indexOf(searchKey) + searchKey.length();</span>
-<span class="nc" id="L119">        int end = json.indexOf(&quot;,&quot;, start);</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
-<span class="nc" id="L121">        return Double.parseDouble(json.substring(start, end).trim());</span>
+<span class="fc" id="L117">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
+<span class="fc" id="L118">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="fc" id="L119">        int end = json.indexOf(&quot;,&quot;, start);</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
+<span class="fc" id="L121">        return Double.parseDouble(json.substring(start, end).trim());</span>
     }
     
     private String extractString(String json, String key) {
-<span class="nc" id="L125">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
-<span class="nc" id="L126">        int start = json.indexOf(searchKey) + searchKey.length();</span>
-<span class="nc" id="L127">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
-<span class="nc" id="L128">        return json.substring(start, end);</span>
+<span class="fc" id="L125">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
+<span class="fc" id="L126">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="fc" id="L127">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
+<span class="fc" id="L128">        return json.substring(start, end);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

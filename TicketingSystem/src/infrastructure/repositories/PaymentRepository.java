@@ -1,4 +1,3 @@
-// src/infrastructure/repositories/PaymentRepository.java
 package infrastructure.repositories;
 
 import application.utilities.LoggerSetup;
@@ -23,12 +22,20 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class PaymentRepository {
-    private static final String PAYMENT_FILE = "payment_history.json";
+    private static final String DEFAULT_PAYMENT_FILE = "payment_history.json";
     private static final Logger logger = LoggerSetup.getLogger();
     
+    private final String paymentFile;
     private ArrayList<Payment> paymentHistory;
     
+    // Default constructor for production
     public PaymentRepository() {
+        this(DEFAULT_PAYMENT_FILE);
+    }
+    
+    // Constructor for testing with custom file
+    public PaymentRepository(String paymentFile) {
+        this.paymentFile = paymentFile;
         this.paymentHistory = loadPayments();
         syncPaymentIds();
         logger.log(Level.INFO, "PaymentRepository initialized with {0} existing payments.", 
@@ -45,7 +52,7 @@ public class PaymentRepository {
     
     // --- LOAD LOGIC ---
     private ArrayList<Payment> loadPayments() {
-        List<String> jsonLines = DataFileHandler.loadFromJsonFile(PAYMENT_FILE);
+        List<String> jsonLines = DataFileHandler.loadFromJsonFile(paymentFile);
         ArrayList<Payment> payments = new ArrayList<>();
         for (String line : jsonLines) {
             if (line.trim().startsWith("{")) {
@@ -69,23 +76,16 @@ public class PaymentRepository {
             List<String> ticketObjs = splitObjects(ticketArray);
             
             for (String tJson : ticketObjs) {
-                // Extract Saved Data
                 String movieName = extractString(tJson, "movieName");
                 String dateStr = extractString(tJson, "date");
                 String timeStr = extractString(tJson, "time");
                 String hallType = extractString(tJson, "hall");
-                String seatStr = extractString(tJson, "seats"); // e.g., "A1,A2"
+                String seatStr = extractString(tJson, "seats");
                 double price = extractDouble(tJson, "price");
                 
-                // Reconstruct Movie
                 Movie m = new Movie(0, movieName, 0, "", "");
-                
-                // Reconstruct Hall (Minimal ID, but correct Type)
                 CinemaHall hall = new CinemaHall(0, hallType, 0, 0);
                 
-                // Reconstruct Showtime (Parsing the date string manually is hard, 
-                // so we pass the string directly if Showtime allows, or use dummy date parts)
-                // Assuming dateStr is "2023-10-25"
                 String[] dateParts = dateStr.split("-");
                 int year = Integer.parseInt(dateParts[0]);
                 int month = Integer.parseInt(dateParts[1]);
@@ -93,19 +93,16 @@ public class PaymentRepository {
                 
                 Showtime s = new Showtime(m, year, month, day, timeStr, hall);
                 
-                // Reconstruct Seats
                 ArrayList<Seat> seatList = new ArrayList<>();
                 if (!seatStr.isEmpty()) {
                     String[] ids = seatStr.split(",");
                     for (String id : ids) {
-                        // id is like "A1"
                         char row = id.charAt(0);
                         int col = Integer.parseInt(id.substring(1));
                         seatList.add(new Seat(new SeatId(row, col), "Single", "Sold", hall));
                     }
                 }
                 
-                // Create Real Ticket
                 Ticket t = new Ticket(s, seatList.size(), hall, seatList);
                 tickets.add(t);
             }
@@ -120,7 +117,6 @@ public class PaymentRepository {
                 int qty = extractInt(fJson, "qty");
                 double price = extractDouble(fJson, "price");
                 
-                // Use Popcorn as generic holder
                 Food f = new Popcorn();
                 f.setName(name);
                 f.setQty(qty);
@@ -145,7 +141,7 @@ public class PaymentRepository {
         for (Payment p : paymentHistory) {
             lines.add(paymentToJsonString(p));
         }
-        DataFileHandler.saveToJsonFile(lines, PAYMENT_FILE);
+        DataFileHandler.saveToJsonFile(lines, paymentFile);
     }
     
     private String paymentToJsonString(Payment p) {
@@ -155,7 +151,6 @@ public class PaymentRepository {
         sb.append("\"customerName\":\"").append(p.getCustomer().map(Customer::getName).orElse("Guest")).append("\",");
         sb.append("\"totalAmount\":").append(p.getTotalPrice()).append(",");
         
-        // SAVE TICKETS (With Date, Time, Seats)
         sb.append("\"tickets\":[");
         ArrayList<Ticket> tickets = p.getTicket();
         for (int i = 0; i < tickets.size(); i++) {
@@ -164,11 +159,10 @@ public class PaymentRepository {
             
             sb.append("{");
             sb.append("\"movieName\":\"").append(t.getMovieName()).append("\",");
-            sb.append("\"date\":\"").append(s.getDate().toString()).append("\","); // Saves "2023-10-25"
-            sb.append("\"time\":\"").append(s.time()).append("\",");             // Saves "10:00 AM"
-            sb.append("\"hall\":\"").append(t.getHallType()).append("\",");       // Saves "IMAX"
+            sb.append("\"date\":\"").append(s.getDate().toString()).append("\",");
+            sb.append("\"time\":\"").append(s.time()).append("\",");
+            sb.append("\"hall\":\"").append(t.getHallType()).append("\",");
             
-            // Save Seats as "A1,A2"
             sb.append("\"seats\":\"");
             ArrayList<Seat> seats = t.getSeat();
             for(int j=0; j<seats.size(); j++) {
@@ -183,7 +177,6 @@ public class PaymentRepository {
         }
         sb.append("],");
         
-        // SAVE FOOD (Same as before)
         sb.append("\"food\":[");
         ArrayList<Food> foods = p.getFood();
         for (int i = 0; i < foods.size(); i++) {

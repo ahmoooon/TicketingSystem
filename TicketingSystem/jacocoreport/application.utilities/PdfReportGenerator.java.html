@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 <span class="nc" id="L23">public class PdfReportGenerator {</span>
     
-<span class="nc" id="L25">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L25">    private static final Logger logger = LoggerSetup.getLogger();</span>
     
     // PDF Layout Constants
     private static final float MARGIN = 50;
@@ -35,25 +35,25 @@ import java.util.logging.Logger;
     static {
         try {
             // Disable PDFBox font cache to avoid corrupted font issues
-<span class="nc" id="L38">            System.setProperty(&quot;pdfbox.fontcache&quot;, &quot;false&quot;);</span>
+<span class="fc" id="L38">            System.setProperty(&quot;pdfbox.fontcache&quot;, &quot;false&quot;);</span>
             
             // Disable system font loading entirely - use only PDF base fonts
-<span class="nc" id="L41">            System.setProperty(&quot;sun.font.fontmanager&quot;, &quot;sun.awt.X11FontManager&quot;);</span>
+<span class="fc" id="L41">            System.setProperty(&quot;sun.font.fontmanager&quot;, &quot;sun.awt.X11FontManager&quot;);</span>
             
             // Suppress PDFBox font warnings
-<span class="nc" id="L44">            Logger pdfboxLogger = Logger.getLogger(&quot;org.apache.fontbox&quot;);</span>
-<span class="nc" id="L45">            pdfboxLogger.setLevel(Level.SEVERE); // Only show severe errors</span>
+<span class="fc" id="L44">            Logger pdfboxLogger = Logger.getLogger(&quot;org.apache.fontbox&quot;);</span>
+<span class="fc" id="L45">            pdfboxLogger.setLevel(Level.SEVERE); // Only show severe errors</span>
             
-<span class="nc" id="L47">            Logger pdfboxTTFLogger = Logger.getLogger(&quot;org.apache.fontbox.ttf&quot;);</span>
-<span class="nc" id="L48">            pdfboxTTFLogger.setLevel(Level.SEVERE);</span>
+<span class="fc" id="L47">            Logger pdfboxTTFLogger = Logger.getLogger(&quot;org.apache.fontbox.ttf&quot;);</span>
+<span class="fc" id="L48">            pdfboxTTFLogger.setLevel(Level.SEVERE);</span>
             
-<span class="nc" id="L50">            Logger pdfboxTTFParser = Logger.getLogger(&quot;org.apache.fontbox.ttf.TTFParser&quot;);</span>
-<span class="nc" id="L51">            pdfboxTTFParser.setLevel(Level.SEVERE);</span>
+<span class="fc" id="L50">            Logger pdfboxTTFParser = Logger.getLogger(&quot;org.apache.fontbox.ttf.TTFParser&quot;);</span>
+<span class="fc" id="L51">            pdfboxTTFParser.setLevel(Level.SEVERE);</span>
 <span class="nc" id="L52">        } catch (Exception e) {</span>
             // Ignore any errors in static initialization
 <span class="nc" id="L54">            System.err.println(&quot;Warning: Could not configure PDF font settings: &quot; + e.getMessage());</span>
-<span class="nc" id="L55">        }</span>
-<span class="nc" id="L56">    }</span>
+<span class="fc" id="L55">        }</span>
+<span class="fc" id="L56">    }</span>
     
     /**
      * Generates a PDF report from text content and saves it to the specified file.
@@ -66,36 +66,36 @@ import java.util.logging.Logger;
     public static void generatePdfReport(String reportContent, File outputFile, String reportTitle) 
             throws IOException {
         
-<span class="nc" id="L69">        logger.info(&quot;Generating PDF report: &quot; + reportTitle);</span>
+<span class="fc" id="L69">        logger.info(&quot;Generating PDF report: &quot; + reportTitle);</span>
         
-<span class="nc" id="L71">        try (PDDocument document = new PDDocument()) {</span>
+<span class="fc" id="L71">        try (PDDocument document = new PDDocument()) {</span>
             // Split content into lines
-<span class="nc" id="L73">            List&lt;String&gt; lines = splitIntoLines(reportContent);</span>
+<span class="fc" id="L73">            List&lt;String&gt; lines = splitIntoLines(reportContent);</span>
             
-<span class="nc" id="L75">            PDPage page = new PDPage(PDRectangle.A4);</span>
-<span class="nc" id="L76">            document.addPage(page);</span>
+<span class="fc" id="L75">            PDPage page = new PDPage(PDRectangle.A4);</span>
+<span class="fc" id="L76">            document.addPage(page);</span>
             
-<span class="nc" id="L78">            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {</span>
+<span class="fc" id="L78">            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {</span>
                 
                 // Current Y position (starts from top)
-<span class="nc" id="L81">                float yPosition = page.getMediaBox().getHeight() - MARGIN;</span>
+<span class="fc" id="L81">                float yPosition = page.getMediaBox().getHeight() - MARGIN;</span>
                 
                 // Write header
-<span class="nc" id="L84">                yPosition = writeHeader(contentStream, page, reportTitle, yPosition);</span>
+<span class="fc" id="L84">                yPosition = writeHeader(contentStream, page, reportTitle, yPosition);</span>
                 
                 // Write content
-<span class="nc" id="L87">                writeContent(document, contentStream, page, lines, yPosition);</span>
+<span class="fc" id="L87">                writeContent(document, contentStream, page, lines, yPosition);</span>
             }
             
             // Save document
-<span class="nc" id="L91">            document.save(outputFile);</span>
-<span class="nc" id="L92">            logger.info(&quot;PDF report saved successfully: &quot; + outputFile.getAbsolutePath());</span>
+<span class="fc" id="L91">            document.save(outputFile);</span>
+<span class="fc" id="L92">            logger.info(&quot;PDF report saved successfully: &quot; + outputFile.getAbsolutePath());</span>
             
-<span class="nc" id="L94">        } catch (IOException e) {</span>
-<span class="nc" id="L95">            logger.log(Level.SEVERE, &quot;Failed to generate PDF report&quot;, e);</span>
-<span class="nc" id="L96">            throw e;</span>
-<span class="nc" id="L97">        }</span>
-<span class="nc" id="L98">    }</span>
+<span class="fc" id="L94">        } catch (IOException e) {</span>
+<span class="fc" id="L95">            logger.log(Level.SEVERE, &quot;Failed to generate PDF report&quot;, e);</span>
+<span class="fc" id="L96">            throw e;</span>
+<span class="fc" id="L97">        }</span>
+<span class="fc" id="L98">    }</span>
     
     /**
      * Writes the report header (title and date).
@@ -104,34 +104,34 @@ import java.util.logging.Logger;
                                      String title, float yPosition) throws IOException {
         
         // Company name
-<span class="nc" id="L107">        contentStream.beginText();</span>
-<span class="nc" id="L108">        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), FONT_SIZE_TITLE);</span>
-<span class="nc" id="L109">        contentStream.newLineAtOffset(MARGIN, yPosition);</span>
-<span class="nc" id="L110">        contentStream.showText(&quot;YSCM CINEMA - &quot; + title);</span>
-<span class="nc" id="L111">        contentStream.endText();</span>
+<span class="fc" id="L107">        contentStream.beginText();</span>
+<span class="fc" id="L108">        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), FONT_SIZE_TITLE);</span>
+<span class="fc" id="L109">        contentStream.newLineAtOffset(MARGIN, yPosition);</span>
+<span class="fc" id="L110">        contentStream.showText(&quot;YSCM CINEMA - &quot; + title);</span>
+<span class="fc" id="L111">        contentStream.endText();</span>
         
-<span class="nc" id="L113">        yPosition -= LINE_HEIGHT * 1.5f;</span>
+<span class="fc" id="L113">        yPosition -= LINE_HEIGHT * 1.5f;</span>
         
         // Date
-<span class="nc" id="L116">        SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
-<span class="nc" id="L117">        String currentDate = dateFormat.format(new Date());</span>
+<span class="fc" id="L116">        SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);</span>
+<span class="fc" id="L117">        String currentDate = dateFormat.format(new Date());</span>
         
-<span class="nc" id="L119">        contentStream.beginText();</span>
-<span class="nc" id="L120">        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE_NORMAL);</span>
-<span class="nc" id="L121">        contentStream.newLineAtOffset(MARGIN, yPosition);</span>
-<span class="nc" id="L122">        contentStream.showText(&quot;Generated: &quot; + currentDate);</span>
-<span class="nc" id="L123">        contentStream.endText();</span>
+<span class="fc" id="L119">        contentStream.beginText();</span>
+<span class="fc" id="L120">        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE_NORMAL);</span>
+<span class="fc" id="L121">        contentStream.newLineAtOffset(MARGIN, yPosition);</span>
+<span class="fc" id="L122">        contentStream.showText(&quot;Generated: &quot; + currentDate);</span>
+<span class="fc" id="L123">        contentStream.endText();</span>
         
-<span class="nc" id="L125">        yPosition -= LINE_HEIGHT * 2;</span>
+<span class="fc" id="L125">        yPosition -= LINE_HEIGHT * 2;</span>
         
         // Separator line
-<span class="nc" id="L128">        contentStream.moveTo(MARGIN, yPosition);</span>
-<span class="nc" id="L129">        contentStream.lineTo(page.getMediaBox().getWidth() - MARGIN, yPosition);</span>
-<span class="nc" id="L130">        contentStream.stroke();</span>
+<span class="fc" id="L128">        contentStream.moveTo(MARGIN, yPosition);</span>
+<span class="fc" id="L129">        contentStream.lineTo(page.getMediaBox().getWidth() - MARGIN, yPosition);</span>
+<span class="fc" id="L130">        contentStream.stroke();</span>
         
-<span class="nc" id="L132">        yPosition -= LINE_HEIGHT;</span>
+<span class="fc" id="L132">        yPosition -= LINE_HEIGHT;</span>
         
-<span class="nc" id="L134">        return yPosition;</span>
+<span class="fc" id="L134">        return yPosition;</span>
     }
     
     /**
@@ -141,11 +141,11 @@ import java.util.logging.Logger;
                                      PDPage currentPage, List&lt;String&gt; lines, float yPosition) 
             throws IOException {
         
-<span class="nc" id="L144">        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.COURIER), FONT_SIZE_NORMAL);</span>
+<span class="fc" id="L144">        contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.COURIER), FONT_SIZE_NORMAL);</span>
         
-<span class="nc bnc" id="L146" title="All 2 branches missed.">        for (String line : lines) {</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        for (String line : lines) {</span>
             // Check if we need a new page
-<span class="nc bnc" id="L148" title="All 2 branches missed.">            if (yPosition &lt; MARGIN + LINE_HEIGHT) {</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">            if (yPosition &lt; MARGIN + LINE_HEIGHT) {</span>
                 // Close current content stream properly
 <span class="nc" id="L150">                contentStream.close();</span>
                 
@@ -162,21 +162,21 @@ import java.util.logging.Logger;
             }
             
             // Write line - ensure text block is properly closed
-<span class="nc" id="L165">            contentStream.beginText();</span>
-<span class="nc" id="L166">            contentStream.newLineAtOffset(MARGIN, yPosition);</span>
+<span class="fc" id="L165">            contentStream.beginText();</span>
+<span class="fc" id="L166">            contentStream.newLineAtOffset(MARGIN, yPosition);</span>
             try {
-<span class="nc" id="L168">                contentStream.showText(line);</span>
+<span class="fc" id="L168">                contentStream.showText(line);</span>
 <span class="nc" id="L169">            } catch (IllegalArgumentException e) {</span>
                 // If character encoding fails, log and skip this line
 <span class="nc" id="L171">                logger.log(Level.WARNING, &quot;Skipping line due to encoding error: {0}&quot;, e.getMessage());</span>
 <span class="nc" id="L172">                contentStream.showText(&quot;[Content contains unsupported characters]&quot;);</span>
-<span class="nc" id="L173">            }</span>
-<span class="nc" id="L174">            contentStream.endText();</span>
+<span class="fc" id="L173">            }</span>
+<span class="fc" id="L174">            contentStream.endText();</span>
             
-<span class="nc" id="L176">            yPosition -= LINE_HEIGHT;</span>
-<span class="nc" id="L177">        }</span>
+<span class="fc" id="L176">            yPosition -= LINE_HEIGHT;</span>
+<span class="fc" id="L177">        }</span>
         
-<span class="nc" id="L179">        return yPosition;</span>
+<span class="fc" id="L179">        return yPosition;</span>
     }
     
     /**
@@ -217,28 +217,28 @@ import java.util.logging.Logger;
      * Also sanitizes content by removing unsupported characters.
      */
     private static List&lt;String&gt; splitIntoLines(String content) {
-<span class="nc" id="L220">        List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L220">        List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
         
         // CRITICAL: Sanitize content first - remove tabs and other control characters
-<span class="nc" id="L223">        content = sanitizeTextForPdf(content);</span>
+<span class="fc" id="L223">        content = sanitizeTextForPdf(content);</span>
         
-<span class="nc" id="L225">        String[] rawLines = content.split(&quot;\n&quot;);</span>
+<span class="fc" id="L225">        String[] rawLines = content.split(&quot;\n&quot;);</span>
         
-<span class="nc bnc" id="L227" title="All 2 branches missed.">        for (String rawLine : rawLines) {</span>
-<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (rawLine.length() &lt;= MAX_CHARS_PER_LINE) {</span>
-<span class="nc" id="L229">                lines.add(rawLine);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        for (String rawLine : rawLines) {</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">            if (rawLine.length() &lt;= MAX_CHARS_PER_LINE) {</span>
+<span class="fc" id="L229">                lines.add(rawLine);</span>
             } else {
                 // Wrap long lines
-<span class="nc" id="L232">                int start = 0;</span>
-<span class="nc bnc" id="L233" title="All 2 branches missed.">                while (start &lt; rawLine.length()) {</span>
-<span class="nc" id="L234">                    int end = Math.min(start + MAX_CHARS_PER_LINE, rawLine.length());</span>
-<span class="nc" id="L235">                    lines.add(rawLine.substring(start, end));</span>
-<span class="nc" id="L236">                    start = end;</span>
-<span class="nc" id="L237">                }</span>
+<span class="fc" id="L232">                int start = 0;</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                while (start &lt; rawLine.length()) {</span>
+<span class="fc" id="L234">                    int end = Math.min(start + MAX_CHARS_PER_LINE, rawLine.length());</span>
+<span class="fc" id="L235">                    lines.add(rawLine.substring(start, end));</span>
+<span class="fc" id="L236">                    start = end;</span>
+<span class="fc" id="L237">                }</span>
             }
         }
         
-<span class="nc" id="L241">        return lines;</span>
+<span class="fc" id="L241">        return lines;</span>
     }
     
     /**
@@ -249,33 +249,33 @@ import java.util.logging.Logger;
      * @return Sanitized text safe for PDF rendering
      */
     private static String sanitizeTextForPdf(String text) {
-<span class="nc bnc" id="L252" title="All 2 branches missed.">        if (text == null) {</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">        if (text == null) {</span>
 <span class="nc" id="L253">            return &quot;&quot;;</span>
         }
         
         // Replace tabs with 4 spaces
-<span class="nc" id="L257">        text = text.replace(&quot;\t&quot;, &quot;    &quot;);</span>
+<span class="fc" id="L257">        text = text.replace(&quot;\t&quot;, &quot;    &quot;);</span>
         
         // Remove carriage returns (keep only line feeds)
-<span class="nc" id="L260">        text = text.replace(&quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L260">        text = text.replace(&quot;\r&quot;, &quot;&quot;);</span>
         
         // Remove other control characters except newline (U+000A)
         // This regex removes characters in ranges:
         // U+0000-U+0009 (NULL to TAB)
         // U+000B-U+001F (vertical tab to unit separator)
         // U+007F (DELETE)
-<span class="nc" id="L267">        text = text.replaceAll(&quot;[\\u0000-\\u0009\\u000B-\\u001F\\u007F]&quot;, &quot;&quot;);</span>
+<span class="fc" id="L267">        text = text.replaceAll(&quot;[\\u0000-\\u0009\\u000B-\\u001F\\u007F]&quot;, &quot;&quot;);</span>
         
         // Replace characters outside WinAnsiEncoding range (U+0000 to U+00FF)
         // with ASCII equivalents or remove them
-<span class="nc" id="L271">        StringBuilder sanitized = new StringBuilder();</span>
-<span class="nc bnc" id="L272" title="All 2 branches missed.">        for (char c : text.toCharArray()) {</span>
-<span class="nc bnc" id="L273" title="All 2 branches missed.">            if (c == '\n') {</span>
+<span class="fc" id="L271">        StringBuilder sanitized = new StringBuilder();</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">        for (char c : text.toCharArray()) {</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">            if (c == '\n') {</span>
                 // Keep newlines
-<span class="nc" id="L275">                sanitized.append(c);</span>
-<span class="nc bnc" id="L276" title="All 4 branches missed.">            } else if (c &gt;= 32 &amp;&amp; c &lt;= 126) {</span>
+<span class="fc" id="L275">                sanitized.append(c);</span>
+<span class="pc bpc" id="L276" title="2 of 4 branches missed.">            } else if (c &gt;= 32 &amp;&amp; c &lt;= 126) {</span>
                 // Standard ASCII printable characters (safe for WinAnsiEncoding)
-<span class="nc" id="L278">                sanitized.append(c);</span>
+<span class="fc" id="L278">                sanitized.append(c);</span>
 <span class="nc bnc" id="L279" title="All 4 branches missed.">            } else if (c &gt;= 160 &amp;&amp; c &lt;= 255) {</span>
                 // Extended ASCII (part of WinAnsiEncoding) - keep them
 <span class="nc" id="L281">                sanitized.append(c);</span>
@@ -286,7 +286,7 @@ import java.util.logging.Logger;
             // Characters &lt; 32 (except newline) are already filtered above
         }
         
-<span class="nc" id="L289">        return sanitized.toString();</span>
+<span class="fc" id="L289">        return sanitized.toString();</span>
     }
     
     /**
@@ -294,11 +294,11 @@ import java.util.logging.Logger;
      */
     public static boolean validateOutputPath(File outputFile) {
         try {
-<span class="nc" id="L297">            File parentDir = outputFile.getParentFile();</span>
-<span class="nc bnc" id="L298" title="All 4 branches missed.">            if (parentDir != null &amp;&amp; !parentDir.exists()) {</span>
-<span class="nc" id="L299">                return parentDir.mkdirs();</span>
+<span class="fc" id="L297">            File parentDir = outputFile.getParentFile();</span>
+<span class="pc bpc" id="L298" title="1 of 4 branches missed.">            if (parentDir != null &amp;&amp; !parentDir.exists()) {</span>
+<span class="fc" id="L299">                return parentDir.mkdirs();</span>
             }
-<span class="nc" id="L301">            return true;</span>
+<span class="fc" id="L301">            return true;</span>
 <span class="nc" id="L302">        } catch (SecurityException e) {</span>
 <span class="nc" id="L303">            logger.log(Level.WARNING, &quot;Cannot write to path: &quot; + outputFile.getAbsolutePath(), e);</span>
 <span class="nc" id="L304">            return false;</span>

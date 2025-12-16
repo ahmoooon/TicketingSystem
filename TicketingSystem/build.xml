@@ -70,5 +70,25 @@
     nbproject/build-impl.xml file. 
 
     -->
-    
+    <target name="jacoco-report" depends="test">
+    <jacoco:report xmlns:jacoco="antlib:org.jacoco.ant">
+        <executiondata>
+            <file file="${basedir}/build/jacoco.exec"/>
+        </executiondata>
+        
+        <structure name="Cinema Application Coverage">
+            <classfiles>
+                <fileset dir="${build.classes.dir}" 
+                         excludes="**/presentation/**"/> 
+            </classfiles>
+            
+            <sourcefiles encoding="UTF-8">
+                <fileset dir="${src.dir}"/>
+            </sourcefiles>
+        </structure>
+        
+        <html destdir="${basedir}/build/jacoco-report"/>
+    </jacoco:report>
+</target>
+
 </project>

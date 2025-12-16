@@ -18,22 +18,33 @@ import java.util.stream.Collectors;
 
 public class FileSeatRepository implements SeatRepository {
 
-    private static final String BOOKINGS_FILE = &quot;bookings.json&quot;;
-    private static final String HALLS_FILE = &quot;halls.json&quot;;
-<span class="nc" id="L23">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    private static final String DEFAULT_BOOKINGS_FILE = &quot;bookings.json&quot;;
+    private static final String DEFAULT_HALLS_FILE = &quot;halls.json&quot;;
+<span class="fc" id="L23">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    
+    private final String bookingsFile;
+    private final String hallsFile;
     
     private final List&lt;CinemaHall&gt; hallList;
-    private ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; confirmedBookings; // ONLY paid bookings
-    private ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; cartReservations;  // Temporary cart holds
+    private ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; confirmedBookings;
+    private ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; cartReservations;
 
-<span class="nc" id="L29">    public FileSeatRepository() {</span>
-<span class="nc" id="L30">        this.hallList = loadHalls();</span>
-<span class="nc" id="L31">        this.confirmedBookings = loadBookings();</span>
-<span class="nc" id="L32">        this.cartReservations = new ConcurrentHashMap&lt;&gt;();</span>
+    // DEFAULT CONSTRUCTOR (for production use)
+    public FileSeatRepository() {
+<span class="nc" id="L34">        this(DEFAULT_BOOKINGS_FILE, DEFAULT_HALLS_FILE);</span>
+<span class="nc" id="L35">    }</span>
+    
+    // CONSTRUCTOR WITH CUSTOM FILES (for testing)
+<span class="fc" id="L38">    public FileSeatRepository(String bookingsFile, String hallsFile) {</span>
+<span class="fc" id="L39">        this.bookingsFile = bookingsFile;</span>
+<span class="fc" id="L40">        this.hallsFile = hallsFile;</span>
+<span class="fc" id="L41">        this.hallList = loadHalls();</span>
+<span class="fc" id="L42">        this.confirmedBookings = loadBookings();</span>
+<span class="fc" id="L43">        this.cartReservations = new ConcurrentHashMap&lt;&gt;();</span>
         
-<span class="nc" id="L34">        logger.log(Level.INFO, &quot;FileSeatRepository initialized. Halls: {0}, Confirmed Bookings: {1}&quot;, </span>
-<span class="nc" id="L35">                   new Object[]{hallList.size(), confirmedBookings.size()});</span>
-<span class="nc" id="L36">    }</span>
+<span class="fc" id="L45">        logger.log(Level.INFO, &quot;FileSeatRepository initialized. Halls: {0}, Confirmed Bookings: {1}&quot;, </span>
+<span class="fc" id="L46">                   new Object[]{hallList.size(), confirmedBookings.size()});</span>
+<span class="fc" id="L47">    }</span>
     
     // === NEW METHODS: Cart Management ===
     
@@ -41,105 +52,105 @@ public class FileSeatRepository implements SeatRepository {
      * Temporarily reserves seats for a cart (NOT written to file)
      */
     public void addToCartReservation(Showtime showtime, List&lt;SeatId&gt; seatIds) {
-<span class="nc" id="L44">        String key = generateKey(showtime);</span>
-<span class="nc" id="L45">        List&lt;SeatId&gt; currentCart = cartReservations.getOrDefault(key, new ArrayList&lt;&gt;());</span>
-<span class="nc" id="L46">        currentCart.addAll(seatIds);</span>
-<span class="nc" id="L47">        cartReservations.put(key, currentCart);</span>
+<span class="fc" id="L55">        String key = generateKey(showtime);</span>
+<span class="fc" id="L56">        List&lt;SeatId&gt; currentCart = cartReservations.getOrDefault(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L57">        currentCart.addAll(seatIds);</span>
+<span class="fc" id="L58">        cartReservations.put(key, currentCart);</span>
         
-<span class="nc" id="L49">        logger.info(&quot;Added &quot; + seatIds.size() + &quot; seats to cart reservation: &quot; + key);</span>
-<span class="nc" id="L50">    }</span>
+<span class="fc" id="L60">        logger.info(&quot;Added &quot; + seatIds.size() + &quot; seats to cart reservation: &quot; + key);</span>
+<span class="fc" id="L61">    }</span>
     
     /**
      * Confirms cart reservation as a paid booking (written to file)
      */
     public void confirmCartReservation(Showtime showtime, List&lt;SeatId&gt; seatIds) {
-<span class="nc" id="L56">        String key = generateKey(showtime);</span>
+<span class="fc" id="L67">        String key = generateKey(showtime);</span>
         
         // Move from cart to confirmed
-<span class="nc" id="L59">        List&lt;SeatId&gt; confirmed = confirmedBookings.getOrDefault(key, new ArrayList&lt;&gt;());</span>
-<span class="nc" id="L60">        confirmed.addAll(seatIds);</span>
-<span class="nc" id="L61">        confirmedBookings.put(key, confirmed);</span>
+<span class="fc" id="L70">        List&lt;SeatId&gt; confirmed = confirmedBookings.getOrDefault(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L71">        confirmed.addAll(seatIds);</span>
+<span class="fc" id="L72">        confirmedBookings.put(key, confirmed);</span>
         
         // Remove from cart
-<span class="nc" id="L64">        List&lt;SeatId&gt; cart = cartReservations.get(key);</span>
-<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (cart != null) {</span>
-<span class="nc" id="L66">            cart.removeAll(seatIds);</span>
-<span class="nc bnc" id="L67" title="All 2 branches missed.">            if (cart.isEmpty()) {</span>
-<span class="nc" id="L68">                cartReservations.remove(key);</span>
+<span class="fc" id="L75">        List&lt;SeatId&gt; cart = cartReservations.get(key);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (cart != null) {</span>
+<span class="fc" id="L77">            cart.removeAll(seatIds);</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">            if (cart.isEmpty()) {</span>
+<span class="fc" id="L79">                cartReservations.remove(key);</span>
             }
         }
         
-<span class="nc" id="L72">        saveBookings(); // NOW we write to file</span>
-<span class="nc" id="L73">        logger.info(&quot;Confirmed &quot; + seatIds.size() + &quot; seats as paid booking: &quot; + key);</span>
-<span class="nc" id="L74">    }</span>
+<span class="fc" id="L83">        saveBookings();</span>
+<span class="fc" id="L84">        logger.info(&quot;Confirmed &quot; + seatIds.size() + &quot; seats as paid booking: &quot; + key);</span>
+<span class="fc" id="L85">    }</span>
     
     /**
      * Cancels cart reservation (releases seats)
      */
     public void cancelCartReservation(Showtime showtime, List&lt;SeatId&gt; seatIds) {
-<span class="nc" id="L80">        String key = generateKey(showtime);</span>
-<span class="nc" id="L81">        List&lt;SeatId&gt; cart = cartReservations.get(key);</span>
+<span class="fc" id="L91">        String key = generateKey(showtime);</span>
+<span class="fc" id="L92">        List&lt;SeatId&gt; cart = cartReservations.get(key);</span>
         
-<span class="nc bnc" id="L83" title="All 2 branches missed.">        if (cart != null) {</span>
-<span class="nc" id="L84">            cart.removeAll(seatIds);</span>
-<span class="nc bnc" id="L85" title="All 2 branches missed.">            if (cart.isEmpty()) {</span>
-<span class="nc" id="L86">                cartReservations.remove(key);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (cart != null) {</span>
+<span class="fc" id="L95">            cart.removeAll(seatIds);</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">            if (cart.isEmpty()) {</span>
+<span class="fc" id="L97">                cartReservations.remove(key);</span>
             }
-<span class="nc" id="L88">            logger.info(&quot;Cancelled &quot; + seatIds.size() + &quot; seats from cart: &quot; + key);</span>
+<span class="fc" id="L99">            logger.info(&quot;Cancelled &quot; + seatIds.size() + &quot; seats from cart: &quot; + key);</span>
         }
-<span class="nc" id="L90">    }</span>
+<span class="fc" id="L101">    }</span>
     
     /**
      * Clears all cart reservations for a customer (on logout)
      */
     public void clearAllCartReservations() {
-<span class="nc" id="L96">        int count = cartReservations.size();</span>
-<span class="nc" id="L97">        cartReservations.clear();</span>
-<span class="nc" id="L98">        logger.info(&quot;Cleared all cart reservations (&quot; + count + &quot; entries)&quot;);</span>
-<span class="nc" id="L99">    }</span>
+<span class="fc" id="L107">        int count = cartReservations.size();</span>
+<span class="fc" id="L108">        cartReservations.clear();</span>
+<span class="fc" id="L109">        logger.info(&quot;Cleared all cart reservations (&quot; + count + &quot; entries)&quot;);</span>
+<span class="fc" id="L110">    }</span>
     
-    // === EXISTING METHODS (Updated) ===
+    // === EXISTING METHODS (Updated to use instance variables) ===
     
     public List&lt;CinemaHall&gt; getAllHalls() {
-<span class="nc" id="L104">        return new ArrayList&lt;&gt;(hallList);</span>
+<span class="fc" id="L115">        return new ArrayList&lt;&gt;(hallList);</span>
     }
     
     public List&lt;CinemaHall&gt; getHallsByType(String hallType) {
-<span class="nc" id="L108">        return hallList.stream()</span>
-<span class="nc" id="L109">            .filter(h -&gt; h.getHallType().equals(hallType))</span>
-<span class="nc" id="L110">            .collect(Collectors.toList());</span>
+<span class="fc" id="L119">        return hallList.stream()</span>
+<span class="fc" id="L120">            .filter(h -&gt; h.getHallType().equals(hallType))</span>
+<span class="fc" id="L121">            .collect(Collectors.toList());</span>
     }
     
     private List&lt;CinemaHall&gt; loadHalls() {
-<span class="nc" id="L114">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(HALLS_FILE);</span>
+<span class="fc" id="L125">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(hallsFile);</span>
         
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (jsonLines.isEmpty()) {</span>
-<span class="nc" id="L117">            logger.warning(&quot;No halls found in file. Creating default halls.&quot;);</span>
-<span class="nc" id="L118">            return createDefaultHalls();</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (jsonLines.isEmpty()) {</span>
+<span class="fc" id="L128">            logger.warning(&quot;No halls found in file. Creating default halls.&quot;);</span>
+<span class="fc" id="L129">            return createDefaultHalls();</span>
         }
         
-<span class="nc" id="L121">        return jsonLines.stream()</span>
-<span class="nc" id="L122">            .map(this::parseHallFromJson)</span>
-<span class="nc bnc" id="L123" title="All 2 branches missed.">            .filter(h -&gt; h != null)</span>
-<span class="nc" id="L124">            .collect(Collectors.toList());</span>
+<span class="nc" id="L132">        return jsonLines.stream()</span>
+<span class="nc" id="L133">            .map(this::parseHallFromJson)</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            .filter(h -&gt; h != null)</span>
+<span class="nc" id="L135">            .collect(Collectors.toList());</span>
     }
     
     private CinemaHall parseHallFromJson(String json) {
         try {
-<span class="nc" id="L129">            int hallNum = extractInt(json, &quot;hallNum&quot;);</span>
-<span class="nc" id="L130">            String hallType = extractString(json, &quot;hallType&quot;);</span>
-<span class="nc" id="L131">            int rowAmt = extractInt(json, &quot;rowAmt&quot;);</span>
-<span class="nc" id="L132">            int colAmt = extractInt(json, &quot;colAmt&quot;);</span>
+<span class="nc" id="L140">            int hallNum = extractInt(json, &quot;hallNum&quot;);</span>
+<span class="nc" id="L141">            String hallType = extractString(json, &quot;hallType&quot;);</span>
+<span class="nc" id="L142">            int rowAmt = extractInt(json, &quot;rowAmt&quot;);</span>
+<span class="nc" id="L143">            int colAmt = extractInt(json, &quot;colAmt&quot;);</span>
             
-<span class="nc" id="L134">            return new CinemaHall(hallNum, hallType, rowAmt, colAmt);</span>
-<span class="nc" id="L135">        } catch (Exception e) {</span>
-<span class="nc" id="L136">            logger.log(Level.SEVERE, &quot;Failed to parse hall JSON: {0}&quot;, json);</span>
-<span class="nc" id="L137">            return null;</span>
+<span class="nc" id="L145">            return new CinemaHall(hallNum, hallType, rowAmt, colAmt);</span>
+<span class="nc" id="L146">        } catch (Exception e) {</span>
+<span class="nc" id="L147">            logger.log(Level.SEVERE, &quot;Failed to parse hall JSON: {0}&quot;, json);</span>
+<span class="nc" id="L148">            return null;</span>
         }
     }
     
     private List&lt;CinemaHall&gt; createDefaultHalls() {
-<span class="nc" id="L142">        List&lt;CinemaHall&gt; defaults = List.of(</span>
+<span class="fc" id="L153">        List&lt;CinemaHall&gt; defaults = List.of(</span>
             new CinemaHall(1, CinemaHall.HALL_TYPE_STANDARD, 5, 10),
             new CinemaHall(2, CinemaHall.HALL_TYPE_STANDARD, 5, 10),
             new CinemaHall(3, CinemaHall.HALL_TYPE_STANDARD, 5, 10),
@@ -148,191 +159,191 @@ public class FileSeatRepository implements SeatRepository {
             new CinemaHall(6, CinemaHall.HALL_TYPE_LOUNGE, 5, 5)
         );
         
-<span class="nc" id="L151">        List&lt;String&gt; jsonLines = defaults.stream()</span>
-<span class="nc" id="L152">            .map(this::hallToJsonString)</span>
-<span class="nc" id="L153">            .collect(Collectors.toList());</span>
-<span class="nc" id="L154">        DataFileHandler.saveToJsonFile(jsonLines, HALLS_FILE);</span>
+<span class="fc" id="L162">        List&lt;String&gt; jsonLines = defaults.stream()</span>
+<span class="fc" id="L163">            .map(this::hallToJsonString)</span>
+<span class="fc" id="L164">            .collect(Collectors.toList());</span>
+<span class="fc" id="L165">        DataFileHandler.saveToJsonFile(jsonLines, hallsFile);</span>
         
-<span class="nc" id="L156">        return defaults;</span>
+<span class="fc" id="L167">        return defaults;</span>
     }
     
     private String hallToJsonString(CinemaHall hall) {
-<span class="nc" id="L160">        return String.format(</span>
+<span class="fc" id="L171">        return String.format(</span>
             &quot;{\&quot;hallNum\&quot;:%d,\&quot;hallType\&quot;:\&quot;%s\&quot;,\&quot;rowAmt\&quot;:%d,\&quot;colAmt\&quot;:%d}&quot;,
-<span class="nc" id="L162">            hall.getHallId(),</span>
-<span class="nc" id="L163">            hall.getHallType(),</span>
-<span class="nc" id="L164">            hall.getRowAmt(),</span>
-<span class="nc" id="L165">            hall.getColAmt()</span>
+<span class="fc" id="L173">            hall.getHallId(),</span>
+<span class="fc" id="L174">            hall.getHallType(),</span>
+<span class="fc" id="L175">            hall.getRowAmt(),</span>
+<span class="fc" id="L176">            hall.getColAmt()</span>
         );
     }
     
     private ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; loadBookings() {
-<span class="nc" id="L170">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(BOOKINGS_FILE);</span>
-<span class="nc" id="L171">        ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; map = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L181">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(bookingsFile);</span>
+<span class="fc" id="L182">        ConcurrentHashMap&lt;String, List&lt;SeatId&gt;&gt; map = new ConcurrentHashMap&lt;&gt;();</span>
         
-<span class="nc bnc" id="L173" title="All 2 branches missed.">        for (String line : jsonLines) {</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">        for (String line : jsonLines) {</span>
             try {
-<span class="nc" id="L175">                String key = extractString(line, &quot;key&quot;);</span>
-<span class="nc" id="L176">                String seatsStr = extractString(line, &quot;seats&quot;);</span>
+<span class="nc" id="L186">                String key = extractString(line, &quot;key&quot;);</span>
+<span class="nc" id="L187">                String seatsStr = extractString(line, &quot;seats&quot;);</span>
                 
-<span class="nc" id="L178">                List&lt;SeatId&gt; seatIds = parseSeatIds(seatsStr);</span>
-<span class="nc" id="L179">                map.put(key, seatIds);</span>
+<span class="nc" id="L189">                List&lt;SeatId&gt; seatIds = parseSeatIds(seatsStr);</span>
+<span class="nc" id="L190">                map.put(key, seatIds);</span>
                 
-<span class="nc" id="L181">            } catch (Exception e) {</span>
-<span class="nc" id="L182">                logger.log(Level.WARNING, &quot;Failed to parse booking: {0}&quot;, line);</span>
-<span class="nc" id="L183">            }</span>
-<span class="nc" id="L184">        }</span>
+<span class="nc" id="L192">            } catch (Exception e) {</span>
+<span class="nc" id="L193">                logger.log(Level.WARNING, &quot;Failed to parse booking: {0}&quot;, line);</span>
+<span class="nc" id="L194">            }</span>
+<span class="nc" id="L195">        }</span>
         
-<span class="nc" id="L186">        logger.log(Level.INFO, &quot;Loaded {0} confirmed booking records.&quot;, map.size());</span>
-<span class="nc" id="L187">        return map;</span>
+<span class="fc" id="L197">        logger.log(Level.INFO, &quot;Loaded {0} confirmed booking records.&quot;, map.size());</span>
+<span class="fc" id="L198">        return map;</span>
     }
     
     private List&lt;SeatId&gt; parseSeatIds(String seatsStr) {
-<span class="nc" id="L191">        List&lt;SeatId&gt; seatIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L202">        List&lt;SeatId&gt; seatIds = new ArrayList&lt;&gt;();</span>
         
-<span class="nc bnc" id="L193" title="All 4 branches missed.">        if (seatsStr == null || seatsStr.trim().isEmpty()) {</span>
-<span class="nc" id="L194">            return seatIds;</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">        if (seatsStr == null || seatsStr.trim().isEmpty()) {</span>
+<span class="nc" id="L205">            return seatIds;</span>
         }
         
-<span class="nc" id="L197">        String[] parts = seatsStr.split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L198" title="All 2 branches missed.">        for (String part : parts) {</span>
-<span class="nc" id="L199">            part = part.trim();</span>
-<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (part.length() &gt;= 2) {</span>
-<span class="nc" id="L201">                char row = part.charAt(0);</span>
-<span class="nc" id="L202">                int col = Integer.parseInt(part.substring(1));</span>
-<span class="nc" id="L203">                seatIds.add(new SeatId(row, col));</span>
+<span class="nc" id="L208">        String[] parts = seatsStr.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        for (String part : parts) {</span>
+<span class="nc" id="L210">            part = part.trim();</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            if (part.length() &gt;= 2) {</span>
+<span class="nc" id="L212">                char row = part.charAt(0);</span>
+<span class="nc" id="L213">                int col = Integer.parseInt(part.substring(1));</span>
+<span class="nc" id="L214">                seatIds.add(new SeatId(row, col));</span>
             }
         }
         
-<span class="nc" id="L207">        return seatIds;</span>
+<span class="nc" id="L218">        return seatIds;</span>
     }
     
     private void saveBookings() {
-<span class="nc" id="L211">        List&lt;String&gt; jsonLines = confirmedBookings.entrySet().stream()</span>
-<span class="nc" id="L212">            .map(entry -&gt; bookingToJsonString(entry.getKey(), entry.getValue()))</span>
-<span class="nc" id="L213">            .collect(Collectors.toList());</span>
+<span class="fc" id="L222">        List&lt;String&gt; jsonLines = confirmedBookings.entrySet().stream()</span>
+<span class="fc" id="L223">            .map(entry -&gt; bookingToJsonString(entry.getKey(), entry.getValue()))</span>
+<span class="fc" id="L224">            .collect(Collectors.toList());</span>
         
-<span class="nc" id="L215">        DataFileHandler.saveToJsonFile(jsonLines, BOOKINGS_FILE);</span>
-<span class="nc" id="L216">    }</span>
+<span class="fc" id="L226">        DataFileHandler.saveToJsonFile(jsonLines, bookingsFile);</span>
+<span class="fc" id="L227">    }</span>
     
     private String bookingToJsonString(String key, List&lt;SeatId&gt; seats) {
-<span class="nc" id="L219">        String seatsStr = seats.stream()</span>
-<span class="nc" id="L220">            .map(SeatId::toDisplayString)</span>
-<span class="nc" id="L221">            .collect(Collectors.joining(&quot;,&quot;));</span>
+<span class="fc" id="L230">        String seatsStr = seats.stream()</span>
+<span class="fc" id="L231">            .map(SeatId::toDisplayString)</span>
+<span class="fc" id="L232">            .collect(Collectors.joining(&quot;,&quot;));</span>
         
-<span class="nc" id="L223">        return String.format(&quot;{\&quot;key\&quot;:\&quot;%s\&quot;,\&quot;seats\&quot;:\&quot;%s\&quot;}&quot;, key, seatsStr);</span>
+<span class="fc" id="L234">        return String.format(&quot;{\&quot;key\&quot;:\&quot;%s\&quot;,\&quot;seats\&quot;:\&quot;%s\&quot;}&quot;, key, seatsStr);</span>
     }
     
     private String generateKey(Showtime showtime) {
-<span class="nc" id="L227">        return showtime.getHallId() + &quot;_&quot; + </span>
-<span class="nc" id="L228">               showtime.getDate() + &quot;_&quot; + </span>
-<span class="nc" id="L229">               showtime.time();</span>
+<span class="fc" id="L238">        return showtime.getHallId() + &quot;_&quot; + </span>
+<span class="fc" id="L239">               showtime.getDate() + &quot;_&quot; + </span>
+<span class="fc" id="L240">               showtime.time();</span>
     }
     
     private CinemaHall getHallById(int hallId) {
-<span class="nc" id="L233">        return hallList.stream()</span>
-<span class="nc bnc" id="L234" title="All 2 branches missed.">            .filter(h -&gt; h.getHallId() == hallId)</span>
-<span class="nc" id="L235">            .findFirst()</span>
-<span class="nc" id="L236">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Hall ID not found: &quot; + hallId));</span>
+<span class="fc" id="L244">        return hallList.stream()</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">            .filter(h -&gt; h.getHallId() == hallId)</span>
+<span class="fc" id="L246">            .findFirst()</span>
+<span class="pc" id="L247">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Hall ID not found: &quot; + hallId));</span>
     }
     
     @Override
     public Optional&lt;Seat&gt; findSeat(Showtime showtime, SeatId seatId) {
-<span class="nc" id="L241">        CinemaHall hall = getHallById(showtime.getHallId());</span>
+<span class="fc" id="L252">        CinemaHall hall = getHallById(showtime.getHallId());</span>
 
-<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (isValidForHall(seatId, hall)) {</span>
-<span class="nc bnc" id="L244" title="All 2 branches missed.">            String status = isSeatBooked(showtime, seatId) ? &quot;Booked&quot; : &quot;Available&quot;;</span>
-<span class="nc" id="L245">            return Optional.of(new Seat(seatId, &quot;Single&quot;, status, hall));</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        if (isValidForHall(seatId, hall)) {</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">            String status = isSeatBooked(showtime, seatId) ? &quot;Booked&quot; : &quot;Available&quot;;</span>
+<span class="fc" id="L256">            return Optional.of(new Seat(seatId, &quot;Single&quot;, status, hall));</span>
         }
-<span class="nc" id="L247">        return Optional.empty();</span>
+<span class="fc" id="L258">        return Optional.empty();</span>
     }
 
     private boolean isValidForHall(SeatId seatId, CinemaHall hall) {
-<span class="nc" id="L251">        int maxCol = hall.getMaxSeatCol(); </span>
-<span class="nc" id="L252">        char maxRow = (char) ('A' + hall.getRowAmt() - 1); </span>
+<span class="fc" id="L262">        int maxCol = hall.getMaxSeatCol(); </span>
+<span class="fc" id="L263">        char maxRow = (char) ('A' + hall.getRowAmt() - 1); </span>
         
-<span class="nc bnc" id="L254" title="All 4 branches missed.">        return seatId.getRow() &gt;= 'A' &amp;&amp; seatId.getRow() &lt;= maxRow &amp;&amp;</span>
-<span class="nc bnc" id="L255" title="All 4 branches missed.">               seatId.getColumn() &gt;= 1 &amp;&amp; seatId.getColumn() &lt;= maxCol;</span>
+<span class="pc bpc" id="L265" title="1 of 4 branches missed.">        return seatId.getRow() &gt;= 'A' &amp;&amp; seatId.getRow() &lt;= maxRow &amp;&amp;</span>
+<span class="pc bpc" id="L266" title="1 of 4 branches missed.">               seatId.getColumn() &gt;= 1 &amp;&amp; seatId.getColumn() &lt;= maxCol;</span>
     }
     
     private boolean isSeatBooked(Showtime showtime, SeatId seatId) {
-<span class="nc" id="L259">        String key = generateKey(showtime);</span>
+<span class="fc" id="L270">        String key = generateKey(showtime);</span>
         
         // Check BOTH confirmed bookings AND cart reservations
-<span class="nc" id="L262">        List&lt;SeatId&gt; confirmed = confirmedBookings.getOrDefault(key, new ArrayList&lt;&gt;());</span>
-<span class="nc" id="L263">        List&lt;SeatId&gt; cart = cartReservations.getOrDefault(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L273">        List&lt;SeatId&gt; confirmed = confirmedBookings.getOrDefault(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L274">        List&lt;SeatId&gt; cart = cartReservations.getOrDefault(key, new ArrayList&lt;&gt;());</span>
         
-<span class="nc bnc" id="L265" title="All 4 branches missed.">        return confirmed.contains(seatId) || cart.contains(seatId);</span>
+<span class="fc bfc" id="L276" title="All 4 branches covered.">        return confirmed.contains(seatId) || cart.contains(seatId);</span>
     }
 
     @Override
     public List&lt;Seat&gt; reserveSeats(Showtime showtime, List&lt;SeatId&gt; seatIds) {
-<span class="nc" id="L270">        String key = generateKey(showtime);</span>
+<span class="fc" id="L281">        String key = generateKey(showtime);</span>
         
-<span class="nc" id="L272">        logger.log(Level.INFO, &quot;Reserving seats for cart: {0}&quot;, key);</span>
+<span class="fc" id="L283">        logger.log(Level.INFO, &quot;Reserving seats for cart: {0}&quot;, key);</span>
         
         // Check conflicts with BOTH confirmed AND other carts
-<span class="nc" id="L275">        List&lt;SeatId&gt; confirmed = confirmedBookings.getOrDefault(key, new ArrayList&lt;&gt;());</span>
-<span class="nc" id="L276">        List&lt;SeatId&gt; otherCarts = cartReservations.getOrDefault(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L286">        List&lt;SeatId&gt; confirmed = confirmedBookings.getOrDefault(key, new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L287">        List&lt;SeatId&gt; otherCarts = cartReservations.getOrDefault(key, new ArrayList&lt;&gt;());</span>
         
-<span class="nc" id="L278">        List&lt;SeatId&gt; allBooked = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L279">        allBooked.addAll(confirmed);</span>
-<span class="nc" id="L280">        allBooked.addAll(otherCarts);</span>
+<span class="fc" id="L289">        List&lt;SeatId&gt; allBooked = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L290">        allBooked.addAll(confirmed);</span>
+<span class="fc" id="L291">        allBooked.addAll(otherCarts);</span>
         
-<span class="nc" id="L282">        List&lt;SeatId&gt; conflicts = seatIds.stream()</span>
-<span class="nc" id="L283">            .filter(allBooked::contains)</span>
-<span class="nc" id="L284">            .collect(Collectors.toList());</span>
+<span class="fc" id="L293">        List&lt;SeatId&gt; conflicts = seatIds.stream()</span>
+<span class="fc" id="L294">            .filter(allBooked::contains)</span>
+<span class="fc" id="L295">            .collect(Collectors.toList());</span>
 
-<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (!conflicts.isEmpty()) {</span>
-<span class="nc" id="L287">            logger.log(Level.WARNING, &quot;Seat booking conflict: {0}&quot;, conflicts);</span>
-<span class="nc" id="L288">            throw new SeatUnavailableException(&quot;Seats already booked: &quot; + conflicts);</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">        if (!conflicts.isEmpty()) {</span>
+<span class="fc" id="L298">            logger.log(Level.WARNING, &quot;Seat booking conflict: {0}&quot;, conflicts);</span>
+<span class="fc" id="L299">            throw new SeatUnavailableException(&quot;Seats already booked: &quot; + conflicts);</span>
         }
 
         // Add to CART (not confirmed bookings)
-<span class="nc" id="L292">        addToCartReservation(showtime, seatIds);</span>
+<span class="fc" id="L303">        addToCartReservation(showtime, seatIds);</span>
         
-<span class="nc" id="L294">        logger.log(Level.INFO, &quot;Successfully reserved {0} seats in cart.&quot;, seatIds.size());</span>
+<span class="fc" id="L305">        logger.log(Level.INFO, &quot;Successfully reserved {0} seats in cart.&quot;, seatIds.size());</span>
 
-<span class="nc" id="L296">        CinemaHall hall = getHallById(showtime.getHallId());</span>
-<span class="nc" id="L297">        return seatIds.stream()</span>
-<span class="nc" id="L298">            .map(id -&gt; new Seat(id, &quot;Single&quot;, &quot;Reserved&quot;, hall))</span>
-<span class="nc" id="L299">            .collect(Collectors.toList());</span>
+<span class="fc" id="L307">        CinemaHall hall = getHallById(showtime.getHallId());</span>
+<span class="fc" id="L308">        return seatIds.stream()</span>
+<span class="fc" id="L309">            .map(id -&gt; new Seat(id, &quot;Single&quot;, &quot;Reserved&quot;, hall))</span>
+<span class="fc" id="L310">            .collect(Collectors.toList());</span>
     }
     
     @Override
     public List&lt;Seat&gt; findSeatsByShowtime(Showtime showtime) {
-<span class="nc" id="L304">        List&lt;Seat&gt; allSeats = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L305">        CinemaHall hall = getHallById(showtime.getHallId());</span>
+<span class="fc" id="L315">        List&lt;Seat&gt; allSeats = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L316">        CinemaHall hall = getHallById(showtime.getHallId());</span>
         
-<span class="nc" id="L307">        char maxRow = (char) ('A' + hall.getRowAmt() - 1);</span>
-<span class="nc" id="L308">        int maxCol = hall.getMaxSeatCol();</span>
+<span class="fc" id="L318">        char maxRow = (char) ('A' + hall.getRowAmt() - 1);</span>
+<span class="fc" id="L319">        int maxCol = hall.getMaxSeatCol();</span>
 
-<span class="nc bnc" id="L310" title="All 2 branches missed.">        for (char row = 'A'; row &lt;= maxRow; row++) {</span>
-<span class="nc bnc" id="L311" title="All 2 branches missed.">            for (int col = 1; col &lt;= maxCol; col++) {</span>
-<span class="nc" id="L312">                SeatId id = new SeatId(row, col);</span>
-<span class="nc" id="L313">                boolean isBooked = isSeatBooked(showtime, id);</span>
-<span class="nc bnc" id="L314" title="All 2 branches missed.">                String status = isBooked ? &quot;Booked&quot; : &quot;Available&quot;;</span>
-<span class="nc" id="L315">                allSeats.add(new Seat(id, &quot;Single&quot;, status, hall));</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">        for (char row = 'A'; row &lt;= maxRow; row++) {</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">            for (int col = 1; col &lt;= maxCol; col++) {</span>
+<span class="fc" id="L323">                SeatId id = new SeatId(row, col);</span>
+<span class="fc" id="L324">                boolean isBooked = isSeatBooked(showtime, id);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">                String status = isBooked ? &quot;Booked&quot; : &quot;Available&quot;;</span>
+<span class="fc" id="L326">                allSeats.add(new Seat(id, &quot;Single&quot;, status, hall));</span>
             }
         }
-<span class="nc" id="L318">        return allSeats;</span>
+<span class="fc" id="L329">        return allSeats;</span>
     }
     
     private int extractInt(String json, String key) {
-<span class="nc" id="L322">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
-<span class="nc" id="L323">        int start = json.indexOf(searchKey) + searchKey.length();</span>
-<span class="nc" id="L324">        int end = json.indexOf(&quot;,&quot;, start);</span>
-<span class="nc bnc" id="L325" title="All 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
+<span class="nc" id="L333">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
+<span class="nc" id="L334">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="nc" id="L335">        int end = json.indexOf(&quot;,&quot;, start);</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
         
-<span class="nc" id="L327">        return Integer.parseInt(json.substring(start, end).trim());</span>
+<span class="nc" id="L338">        return Integer.parseInt(json.substring(start, end).trim());</span>
     }
     
     private String extractString(String json, String key) {
-<span class="nc" id="L331">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
-<span class="nc" id="L332">        int start = json.indexOf(searchKey) + searchKey.length();</span>
-<span class="nc" id="L333">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
+<span class="nc" id="L342">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
+<span class="nc" id="L343">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="nc" id="L344">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
         
-<span class="nc" id="L335">        return json.substring(start, end);</span>
+<span class="nc" id="L346">        return json.substring(start, end);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -11,42 +11,42 @@ public class SeatId {
     private final char row;
     private final int column;
     
-<span class="nc" id="L14">    public SeatId(char row, int column) {</span>
+<span class="fc" id="L14">    public SeatId(char row, int column) {</span>
         // Validation logic is encapsulated here
-<span class="nc bnc" id="L16" title="All 4 branches missed.">        if (row &lt; 'A' || row &gt; 'Z') {</span>
-<span class="nc" id="L17">            throw new IllegalArgumentException(&quot;Invalid seat row: &quot; + row);</span>
+<span class="fc bfc" id="L16" title="All 4 branches covered.">        if (row &lt; 'A' || row &gt; 'Z') {</span>
+<span class="fc" id="L17">            throw new IllegalArgumentException(&quot;Invalid seat row: &quot; + row);</span>
         }
-<span class="nc bnc" id="L19" title="All 2 branches missed.">        if (column &lt; 1) {</span>
-<span class="nc" id="L20">            throw new IllegalArgumentException(&quot;Invalid seat column: &quot; + column);</span>
+<span class="fc bfc" id="L19" title="All 2 branches covered.">        if (column &lt; 1) {</span>
+<span class="fc" id="L20">            throw new IllegalArgumentException(&quot;Invalid seat column: &quot; + column);</span>
         }
         
-<span class="nc" id="L23">        this.row = row;</span>
-<span class="nc" id="L24">        this.column = column;</span>
-<span class="nc" id="L25">    }</span>
+<span class="fc" id="L23">        this.row = row;</span>
+<span class="fc" id="L24">        this.column = column;</span>
+<span class="fc" id="L25">    }</span>
     
-<span class="nc" id="L27">    public char getRow() { return row; }</span>
-<span class="nc" id="L28">    public int getColumn() { return column; }</span>
+<span class="fc" id="L27">    public char getRow() { return row; }</span>
+<span class="fc" id="L28">    public int getColumn() { return column; }</span>
     
     public String toDisplayString() {
-<span class="nc" id="L31">        return String.valueOf(row) + column;</span>
+<span class="fc" id="L31">        return String.valueOf(row) + column;</span>
     }
 
     @Override
     public boolean equals(Object o) {
-<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (this == o) return true;</span>
-<span class="nc bnc" id="L37" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="nc" id="L38">        SeatId seatId = (SeatId) o;</span>
-<span class="nc bnc" id="L39" title="All 4 branches missed.">        return row == seatId.row &amp;&amp; column == seatId.column;</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (this == o) return true;</span>
+<span class="fc bfc" id="L37" title="All 4 branches covered.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="fc" id="L38">        SeatId seatId = (SeatId) o;</span>
+<span class="fc bfc" id="L39" title="All 4 branches covered.">        return row == seatId.row &amp;&amp; column == seatId.column;</span>
     }
 
     @Override
     public int hashCode() {
-<span class="nc" id="L44">        return Objects.hash(row, column);</span>
+<span class="fc" id="L44">        return Objects.hash(row, column);</span>
     }
     
     @Override
     public String toString() {
-<span class="nc" id="L49">        return toDisplayString();</span>
+<span class="fc" id="L49">        return toDisplayString();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

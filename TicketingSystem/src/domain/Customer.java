@@ -26,7 +26,7 @@ public class Customer {
 
     // Empty Constructor (Updated to increment ID if used, matching original)
     public Customer() {
-        assignid++;
+        this.id = assignid++;
     }
 
     // Main Constructor (Accepts HASHED password from AuthService)
@@ -113,7 +113,7 @@ public class Customer {
             c.id = id; // Override the ID assigned by the constructor
             
             return c;
-        } catch (NumberFormatException e) {
+        } catch (Exception e) {
             logger.log(Level.SEVERE, "Failed to parse JSON string: {0}. Error: {1}", new Object[]{json, e.getMessage()});
             return null;
         }

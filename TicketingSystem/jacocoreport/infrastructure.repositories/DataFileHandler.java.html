@@ -21,51 +21,51 @@ import java.util.logging.Logger;
 
 <span class="nc" id="L22">public class DataFileHandler {</span>
 
-<span class="nc" id="L24">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L24">    private static final Logger logger = LoggerSetup.getLogger();</span>
 
     // --- Customer/Payment Persistence (One JSON Object Per Line) ---
     public static void saveToJsonFile(List&lt;String&gt; jsonList, String filename) {
-<span class="nc" id="L28">        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {</span>
-<span class="nc bnc" id="L29" title="All 2 branches missed.">            for (String json : jsonList) {</span>
-<span class="nc" id="L30">                writer.write(json);</span>
-<span class="nc" id="L31">                writer.newLine();</span>
-<span class="nc" id="L32">            }</span>
-<span class="nc" id="L33">            logger.log(Level.INFO, &quot;Data saved successfully to: {0}&quot;, filename);</span>
+<span class="fc" id="L28">        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">            for (String json : jsonList) {</span>
+<span class="fc" id="L30">                writer.write(json);</span>
+<span class="fc" id="L31">                writer.newLine();</span>
+<span class="fc" id="L32">            }</span>
+<span class="fc" id="L33">            logger.log(Level.INFO, &quot;Data saved successfully to: {0}&quot;, filename);</span>
 <span class="nc" id="L34">        } catch (IOException e) {</span>
 <span class="nc" id="L35">            logger.log(Level.SEVERE, &quot;Failed to save data to file {0}: {1}&quot;, new Object[]{filename, e.getMessage()});</span>
-<span class="nc" id="L36">        }</span>
-<span class="nc" id="L37">    }</span>
+<span class="fc" id="L36">        }</span>
+<span class="fc" id="L37">    }</span>
 
     public static List&lt;String&gt; loadFromJsonFile(String filename) {
-<span class="nc" id="L40">        List&lt;String&gt; jsonList = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L41">        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {</span>
+<span class="fc" id="L40">        List&lt;String&gt; jsonList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L41">        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {</span>
             String line;
-<span class="nc bnc" id="L43" title="All 2 branches missed.">            while ((line = reader.readLine()) != null) {</span>
-<span class="nc bnc" id="L44" title="All 2 branches missed.">                if (!line.trim().isEmpty()) {</span>
-<span class="nc" id="L45">                    jsonList.add(line);</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">            while ((line = reader.readLine()) != null) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">                if (!line.trim().isEmpty()) {</span>
+<span class="fc" id="L45">                    jsonList.add(line);</span>
                 }
             }
-<span class="nc" id="L48">            logger.log(Level.INFO, &quot;Data loaded successfully from: {0}&quot;, filename);</span>
-<span class="nc" id="L49">        } catch (FileNotFoundException e) {</span>
-<span class="nc" id="L50">            logger.log(Level.WARNING, &quot;File not found: {0}. Returning empty list.&quot;, filename);</span>
+<span class="fc" id="L48">            logger.log(Level.INFO, &quot;Data loaded successfully from: {0}&quot;, filename);</span>
+<span class="fc" id="L49">        } catch (FileNotFoundException e) {</span>
+<span class="fc" id="L50">            logger.log(Level.WARNING, &quot;File not found: {0}. Returning empty list.&quot;, filename);</span>
 <span class="nc" id="L51">        } catch (IOException e) {</span>
 <span class="nc" id="L52">            logger.log(Level.SEVERE, &quot;Failed to read data from file {0}. Error: {1}&quot;, new Object[]{filename, e.getMessage()});</span>
-<span class="nc" id="L53">        }</span>
-<span class="nc" id="L54">        return jsonList;</span>
+<span class="fc" id="L53">        }</span>
+<span class="fc" id="L54">        return jsonList;</span>
     }
 
     // --- Food Inventory Loading (Single JSON Array File) ---
     private static String readEntireFile(String filename) {
-<span class="nc" id="L59">        StringBuilder content = new StringBuilder();</span>
-<span class="nc" id="L60">        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {</span>
+<span class="fc" id="L59">        StringBuilder content = new StringBuilder();</span>
+<span class="fc" id="L60">        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {</span>
             String line;
-<span class="nc bnc" id="L62" title="All 2 branches missed.">            while ((line = reader.readLine()) != null) {</span>
-<span class="nc" id="L63">                content.append(line.trim());</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">            while ((line = reader.readLine()) != null) {</span>
+<span class="fc" id="L63">                content.append(line.trim());</span>
             }
-<span class="nc" id="L65">            return content.toString();</span>
-<span class="nc" id="L66">        } catch (FileNotFoundException e) {</span>
-<span class="nc" id="L67">            logger.log(Level.WARNING, &quot;Inventory file not found: {0}.&quot;, filename);</span>
-<span class="nc" id="L68">            return null;</span>
+<span class="fc" id="L65">            return content.toString();</span>
+<span class="fc" id="L66">        } catch (FileNotFoundException e) {</span>
+<span class="fc" id="L67">            logger.log(Level.WARNING, &quot;Inventory file not found: {0}.&quot;, filename);</span>
+<span class="fc" id="L68">            return null;</span>
 <span class="nc" id="L69">        } catch (IOException e) {</span>
 <span class="nc" id="L70">            logger.log(Level.SEVERE, &quot;Error reading inventory file {0}: {1}&quot;, new Object[]{filename, e.getMessage()});</span>
 <span class="nc" id="L71">            return null;</span>
@@ -73,69 +73,69 @@ import java.util.logging.Logger;
     }
 
     public static List&lt;Map&lt;String, Object&gt;&gt; loadFoodInventoryData(String filename) {
-<span class="nc" id="L76">        List&lt;Map&lt;String, Object&gt;&gt; inventory = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L77">        String jsonContent = readEntireFile(filename);</span>
+<span class="fc" id="L76">        List&lt;Map&lt;String, Object&gt;&gt; inventory = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L77">        String jsonContent = readEntireFile(filename);</span>
 
-<span class="nc bnc" id="L79" title="All 8 branches missed.">        if (jsonContent == null || jsonContent.isEmpty() || !jsonContent.startsWith(&quot;[&quot;) || !jsonContent.endsWith(&quot;]&quot;)) {</span>
-<span class="nc" id="L80">            return inventory;</span>
+<span class="pc bpc" id="L79" title="2 of 8 branches missed.">        if (jsonContent == null || jsonContent.isEmpty() || !jsonContent.startsWith(&quot;[&quot;) || !jsonContent.endsWith(&quot;]&quot;)) {</span>
+<span class="fc" id="L80">            return inventory;</span>
         }
 
-<span class="nc" id="L83">        String arrayContent = jsonContent.substring(1, jsonContent.length() - 1);</span>
-<span class="nc" id="L84">        String[] itemStrings = arrayContent.split(&quot;},\\s*\\{&quot;);</span>
+<span class="fc" id="L83">        String arrayContent = jsonContent.substring(1, jsonContent.length() - 1);</span>
+<span class="fc" id="L84">        String[] itemStrings = arrayContent.split(&quot;},\\s*\\{&quot;);</span>
 
-<span class="nc bnc" id="L86" title="All 2 branches missed.">        for (String itemStr : itemStrings) {</span>
-<span class="nc" id="L87">            Map&lt;String, Object&gt; item = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (String itemStr : itemStrings) {</span>
+<span class="fc" id="L87">            Map&lt;String, Object&gt; item = new HashMap&lt;&gt;();</span>
 
-<span class="nc bnc" id="L89" title="All 2 branches missed.">            if (!itemStr.startsWith(&quot;{&quot;)) {</span>
-<span class="nc" id="L90">                itemStr = &quot;{&quot; + itemStr;</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (!itemStr.startsWith(&quot;{&quot;)) {</span>
+<span class="fc" id="L90">                itemStr = &quot;{&quot; + itemStr;</span>
             }
-<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (!itemStr.endsWith(&quot;}&quot;)) {</span>
-<span class="nc" id="L93">                itemStr = itemStr + &quot;}&quot;;</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if (!itemStr.endsWith(&quot;}&quot;)) {</span>
+<span class="fc" id="L93">                itemStr = itemStr + &quot;}&quot;;</span>
             }
 
             // DataFileHandler.java - loadFoodInventoryData() (Inside the loop)
             // ...
             try {
                 // Find the full string value, including the quotes, for &quot;name&quot;
-<span class="nc" id="L100">                int nameKeyStart = itemStr.indexOf(&quot;\&quot;name\&quot;&quot;);</span>
-<span class="nc" id="L101">                int nameValueStart = itemStr.indexOf(&quot;:&quot;, nameKeyStart) + 1; // Find the colon after &quot;name&quot; and move one character right</span>
+<span class="fc" id="L100">                int nameKeyStart = itemStr.indexOf(&quot;\&quot;name\&quot;&quot;);</span>
+<span class="fc" id="L101">                int nameValueStart = itemStr.indexOf(&quot;:&quot;, nameKeyStart) + 1; // Find the colon after &quot;name&quot; and move one character right</span>
 
                 // --- Core Fix ---
                 // Find the start quote of the name value
-<span class="nc" id="L105">                int quote1 = itemStr.indexOf(&quot;\&quot;&quot;, nameValueStart);</span>
-<span class="nc bnc" id="L106" title="All 2 branches missed.">                if (quote1 == -1) {</span>
-<span class="nc" id="L107">                    throw new IllegalStateException(&quot;Name value quote not found.&quot;);</span>
+<span class="fc" id="L105">                int quote1 = itemStr.indexOf(&quot;\&quot;&quot;, nameValueStart);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">                if (quote1 == -1) {</span>
+<span class="fc" id="L107">                    throw new IllegalStateException(&quot;Name value quote not found.&quot;);</span>
                 }
 
                 // Find the end quote of the name value (looking after the start quote)
-<span class="nc" id="L111">                int quote2 = itemStr.indexOf(&quot;\&quot;&quot;, quote1 + 1);</span>
-<span class="nc bnc" id="L112" title="All 2 branches missed.">                if (quote2 == -1) {</span>
+<span class="fc" id="L111">                int quote2 = itemStr.indexOf(&quot;\&quot;&quot;, quote1 + 1);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">                if (quote2 == -1) {</span>
 <span class="nc" id="L113">                    throw new IllegalStateException(&quot;Name value end quote not found.&quot;);</span>
                 }
 
                 // The name is the substring BETWEEN the two quotes.
-<span class="nc" id="L117">                String name = itemStr.substring(quote1 + 1, quote2);</span>
+<span class="fc" id="L117">                String name = itemStr.substring(quote1 + 1, quote2);</span>
                 // --- End Core Fix ---
 
                 // Extract price as before (this looks safe)
-<span class="nc" id="L121">                int priceStart = itemStr.indexOf(&quot;\&quot;price\&quot;:&quot;) + 8;</span>
-<span class="nc" id="L122">                int priceEnd = itemStr.lastIndexOf(&quot;}&quot;);</span>
-<span class="nc" id="L123">                String priceStr = itemStr.substring(priceStart, priceEnd);</span>
-<span class="nc" id="L124">                double price = Double.parseDouble(priceStr);</span>
+<span class="fc" id="L121">                int priceStart = itemStr.indexOf(&quot;\&quot;price\&quot;:&quot;) + 8;</span>
+<span class="fc" id="L122">                int priceEnd = itemStr.lastIndexOf(&quot;}&quot;);</span>
+<span class="fc" id="L123">                String priceStr = itemStr.substring(priceStart, priceEnd);</span>
+<span class="fc" id="L124">                double price = Double.parseDouble(priceStr);</span>
 
                 // We clean the name here to remove any potential hidden characters like the colon
                 // that your manual parsing might have accidentally included in the FoodService.
-<span class="nc" id="L128">                item.put(&quot;name&quot;, name.trim());</span>
-<span class="nc" id="L129">                item.put(&quot;price&quot;, price);</span>
-<span class="nc" id="L130">                inventory.add(item);</span>
+<span class="fc" id="L128">                item.put(&quot;name&quot;, name.trim());</span>
+<span class="fc" id="L129">                item.put(&quot;price&quot;, price);</span>
+<span class="fc" id="L130">                inventory.add(item);</span>
 
-<span class="nc" id="L132">            } catch (NumberFormatException | IllegalStateException e) {</span>
-<span class="nc" id="L133">                logger.log(Level.SEVERE, &quot;Failed to parse item from file &quot; + filename + &quot;: &quot; + itemStr, e);</span>
-<span class="nc" id="L134">            }</span>
+<span class="fc" id="L132">            } catch (NumberFormatException | IllegalStateException e) {</span>
+<span class="fc" id="L133">                logger.log(Level.SEVERE, &quot;Failed to parse item from file &quot; + filename + &quot;: &quot; + itemStr, e);</span>
+<span class="fc" id="L134">            }</span>
         }
 
-<span class="nc" id="L137">        logger.info(() -&gt; &quot;Successfully parsed &quot; + inventory.size() + &quot; items from food inventory file: &quot; + filename);</span>
-<span class="nc" id="L138">        return inventory;</span>
+<span class="fc" id="L137">        logger.info(() -&gt; &quot;Successfully parsed &quot; + inventory.size() + &quot; items from food inventory file: &quot; + filename);</span>
+<span class="fc" id="L138">        return inventory;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

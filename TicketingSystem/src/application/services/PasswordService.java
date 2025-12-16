@@ -1,14 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package application.services;
 
 /**
  *
  * @author zhili
  */
-// PasswordService.java - Business Logic Layer (Security)
 import application.utilities.LoggerSetup;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +23,7 @@ public class PasswordService {
             return hashedPassword;
         } catch (NoSuchAlgorithmException e) {
             logger.severe("SHA-256 algorithm not available. Cannot hash password.");
-            return password; // Fallback: return plaintext (CRITICAL SECURITY FAILURE IN REAL LIFE)
+            return password; // Fallback: return plaintext
         }
     }
 

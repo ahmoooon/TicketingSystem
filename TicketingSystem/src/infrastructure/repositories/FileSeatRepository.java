@@ -18,15 +18,26 @@ import java.util.stream.Collectors;
 
 public class FileSeatRepository implements SeatRepository {
 
-    private static final String BOOKINGS_FILE = "bookings.json";
-    private static final String HALLS_FILE = "halls.json";
+    private static final String DEFAULT_BOOKINGS_FILE = "bookings.json";
+    private static final String DEFAULT_HALLS_FILE = "halls.json";
     private static final Logger logger = LoggerSetup.getLogger();
     
+    private final String bookingsFile;
+    private final String hallsFile;
+    
     private final List<CinemaHall> hallList;
-    private ConcurrentHashMap<String, List<SeatId>> confirmedBookings; // ONLY paid bookings
-    private ConcurrentHashMap<String, List<SeatId>> cartReservations;  // Temporary cart holds
+    private ConcurrentHashMap<String, List<SeatId>> confirmedBookings;
+    private ConcurrentHashMap<String, List<SeatId>> cartReservations;
 
+    // DEFAULT CONSTRUCTOR (for production use)
     public FileSeatRepository() {
+        this(DEFAULT_BOOKINGS_FILE, DEFAULT_HALLS_FILE);
+    }
+    
+    // CONSTRUCTOR WITH CUSTOM FILES (for testing)
+    public FileSeatRepository(String bookingsFile, String hallsFile) {
+        this.bookingsFile = bookingsFile;
+        this.hallsFile = hallsFile;
         this.hallList = loadHalls();
         this.confirmedBookings = loadBookings();
         this.cartReservations = new ConcurrentHashMap<>();
@@ -69,7 +80,7 @@ public class FileSeatRepository implements SeatRepository {
             }
         }
         
-        saveBookings(); // NOW we write to file
+        saveBookings();
         logger.info("Confirmed " + seatIds.size() + " seats as paid booking: " + key);
     }
     
@@ -98,7 +109,7 @@ public class FileSeatRepository implements SeatRepository {
         logger.info("Cleared all cart reservations (" + count + " entries)");
     }
     
-    // === EXISTING METHODS (Updated) ===
+    // === EXISTING METHODS (Updated to use instance variables) ===
     
     public List<CinemaHall> getAllHalls() {
         return new ArrayList<>(hallList);
@@ -111,7 +122,7 @@ public class FileSeatRepository implements SeatRepository {
     }
     
     private List<CinemaHall> loadHalls() {
-        List<String> jsonLines = DataFileHandler.loadFromJsonFile(HALLS_FILE);
+        List<String> jsonLines = DataFileHandler.loadFromJsonFile(hallsFile);
         
         if (jsonLines.isEmpty()) {
             logger.warning("No halls found in file. Creating default halls.");
@@ -151,7 +162,7 @@ public class FileSeatRepository implements SeatRepository {
         List<String> jsonLines = defaults.stream()
             .map(this::hallToJsonString)
             .collect(Collectors.toList());
-        DataFileHandler.saveToJsonFile(jsonLines, HALLS_FILE);
+        DataFileHandler.saveToJsonFile(jsonLines, hallsFile);
         
         return defaults;
     }
@@ -167,7 +178,7 @@ public class FileSeatRepository implements SeatRepository {
     }
     
     private ConcurrentHashMap<String, List<SeatId>> loadBookings() {
-        List<String> jsonLines = DataFileHandler.loadFromJsonFile(BOOKINGS_FILE);
+        List<String> jsonLines = DataFileHandler.loadFromJsonFile(bookingsFile);
         ConcurrentHashMap<String, List<SeatId>> map = new ConcurrentHashMap<>();
         
         for (String line : jsonLines) {
@@ -212,7 +223,7 @@ public class FileSeatRepository implements SeatRepository {
             .map(entry -> bookingToJsonString(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
         
-        DataFileHandler.saveToJsonFile(jsonLines, BOOKINGS_FILE);
+        DataFileHandler.saveToJsonFile(jsonLines, bookingsFile);
     }
     
     private String bookingToJsonString(String key, List<SeatId> seats) {

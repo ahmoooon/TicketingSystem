@@ -8,14 +8,12 @@ package application.services;
  *
  * @author zhili
  */
-// AuthService.java - Business Logic Layer (Core Auth)
 import application.utilities.LoggerSetup;
 import domain.Customer;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-// Assuming imports for Customer, PasswordService, OtpService, LoggerSetup, etc.
 
 public class AuthService {
     private static final Logger logger = LoggerSetup.getLogger();
@@ -110,13 +108,6 @@ public class AuthService {
     }
     
     public static boolean isPasswordValid(String password) {
-        // Regex components:
-        // ^                   # Start of the string.
-        // (?=.*[a-zA-Z])      # Positive lookahead: must contain at least one letter.
-        // (?=.*[0-9])         # Positive lookahead: must contain at least one digit.
-        // (?=.*[^a-zA-Z0-9])  # Positive lookahead: must contain at least one symbol.
-        // .{8,16}             # Must be 8 to 16 characters long.
-        // $                   # End of the string.
         
         String regex = "^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,16}$";
         
@@ -131,7 +122,7 @@ public class AuthService {
      */
     public Customer finalizeCustomerRegistration(String name, String password) {
         String hashedPassword = passwordService.hashPassword(password);
-        // Note: The password passed here is the plaintext password from the UI
+        // The password passed here is the plaintext password from the UI
         return new Customer(name, hashedPassword); 
     }
 }

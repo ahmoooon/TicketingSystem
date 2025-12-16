@@ -14,28 +14,28 @@ import infrastructure.strategies.CashPaymentStrategy;
  *
  * @author MOON
  */
-<span class="nc" id="L17">public class PaymentService {</span>
+<span class="fc" id="L17">public class PaymentService {</span>
     public PaymentResult processPayment(PaymentRequest request){
         PaymentStrategy strategy;
         // 1. Factory Logic: Choose the Strategy
         // (This switch replaces the switch case in the old main method)
-<span class="nc bnc" id="L22" title="All 2 branches missed.">        if (request.getPaymentMethod().equalsIgnoreCase(&quot;Bank Transfer&quot;)) {</span>
-<span class="nc" id="L23">            strategy = new BankTransferStrategy(request.getBankAccountNumber());</span>
-<span class="nc bnc" id="L24" title="All 2 branches missed.">        } else if (request.getPaymentMethod().equalsIgnoreCase(&quot;Cash&quot;)) {</span>
-<span class="nc" id="L25">            strategy = new CashPaymentStrategy();</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">        if (request.getPaymentMethod().equalsIgnoreCase(&quot;Bank Transfer&quot;)) {</span>
+<span class="fc" id="L23">            strategy = new BankTransferStrategy(request.getBankAccountNumber());</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        } else if (request.getPaymentMethod().equalsIgnoreCase(&quot;Cash&quot;)) {</span>
+<span class="fc" id="L25">            strategy = new CashPaymentStrategy();</span>
         } else {
-<span class="nc" id="L27">            return new PaymentResult(false, &quot;Invalid Payment Method&quot;);</span>
+<span class="fc" id="L27">            return new PaymentResult(false, &quot;Invalid Payment Method&quot;);</span>
         }
 
         // 2. Validate using the Strategy
-<span class="nc bnc" id="L31" title="All 2 branches missed.">        if (!strategy.validate()) {</span>
-<span class="nc" id="L32">            return new PaymentResult(false, &quot;Invalid details provided (e.g., Account Number).&quot;);</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (!strategy.validate()) {</span>
+<span class="fc" id="L32">            return new PaymentResult(false, &quot;Invalid details provided (e.g., Account Number).&quot;);</span>
         }
 
         // 3. Execute Payment
-<span class="nc" id="L36">        strategy.pay(request.getTotalAmount());</span>
+<span class="fc" id="L36">        strategy.pay(request.getTotalAmount());</span>
 
-<span class="nc" id="L38">        return new PaymentResult(true, &quot;Payment successful!&quot;);</span>
+<span class="fc" id="L38">        return new PaymentResult(true, &quot;Payment successful!&quot;);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

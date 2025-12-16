@@ -13,37 +13,37 @@ import java.util.logging.Logger;
  * Handles customer management and report generation.
  */
 public class StaffService {
-<span class="nc" id="L16">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="fc" id="L16">    private static final Logger logger = LoggerSetup.getLogger();</span>
     
     private final ReportService reportService;
     private final CustomerService customerService; 
     
-<span class="nc" id="L21">    public StaffService(ReportService reportService, CustomerService customerService) {</span>
-<span class="nc" id="L22">        this.reportService = reportService;</span>
-<span class="nc" id="L23">        this.customerService = customerService;</span>
-<span class="nc" id="L24">        logger.info(&quot;StaffService initialized.&quot;);</span>
-<span class="nc" id="L25">    }</span>
+<span class="fc" id="L21">    public StaffService(ReportService reportService, CustomerService customerService) {</span>
+<span class="fc" id="L22">        this.reportService = reportService;</span>
+<span class="fc" id="L23">        this.customerService = customerService;</span>
+<span class="fc" id="L24">        logger.info(&quot;StaffService initialized.&quot;);</span>
+<span class="fc" id="L25">    }</span>
 
     // ========== TEXT REPORT METHODS (Existing) ==========
     
     public String getCustomerListReport(ArrayList&lt;Customer&gt; customer) {
-<span class="nc" id="L30">        logger.info(&quot;Retrieving Customer List Report.&quot;);</span>
-<span class="nc" id="L31">        return reportService.getCustomerListReport(customer);</span>
+<span class="fc" id="L30">        logger.info(&quot;Retrieving Customer List Report.&quot;);</span>
+<span class="fc" id="L31">        return reportService.getCustomerListReport(customer);</span>
     }
 
     public String getMoviePurchaseReport() {
-<span class="nc" id="L35">        logger.info(&quot;Retrieving Movie Purchase Report.&quot;);</span>
-<span class="nc" id="L36">        return reportService.getMoviePurchaseReport();</span>
+<span class="fc" id="L35">        logger.info(&quot;Retrieving Movie Purchase Report.&quot;);</span>
+<span class="fc" id="L36">        return reportService.getMoviePurchaseReport();</span>
     }
 
     public String getFoodPurchaseReport() {
-<span class="nc" id="L40">        logger.info(&quot;Retrieving Food Purchase Report.&quot;);</span>
-<span class="nc" id="L41">        return reportService.getFoodPurchaseReport();</span>
+<span class="fc" id="L40">        logger.info(&quot;Retrieving Food Purchase Report.&quot;);</span>
+<span class="fc" id="L41">        return reportService.getFoodPurchaseReport();</span>
     }
     
     public String getSalesSummaryReport() {
-<span class="nc" id="L45">        logger.info(&quot;Retrieving Sales Summary Report.&quot;);</span>
-<span class="nc" id="L46">        return reportService.generateSalesSummaryReport();</span>
+<span class="fc" id="L45">        logger.info(&quot;Retrieving Sales Summary Report.&quot;);</span>
+<span class="fc" id="L46">        return reportService.generateSalesSummaryReport();</span>
     }
     
     // ========== PDF EXPORT METHODS (New) ==========
@@ -57,9 +57,9 @@ public class StaffService {
      */
     public void exportCustomerListToPdf(ArrayList&lt;Customer&gt; customers, File outputFile) 
             throws IOException {
-<span class="nc" id="L60">        logger.log(Level.INFO, &quot;Exporting Customer List Report to PDF: {0}&quot;, outputFile.getName());</span>
-<span class="nc" id="L61">        reportService.exportCustomerListToPdf(customers, outputFile);</span>
-<span class="nc" id="L62">    }</span>
+<span class="fc" id="L60">        logger.log(Level.INFO, &quot;Exporting Customer List Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="fc" id="L61">        reportService.exportCustomerListToPdf(customers, outputFile);</span>
+<span class="fc" id="L62">    }</span>
     
     /**
      * Exports Movie Purchase Report to PDF file.
@@ -68,9 +68,9 @@ public class StaffService {
      * @throws IOException if PDF generation or file writing fails
      */
     public void exportMoviePurchaseToPdf(File outputFile) throws IOException {
-<span class="nc" id="L71">        logger.log(Level.INFO, &quot;Exporting Movie Purchase Report to PDF: {0}&quot;, outputFile.getName());</span>
-<span class="nc" id="L72">        reportService.exportMoviePurchaseToPdf(outputFile);</span>
-<span class="nc" id="L73">    }</span>
+<span class="fc" id="L71">        logger.log(Level.INFO, &quot;Exporting Movie Purchase Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="fc" id="L72">        reportService.exportMoviePurchaseToPdf(outputFile);</span>
+<span class="fc" id="L73">    }</span>
     
     /**
      * Exports Food Purchase Report to PDF file.
@@ -79,9 +79,9 @@ public class StaffService {
      * @throws IOException if PDF generation or file writing fails
      */
     public void exportFoodPurchaseToPdf(File outputFile) throws IOException {
-<span class="nc" id="L82">        logger.log(Level.INFO, &quot;Exporting Food Purchase Report to PDF: {0}&quot;, outputFile.getName());</span>
-<span class="nc" id="L83">        reportService.exportFoodPurchaseToPdf(outputFile);</span>
-<span class="nc" id="L84">    }</span>
+<span class="fc" id="L82">        logger.log(Level.INFO, &quot;Exporting Food Purchase Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="fc" id="L83">        reportService.exportFoodPurchaseToPdf(outputFile);</span>
+<span class="fc" id="L84">    }</span>
     
     /**
      * Exports Sales Summary Report to PDF file.
@@ -90,15 +90,15 @@ public class StaffService {
      * @throws IOException if PDF generation or file writing fails
      */
     public void exportSalesSummaryToPdf(File outputFile) throws IOException {
-<span class="nc" id="L93">        logger.log(Level.INFO, &quot;Exporting Sales Summary Report to PDF: {0}&quot;, outputFile.getName());</span>
-<span class="nc" id="L94">        reportService.exportSalesSummaryToPdf(outputFile);</span>
-<span class="nc" id="L95">    }</span>
+<span class="fc" id="L93">        logger.log(Level.INFO, &quot;Exporting Sales Summary Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="fc" id="L94">        reportService.exportSalesSummaryToPdf(outputFile);</span>
+<span class="fc" id="L95">    }</span>
     
     // ========== CUSTOMER MANAGEMENT (Existing) ==========
     
     public boolean deleteCustomerAccount(String name) {
-<span class="nc" id="L100">        logger.log(Level.INFO, &quot;Attempting to delete customer account: {0}&quot;, name);</span>
-<span class="nc" id="L101">        return customerService.deleteCustomer(name);</span>
+<span class="fc" id="L100">        logger.log(Level.INFO, &quot;Attempting to delete customer account: {0}&quot;, name);</span>
+<span class="fc" id="L101">        return customerService.deleteCustomer(name);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

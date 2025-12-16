@@ -17,35 +17,35 @@ public class Seat {
     
     // Note: Removed default constructor (less necessary for entities)
     
-<span class="nc" id="L20">    public Seat(SeatId id, String seatType, String seatStatus, CinemaHall hall){</span>
-<span class="nc" id="L21">        this.id = id;</span>
-<span class="nc" id="L22">        this.seatType = seatType;</span>
-<span class="nc" id="L23">        this.seatStatus = seatStatus;</span>
-<span class="nc" id="L24">        this.hall = hall;</span>
-<span class="nc" id="L25">    }</span>
+<span class="fc" id="L20">    public Seat(SeatId id, String seatType, String seatStatus, CinemaHall hall){</span>
+<span class="fc" id="L21">        this.id = id;</span>
+<span class="fc" id="L22">        this.seatType = seatType;</span>
+<span class="fc" id="L23">        this.seatStatus = seatStatus;</span>
+<span class="fc" id="L24">        this.hall = hall;</span>
+<span class="fc" id="L25">    }</span>
     
     // You can now access the row/col via the ID object
     public char getSeatRow(){
-<span class="nc" id="L29">        return id.getRow();</span>
+<span class="fc" id="L29">        return id.getRow();</span>
     }
     public int getSeatCol(){
-<span class="nc" id="L32">        return id.getColumn();</span>
+<span class="fc" id="L32">        return id.getColumn();</span>
     }
     
     // The main identifier getter
     public SeatId getId() {
-<span class="nc" id="L37">        return id;</span>
+<span class="fc" id="L37">        return id;</span>
     }
     
     // Existing Getters for other fields (no changes)
     public String getSeatType(){
-<span class="nc" id="L42">        return seatType;</span>
+<span class="fc" id="L42">        return seatType;</span>
     }
     public String getSeatStatus(){
-<span class="nc" id="L45">        return seatStatus;</span>
+<span class="fc" id="L45">        return seatStatus;</span>
     }
     public CinemaHall getCinemaHall(){
-<span class="nc" id="L48">        return hall;</span>
+<span class="fc" id="L48">        return hall;</span>
     }
     
     // Setters: Only include business-valid state changes. 
@@ -53,26 +53,26 @@ public class Seat {
     // The Seat ID should not change after creation.
     
     public void setSeatStatus(String seatStatus){
-<span class="nc" id="L56">        this.seatStatus = seatStatus;</span>
-<span class="nc" id="L57">    }</span>
+<span class="fc" id="L56">        this.seatStatus = seatStatus;</span>
+<span class="fc" id="L57">    }</span>
     
     // Note: Removed setSeatRow/Col/Type as they should generally be immutable or 
     // changed via a business method (e.g., upgradeSeat()).
 
     // Business Logic (Price calculation is fine here as it's directly tied to the seat's state/hall)
     public double calculatePrice() {
-<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (hall != null) {</span>
-<span class="nc" id="L65">            return hall.getBasePrice(); </span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (hall != null) {</span>
+<span class="fc" id="L65">            return hall.getBasePrice(); </span>
         }
-<span class="nc" id="L67">        return 0.0;</span>
+<span class="fc" id="L67">        return 0.0;</span>
     }
     
     @Override
     public String toString(){
-<span class="nc" id="L72">        return &quot;\nSeat Row &amp; Column    : &quot; + id.toDisplayString() +</span>
+<span class="fc" id="L72">        return &quot;\nSeat Row &amp; Column    : &quot; + id.toDisplayString() +</span>
                  &quot;\nSeat Type          : &quot; + seatType +
                  &quot;\nSeat Status        : &quot; + seatStatus +
-<span class="nc" id="L75">                 &quot;\nSeat Price         : &quot; + calculatePrice();</span>
+<span class="fc" id="L75">                 &quot;\nSeat Price         : &quot; + calculatePrice();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
