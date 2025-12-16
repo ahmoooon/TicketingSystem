@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui.views</a> &gt; <span class="el_source">PaymentView.java</span></div><h1>PaymentView.java</h1><pre class="source lang-java linenums">package presentation.gui.views;
+
+import application.dto.PaymentRequest;
+import application.dto.PaymentResult;
+import application.services.PaymentService;
+import domain.*;
+import infrastructure.repositories.PaymentRepository;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import presentation.gui.ViewManager;
+
+import java.util.ArrayList;
+import java.util.Optional;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
+// ZXing QR Code generation
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.WriterException;
+import domain.valueobjects.SeatId;
+import infrastructure.repositories.FileSeatRepository;
+import java.util.List;
+
+public class PaymentView extends BorderPane {
+    
+    private final ViewManager viewManager;
+    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
+    private final FileSeatRepository seatRepository;
+    private final ArrayList&lt;Ticket&gt; tickets;
+    private final ArrayList&lt;Food&gt; foods;
+    private final Optional&lt;Customer&gt; customer;
+    
+    private TabPane tabPane;
+    
+    public PaymentView(ViewManager viewManager, PaymentService paymentService,
+                      PaymentRepository paymentRepository, FileSeatRepository seatRepository,
+<span class="nc" id="L47">                      ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; foods, Optional&lt;Customer&gt; customer) {</span>
+<span class="nc" id="L48">        this.viewManager = viewManager;</span>
+<span class="nc" id="L49">        this.paymentService = paymentService;</span>
+<span class="nc" id="L50">        this.paymentRepository = paymentRepository;</span>
+<span class="nc" id="L51">        this.seatRepository = seatRepository; // NEW</span>
+<span class="nc" id="L52">        this.tickets = tickets;</span>
+<span class="nc" id="L53">        this.foods = foods;</span>
+<span class="nc" id="L54">        this.customer = customer;</span>
+<span class="nc" id="L55">        initializeUI();</span>
+<span class="nc" id="L56">    }</span>
+    
+    private void initializeUI() {
+<span class="nc" id="L59">        setTop(createTopBar());</span>
+        
+        // Create tabbed interface
+<span class="nc" id="L62">        tabPane = new TabPane();</span>
+<span class="nc" id="L63">        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);</span>
+        
+        // Tab 1: Make Payment
+<span class="nc" id="L66">        Tab paymentTab = new Tab(&quot;Make Payment&quot;);</span>
+<span class="nc" id="L67">        paymentTab.setContent(createPaymentPane());</span>
+        
+        // Tab 2: Payment History
+<span class="nc" id="L70">        Tab historyTab = new Tab(&quot;Payment History&quot;);</span>
+<span class="nc" id="L71">        historyTab.setContent(createHistoryPane());</span>
+        
+<span class="nc" id="L73">        tabPane.getTabs().addAll(paymentTab, historyTab);</span>
+        
+<span class="nc" id="L75">        setCenter(tabPane);</span>
+<span class="nc" id="L76">    }</span>
+    
+    private HBox createTopBar() {
+<span class="nc" id="L79">        Label titleLabel = new Label(&quot;Payment &amp; History&quot;);</span>
+<span class="nc" id="L80">        titleLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 24));</span>
+<span class="nc" id="L81">        titleLabel.setStyle(&quot;-fx-text-fill: white;&quot;);</span>
+        
+<span class="nc" id="L83">        Button backBtn = new Button(&quot;← Back to Main Menu&quot;);</span>
+<span class="nc" id="L84">        backBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;&quot;);</span>
+<span class="nc" id="L85">        backBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L86">            viewManager.showMainMenu(</span>
+<span class="nc" id="L87">                viewManager.getCurrentUser().orElse(new Customer(&quot;User&quot;, &quot;&quot;))</span>
+            );
+<span class="nc" id="L89">        });</span>
+        
+<span class="nc" id="L91">        HBox topBar = new HBox(20, titleLabel, backBtn);</span>
+<span class="nc" id="L92">        topBar.setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L93">        topBar.setPadding(new Insets(20));</span>
+<span class="nc" id="L94">        topBar.setStyle(&quot;-fx-background-color: #34495e;&quot;);</span>
+<span class="nc" id="L95">        HBox.setHgrow(titleLabel, Priority.ALWAYS);</span>
+        
+<span class="nc" id="L97">        return topBar;</span>
+    }
+    
+    // ========== TAB 1: MAKE PAYMENT ==========
+    
+    private HBox createPaymentPane() {
+<span class="nc" id="L103">        VBox receiptView = createReceiptView();</span>
+<span class="nc" id="L104">        VBox paymentForm = createPaymentForm();</span>
+        
+<span class="nc" id="L106">        HBox paymentContent = new HBox(20, receiptView, paymentForm);</span>
+<span class="nc" id="L107">        paymentContent.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L109">        return paymentContent;</span>
+    }
+    
+    private VBox createReceiptView() {
+<span class="nc" id="L113">        Label receiptTitle = new Label(&quot;Current Cart Receipt&quot;);</span>
+<span class="nc" id="L114">        receiptTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+<span class="nc" id="L116">        TextArea receiptArea = new TextArea();</span>
+<span class="nc" id="L117">        receiptArea.setEditable(false);</span>
+<span class="nc" id="L118">        receiptArea.setPrefHeight(400);</span>
+<span class="nc" id="L119">        receiptArea.setStyle(&quot;-fx-font-family: monospace;&quot;);</span>
+        
+<span class="nc" id="L121">        String receiptText = generateReceiptText(tickets, foods);</span>
+<span class="nc" id="L122">        receiptArea.setText(receiptText);</span>
+        
+<span class="nc" id="L124">        VBox receiptView = new VBox(15, receiptTitle, receiptArea);</span>
+<span class="nc" id="L125">        receiptView.setPrefWidth(450);</span>
+        
+<span class="nc" id="L127">        return receiptView;</span>
+    }
+    
+    private VBox createPaymentForm() {
+<span class="nc" id="L131">        Label formTitle = new Label(&quot;Payment Method&quot;);</span>
+<span class="nc" id="L132">        formTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+<span class="nc" id="L134">        ToggleGroup paymentMethodGroup = new ToggleGroup();</span>
+        
+<span class="nc" id="L136">        RadioButton bankRadio = new RadioButton(&quot;Bank Transfer&quot;);</span>
+<span class="nc" id="L137">        bankRadio.setToggleGroup(paymentMethodGroup);</span>
+<span class="nc" id="L138">        bankRadio.setSelected(true);</span>
+        
+<span class="nc" id="L140">        RadioButton cashRadio = new RadioButton(&quot;Cash&quot;);</span>
+<span class="nc" id="L141">        cashRadio.setToggleGroup(paymentMethodGroup);</span>
+        
+<span class="nc" id="L143">        TextField bankAccountField = new TextField();</span>
+<span class="nc" id="L144">        bankAccountField.setPromptText(&quot;9-digit account number&quot;);</span>
+<span class="nc" id="L145">        bankAccountField.setPrefWidth(250);</span>
+        
+<span class="nc" id="L147">        Label bankLabel = new Label(&quot;Bank Account:&quot;);</span>
+        
+<span class="nc" id="L149">        bankRadio.selectedProperty().addListener((obs, old, newVal) -&gt; {</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            bankLabel.setDisable(!newVal);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            bankAccountField.setDisable(!newVal);</span>
+<span class="nc" id="L152">        });</span>
+        
+<span class="nc" id="L154">        cashRadio.selectedProperty().addListener((obs, old, newVal) -&gt; {</span>
+<span class="nc" id="L155">            bankLabel.setDisable(newVal);</span>
+<span class="nc" id="L156">            bankAccountField.setDisable(newVal);</span>
+<span class="nc" id="L157">        });</span>
+        
+<span class="nc" id="L159">        Button confirmBtn = new Button(&quot;Confirm Payment&quot;);</span>
+<span class="nc" id="L160">        confirmBtn.setStyle(&quot;-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;&quot;);</span>
+<span class="nc" id="L161">        confirmBtn.setPrefWidth(250);</span>
+<span class="nc" id="L162">        confirmBtn.setPrefHeight(50);</span>
+        
+<span class="nc bnc" id="L164" title="All 4 branches missed.">        if (tickets.isEmpty() &amp;&amp; foods.isEmpty()) {</span>
+<span class="nc" id="L165">            confirmBtn.setDisable(true);</span>
+<span class="nc" id="L166">            Label emptyLabel = new Label(&quot;Cart is empty!&quot;);</span>
+<span class="nc" id="L167">            emptyLabel.setStyle(&quot;-fx-text-fill: red; -fx-font-weight: bold;&quot;);</span>
+<span class="nc" id="L168">            VBox form = new VBox(15, formTitle, emptyLabel);</span>
+<span class="nc" id="L169">            form.setPadding(new Insets(20));</span>
+<span class="nc" id="L170">            return form;</span>
+        }
+        
+<span class="nc" id="L173">        confirmBtn.setOnAction(e -&gt; {</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            String paymentMethod = bankRadio.isSelected() ? &quot;Bank Transfer&quot; : &quot;Cash&quot;;</span>
+<span class="nc" id="L175">            String bankAccount = bankAccountField.getText().trim();</span>
+            
+<span class="nc" id="L177">            double total = calculateTotal();</span>
+            
+<span class="nc" id="L179">            PaymentRequest request = new PaymentRequest(</span>
+                total, paymentMethod, bankAccount, tickets, foods, customer
+            );
+            
+<span class="nc" id="L183">            PaymentResult result = paymentService.processPayment(request);</span>
+            
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (result.isSuccess()) {</span>
+<span class="nc" id="L186">                Payment payment = new Payment(customer, tickets, foods, total, true);</span>
+                // CONFIRM BOOKINGS
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                for (Ticket ticket : tickets) {</span>
+<span class="nc" id="L189">                    List&lt;SeatId&gt; seatIds = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                    for (Seat seat : ticket.getSeat()) {</span>
+<span class="nc" id="L191">                        seatIds.add(seat.getId());</span>
+<span class="nc" id="L192">                    }</span>
+<span class="nc" id="L193">                    seatRepository.confirmCartReservation(ticket.getShowtime(), seatIds);</span>
+<span class="nc" id="L194">                }</span>
+<span class="nc" id="L195">                paymentRepository.savePayment(payment);</span>
+                
+<span class="nc" id="L197">                showInfo(&quot;Payment Successful&quot;, </span>
+<span class="nc" id="L198">                    String.format(&quot;Payment of RM%.2f completed successfully!\n\nThank you for your purchase!&quot;, total));</span>
+                
+<span class="nc" id="L200">                viewManager.clearCart();</span>
+                
+                // Refresh history tab
+<span class="nc" id="L203">                Tab historyTab = tabPane.getTabs().get(1);</span>
+<span class="nc" id="L204">                historyTab.setContent(createHistoryPane());</span>
+                
+                // Switch to history tab to show the new payment
+<span class="nc" id="L207">                tabPane.getSelectionModel().select(historyTab);</span>
+<span class="nc" id="L208">            } else {</span>
+<span class="nc" id="L209">                showError(&quot;Payment Failed&quot;, result.getMessage());</span>
+            }
+<span class="nc" id="L211">        });</span>
+        
+<span class="nc" id="L213">        VBox form = new VBox(15,</span>
+            formTitle,
+            new Label(&quot;Select Payment Method:&quot;),
+            bankRadio,
+            cashRadio,
+            new Separator(),
+            bankLabel,
+            bankAccountField,
+            new Separator(),
+            confirmBtn
+        );
+<span class="nc" id="L224">        form.setPadding(new Insets(20));</span>
+<span class="nc" id="L225">        form.setPrefWidth(350);</span>
+        
+<span class="nc" id="L227">        return form;</span>
+    }
+    
+    // ========== TAB 2: PAYMENT HISTORY ==========
+    
+    private VBox createHistoryPane() {
+<span class="nc" id="L233">        Label historyTitle = new Label(&quot;Payment History&quot;);</span>
+<span class="nc" id="L234">        historyTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 20));</span>
+        
+<span class="nc" id="L236">        ArrayList&lt;Payment&gt; history = paymentRepository.getAllPayments();</span>
+        
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        if (history.isEmpty()) {</span>
+<span class="nc" id="L239">            Label emptyLabel = new Label(&quot;No payment records found.&quot;);</span>
+<span class="nc" id="L240">            emptyLabel.setStyle(&quot;-fx-font-size: 16; -fx-text-fill: #7f8c8d;&quot;);</span>
+<span class="nc" id="L241">            VBox emptyView = new VBox(30, historyTitle, emptyLabel);</span>
+<span class="nc" id="L242">            emptyView.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L243">            emptyView.setPadding(new Insets(50));</span>
+<span class="nc" id="L244">            return emptyView;</span>
+        }
+        
+        // Create list view for payment records
+<span class="nc" id="L248">        ListView&lt;Payment&gt; paymentListView = new ListView&lt;&gt;();</span>
+<span class="nc" id="L249">        paymentListView.getItems().addAll(history);</span>
+<span class="nc" id="L250">        paymentListView.setPrefHeight(300);</span>
+        
+<span class="nc" id="L252">        paymentListView.setCellFactory(lv -&gt; new ListCell&lt;Payment&gt;() {</span>
+            @Override
+            protected void updateItem(Payment payment, boolean empty) {
+<span class="nc" id="L255">                super.updateItem(payment, empty);</span>
+<span class="nc bnc" id="L256" title="All 4 branches missed.">                if (empty || payment == null) {</span>
+<span class="nc" id="L257">                    setText(null);</span>
+<span class="nc" id="L258">                    setGraphic(null);</span>
+                } else {
+<span class="nc" id="L260">                    String customerName = payment.getCustomer()</span>
+<span class="nc" id="L261">                        .map(Customer::getName).orElse(&quot;Guest&quot;);</span>
+                    
+<span class="nc" id="L263">                    setText(String.format(</span>
+                        &quot;ID: %d | Customer: %s | Tickets: %d | Food: %d | Total: RM%.2f&quot;,
+<span class="nc" id="L265">                        payment.getPaymentID(),</span>
+                        customerName,
+<span class="nc" id="L267">                        payment.getTicketAmt(),</span>
+<span class="nc" id="L268">                        payment.getFoodQty(),</span>
+<span class="nc" id="L269">                        payment.getTotalPrice()</span>
+                    ));
+                }
+<span class="nc" id="L272">            }</span>
+        });
+        
+        // Details panel
+<span class="nc" id="L276">        VBox detailsPanel = new VBox(10);</span>
+<span class="nc" id="L277">        detailsPanel.setPadding(new Insets(15));</span>
+<span class="nc" id="L278">        detailsPanel.setStyle(&quot;-fx-border-color: #bdc3c7; -fx-border-radius: 5; -fx-background-color: white;&quot;);</span>
+<span class="nc" id="L279">        detailsPanel.setMinHeight(350);</span>
+        
+<span class="nc" id="L281">        Label detailsTitle = new Label(&quot;Select a payment to view details&quot;);</span>
+<span class="nc" id="L282">        detailsTitle.setStyle(&quot;-fx-font-size: 14; -fx-text-fill: #7f8c8d;&quot;);</span>
+<span class="nc" id="L283">        detailsPanel.getChildren().add(detailsTitle);</span>
+        
+        // Handle selection
+<span class="nc" id="L286">        paymentListView.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -&gt; {</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">            if (newVal != null) {</span>
+<span class="nc" id="L288">                detailsPanel.getChildren().clear();</span>
+<span class="nc" id="L289">                detailsPanel.getChildren().addAll(createPaymentDetails(newVal));</span>
+            }
+<span class="nc" id="L291">        });</span>
+        
+<span class="nc" id="L293">        VBox historyView = new VBox(15, </span>
+            historyTitle, 
+            new Label(&quot;Payment Records:&quot;),
+            paymentListView,
+            new Label(&quot;Details:&quot;),
+            detailsPanel
+        );
+<span class="nc" id="L300">        historyView.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L302">        return historyView;</span>
+    }
+    
+    private VBox createPaymentDetails(Payment payment) {
+<span class="nc" id="L306">        Label detailsTitle = new Label(&quot;Payment Details&quot;);</span>
+<span class="nc" id="L307">        detailsTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 16));</span>
+        
+        // Basic info
+<span class="nc" id="L310">        VBox infoBox = new VBox(5);</span>
+<span class="nc" id="L311">        infoBox.getChildren().addAll(</span>
+<span class="nc" id="L312">            new Label(&quot;Payment ID: &quot; + payment.getPaymentID()),</span>
+<span class="nc" id="L313">            new Label(&quot;Customer: &quot; + payment.getCustomer().map(Customer::getName).orElse(&quot;Guest&quot;)),</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">            new Label(&quot;Status: &quot; + (payment.getPaymentMade() ? &quot;✓ Completed&quot; : &quot;✗ Pending&quot;))</span>
+        );
+        
+        // Tickets section
+<span class="nc" id="L318">        VBox ticketsBox = new VBox(5);</span>
+<span class="nc" id="L319">        Label ticketsLabel = new Label(&quot;Tickets:&quot;);</span>
+<span class="nc" id="L320">        ticketsLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 14));</span>
+<span class="nc" id="L321">        ticketsBox.getChildren().add(ticketsLabel);</span>
+        
+<span class="nc bnc" id="L323" title="All 2 branches missed.">        if (payment.getTicket().isEmpty()) {</span>
+<span class="nc" id="L324">            ticketsBox.getChildren().add(new Label(&quot;  Total Tickets: &quot; + payment.getTicketAmt()));</span>
+        } else {
+<span class="nc bnc" id="L326" title="All 2 branches missed.">            for (Ticket t : payment.getTicket()) {</span>
+<span class="nc" id="L327">                ticketsBox.getChildren().add(new Label(String.format(</span>
+                    &quot;  • %s (%s) - %d seats - RM%.2f&quot;,
+<span class="nc" id="L329">                    t.getMovieName(), t.getSchedule(), t.getTicketAmt(), t.getTotalPrice()</span>
+                )));
+<span class="nc" id="L331">            }</span>
+        }
+        
+        // Food section
+<span class="nc" id="L335">        VBox foodBox = new VBox(5);</span>
+<span class="nc" id="L336">        Label foodLabel = new Label(&quot;Food &amp; Beverage:&quot;);</span>
+<span class="nc" id="L337">        foodLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 14));</span>
+<span class="nc" id="L338">        foodBox.getChildren().add(foodLabel);</span>
+        
+<span class="nc bnc" id="L340" title="All 2 branches missed.">        if (payment.getFood().isEmpty()) {</span>
+<span class="nc" id="L341">            foodBox.getChildren().add(new Label(&quot;  Total Food Items: &quot; + payment.getFoodQty()));</span>
+        } else {
+<span class="nc bnc" id="L343" title="All 2 branches missed.">            for (Food f : payment.getFood()) {</span>
+<span class="nc" id="L344">                foodBox.getChildren().add(new Label(String.format(</span>
+                    &quot;  • %s x%d - RM%.2f&quot;,
+<span class="nc" id="L346">                    f.getName(), f.getQty(), f.getPrice()</span>
+                )));
+<span class="nc" id="L348">            }</span>
+        }
+        
+        // Total
+<span class="nc" id="L352">        Label totalLabel = new Label(String.format(&quot;GRAND TOTAL: RM%.2f&quot;, payment.getTotalPrice()));</span>
+<span class="nc" id="L353">        totalLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 16));</span>
+<span class="nc" id="L354">        totalLabel.setStyle(&quot;-fx-text-fill: #2ecc71;&quot;);</span>
+        
+<span class="nc" id="L356">        Separator sep = new Separator();</span>
+        
+        // QR Code section (optional - uncomment if ZXing library is added)
+<span class="nc" id="L359">        VBox qrBox = createQRCodeSection(payment);</span>
+        
+<span class="nc" id="L361">        VBox details = new VBox(10,</span>
+            detailsTitle,
+            infoBox,
+            sep,
+            ticketsBox,
+            foodBox,
+            new Separator(),
+            totalLabel,
+            qrBox
+        );
+        
+<span class="nc" id="L372">        return details;</span>
+    }
+    
+    /**
+     * Creates QR code for payment receipt.
+     * Now FULLY FUNCTIONAL with ZXing library.
+     */
+    private VBox createQRCodeSection(Payment payment) {
+<span class="nc" id="L380">        VBox qrBox = new VBox(10);</span>
+<span class="nc" id="L381">        qrBox.setAlignment(Pos.CENTER);</span>
+        
+<span class="nc" id="L383">        Label qrLabel = new Label(&quot;Digital Receipt QR Code:&quot;);</span>
+<span class="nc" id="L384">        qrLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 12));</span>
+        
+        try {
+            // Generate QR code data
+<span class="nc" id="L388">            String qrData = String.format(</span>
+                &quot;YSCM CINEMA RECEIPT\n&quot; +
+                &quot;==================\n&quot; +
+                &quot;Payment ID: %d\n&quot; +
+                &quot;Customer: %s\n&quot; +
+                &quot;Tickets: %d\n&quot; +
+                &quot;Food Items: %d\n&quot; +
+                &quot;Total: RM%.2f\n&quot; +
+                &quot;==================\n&quot; +
+                &quot;Thank you for your purchase!&quot;,
+<span class="nc" id="L398">                payment.getPaymentID(),</span>
+<span class="nc" id="L399">                payment.getCustomer().map(Customer::getName).orElse(&quot;Guest&quot;),</span>
+<span class="nc" id="L400">                payment.getTicketAmt(),</span>
+<span class="nc" id="L401">                payment.getFoodQty(),</span>
+<span class="nc" id="L402">                payment.getTotalPrice()</span>
+            );
+            
+            // Generate QR code
+<span class="nc" id="L406">            QRCodeWriter qrCodeWriter = new QRCodeWriter();</span>
+<span class="nc" id="L407">            BitMatrix bitMatrix = qrCodeWriter.encode(</span>
+                qrData, 
+                BarcodeFormat.QR_CODE, 
+                200,  // Width
+                200   // Height
+            );
+            
+            // Convert to JavaFX Image
+<span class="nc" id="L415">            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();</span>
+<span class="nc" id="L416">            MatrixToImageWriter.writeToStream(bitMatrix, &quot;PNG&quot;, outputStream);</span>
+            
+<span class="nc" id="L418">            Image qrImage = new Image(new ByteArrayInputStream(outputStream.toByteArray()));</span>
+<span class="nc" id="L419">            ImageView qrImageView = new ImageView(qrImage);</span>
+<span class="nc" id="L420">            qrImageView.setFitWidth(180);</span>
+<span class="nc" id="L421">            qrImageView.setFitHeight(180);</span>
+<span class="nc" id="L422">            qrImageView.setStyle(&quot;-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 2);&quot;);</span>
+            
+            // Add instruction label
+<span class="nc" id="L425">            Label scanLabel = new Label(&quot;Scan to view receipt details&quot;);</span>
+<span class="nc" id="L426">            scanLabel.setStyle(&quot;-fx-font-size: 10; -fx-text-fill: #7f8c8d;&quot;);</span>
+            
+<span class="nc" id="L428">            qrBox.getChildren().addAll(qrLabel, qrImageView, scanLabel);</span>
+            
+<span class="nc" id="L430">        } catch (WriterException | java.io.IOException e) {</span>
+            // Fallback if QR generation fails
+<span class="nc" id="L432">            Label errorLabel = new Label(&quot;❌ QR Code generation failed&quot;);</span>
+<span class="nc" id="L433">            errorLabel.setStyle(&quot;-fx-text-fill: red; -fx-font-size: 10;&quot;);</span>
+            
+<span class="nc" id="L435">            Label errorDetails = new Label(&quot;Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L436">            errorDetails.setStyle(&quot;-fx-font-size: 9; -fx-text-fill: #95a5a6;&quot;);</span>
+            
+<span class="nc" id="L438">            qrBox.getChildren().addAll(qrLabel, errorLabel, errorDetails);</span>
+<span class="nc" id="L439">        }</span>
+        
+<span class="nc" id="L441">        return qrBox;</span>
+    }
+    
+    // ========== HELPER METHODS ==========
+    
+    private String generateReceiptText(ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; foods) {
+<span class="nc" id="L447">        StringBuilder receipt = new StringBuilder();</span>
+<span class="nc" id="L448">        receipt.append(&quot;========================================\n&quot;);</span>
+<span class="nc" id="L449">        receipt.append(&quot;         YSCM CINEMA RECEIPT\n&quot;);</span>
+<span class="nc" id="L450">        receipt.append(&quot;========================================\n\n&quot;);</span>
+        
+<span class="nc" id="L452">        double ticketTotal = 0;</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">        if (!tickets.isEmpty()) {</span>
+<span class="nc" id="L454">            receipt.append(&quot;TICKETS:\n&quot;);</span>
+<span class="nc" id="L455">            receipt.append(&quot;----------------------------------------\n&quot;);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">            for (Ticket t : tickets) {</span>
+<span class="nc" id="L457">                receipt.append(String.format(&quot;%-30s\n&quot;, t.getMovieName()));</span>
+<span class="nc" id="L458">                receipt.append(String.format(&quot;  Date: %s  Time: %s\n&quot;, t.getSchedule(), t.time()));</span>
+<span class="nc" id="L459">                receipt.append(String.format(&quot;  Qty: %d  Hall: %s\n&quot;, t.getTicketAmt(), t.getHallType()));</span>
+<span class="nc" id="L460">                receipt.append(String.format(&quot;  Price: RM%.2f\n\n&quot;, t.getTotalPrice()));</span>
+<span class="nc" id="L461">                ticketTotal += t.getTotalPrice();</span>
+<span class="nc" id="L462">            }</span>
+        }
+        
+<span class="nc" id="L465">        double foodTotal = 0;</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">        if (!foods.isEmpty()) {</span>
+<span class="nc" id="L467">            receipt.append(&quot;FOOD &amp; BEVERAGE:\n&quot;);</span>
+<span class="nc" id="L468">            receipt.append(&quot;----------------------------------------\n&quot;);</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">            for (Food f : foods) {</span>
+<span class="nc" id="L470">                receipt.append(String.format(&quot;%-25s x%d\n&quot;, f.getName(), f.getQty()));</span>
+<span class="nc" id="L471">                receipt.append(String.format(&quot;  RM%.2f\n\n&quot;, f.getPrice()));</span>
+<span class="nc" id="L472">                foodTotal += f.getPrice();</span>
+<span class="nc" id="L473">            }</span>
+        }
+        
+<span class="nc" id="L476">        receipt.append(&quot;========================================\n&quot;);</span>
+<span class="nc" id="L477">        receipt.append(String.format(&quot;Tickets Subtotal:       RM%.2f\n&quot;, ticketTotal));</span>
+<span class="nc" id="L478">        receipt.append(String.format(&quot;Food Subtotal:          RM%.2f\n&quot;, foodTotal));</span>
+<span class="nc" id="L479">        receipt.append(&quot;----------------------------------------\n&quot;);</span>
+<span class="nc" id="L480">        receipt.append(String.format(&quot;GRAND TOTAL:            RM%.2f\n&quot;, ticketTotal + foodTotal));</span>
+<span class="nc" id="L481">        receipt.append(&quot;========================================\n&quot;);</span>
+        
+<span class="nc" id="L483">        return receipt.toString();</span>
+    }
+    
+    private double calculateTotal() {
+<span class="nc" id="L487">        double total = 0;</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">        for (Ticket t : tickets) total += t.getTotalPrice();</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">        for (Food f : foods) total += f.getPrice();</span>
+<span class="nc" id="L490">        return total;</span>
+    }
+    
+    private void showError(String title, String message) {
+<span class="nc" id="L494">        Alert alert = new Alert(Alert.AlertType.ERROR);</span>
+<span class="nc" id="L495">        alert.setTitle(title);</span>
+<span class="nc" id="L496">        alert.setContentText(message);</span>
+<span class="nc" id="L497">        alert.showAndWait();</span>
+<span class="nc" id="L498">    }</span>
+    
+    private void showInfo(String title, String message) {
+<span class="nc" id="L501">        Alert alert = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L502">        alert.setTitle(title);</span>
+<span class="nc" id="L503">        alert.setContentText(message);</span>
+<span class="nc" id="L504">        alert.showAndWait();</span>
+<span class="nc" id="L505">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

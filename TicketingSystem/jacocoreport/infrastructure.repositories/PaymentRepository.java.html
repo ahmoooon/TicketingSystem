@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">infrastructure.repositories</a> &gt; <span class="el_source">PaymentRepository.java</span></div><h1>PaymentRepository.java</h1><pre class="source lang-java linenums">// src/infrastructure/repositories/PaymentRepository.java
+package infrastructure.repositories;
+
+import application.utilities.LoggerSetup;
+import domain.Customer;
+import domain.Food;
+import domain.Payment;
+import domain.Ticket;
+import domain.Movie; 
+import domain.Showtime;
+import domain.CinemaHall;
+import domain.Seat;
+import domain.valueobjects.SeatId;
+import domain.Popcorn;
+import domain.Beverage;
+import domain.HotFood;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+public class PaymentRepository {
+    private static final String PAYMENT_FILE = &quot;payment_history.json&quot;;
+<span class="nc" id="L27">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    
+    private ArrayList&lt;Payment&gt; paymentHistory;
+    
+<span class="nc" id="L31">    public PaymentRepository() {</span>
+<span class="nc" id="L32">        this.paymentHistory = loadPayments();</span>
+<span class="nc" id="L33">        syncPaymentIds();</span>
+<span class="nc" id="L34">        logger.log(Level.INFO, &quot;PaymentRepository initialized with {0} existing payments.&quot;, </span>
+<span class="nc" id="L35">                   this.paymentHistory.size());</span>
+<span class="nc" id="L36">    }</span>
+    
+    private void syncPaymentIds() {
+<span class="nc" id="L39">        int maxId = 0;</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        for (Payment p : paymentHistory) {</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">            if (p.getPaymentID() &gt; maxId) maxId = p.getPaymentID();</span>
+<span class="nc" id="L42">        }</span>
+<span class="nc" id="L43">        Payment.setLastID(maxId);</span>
+<span class="nc" id="L44">    }</span>
+    
+    // --- LOAD LOGIC ---
+    private ArrayList&lt;Payment&gt; loadPayments() {
+<span class="nc" id="L48">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(PAYMENT_FILE);</span>
+<span class="nc" id="L49">        ArrayList&lt;Payment&gt; payments = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        for (String line : jsonLines) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            if (line.trim().startsWith(&quot;{&quot;)) {</span>
+<span class="nc" id="L52">                Payment p = parsePaymentFromJson(line);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">                if (p != null) payments.add(p);</span>
+            }
+<span class="nc" id="L55">        }</span>
+<span class="nc" id="L56">        return payments;</span>
+    }
+    
+    private Payment parsePaymentFromJson(String json) {
+        try {
+<span class="nc" id="L61">            int paymentId = extractInt(json, &quot;paymentId&quot;);</span>
+<span class="nc" id="L62">            double totalAmount = extractDouble(json, &quot;totalAmount&quot;);</span>
+<span class="nc" id="L63">            String custName = extractString(json, &quot;customerName&quot;);</span>
+<span class="nc" id="L64">            Customer historyCustomer = new Customer(custName, &quot;&quot;);</span>
+            
+            // --- 1. RECONSTRUCT TICKETS WITH REAL DATA ---
+<span class="nc" id="L67">            ArrayList&lt;Ticket&gt; tickets = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L68">            String ticketArray = extractArrayString(json, &quot;tickets&quot;);</span>
+<span class="nc" id="L69">            List&lt;String&gt; ticketObjs = splitObjects(ticketArray);</span>
+            
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            for (String tJson : ticketObjs) {</span>
+                // Extract Saved Data
+<span class="nc" id="L73">                String movieName = extractString(tJson, &quot;movieName&quot;);</span>
+<span class="nc" id="L74">                String dateStr = extractString(tJson, &quot;date&quot;);</span>
+<span class="nc" id="L75">                String timeStr = extractString(tJson, &quot;time&quot;);</span>
+<span class="nc" id="L76">                String hallType = extractString(tJson, &quot;hall&quot;);</span>
+<span class="nc" id="L77">                String seatStr = extractString(tJson, &quot;seats&quot;); // e.g., &quot;A1,A2&quot;</span>
+<span class="nc" id="L78">                double price = extractDouble(tJson, &quot;price&quot;);</span>
+                
+                // Reconstruct Movie
+<span class="nc" id="L81">                Movie m = new Movie(0, movieName, 0, &quot;&quot;, &quot;&quot;);</span>
+                
+                // Reconstruct Hall (Minimal ID, but correct Type)
+<span class="nc" id="L84">                CinemaHall hall = new CinemaHall(0, hallType, 0, 0);</span>
+                
+                // Reconstruct Showtime (Parsing the date string manually is hard, 
+                // so we pass the string directly if Showtime allows, or use dummy date parts)
+                // Assuming dateStr is &quot;2023-10-25&quot;
+<span class="nc" id="L89">                String[] dateParts = dateStr.split(&quot;-&quot;);</span>
+<span class="nc" id="L90">                int year = Integer.parseInt(dateParts[0]);</span>
+<span class="nc" id="L91">                int month = Integer.parseInt(dateParts[1]);</span>
+<span class="nc" id="L92">                int day = Integer.parseInt(dateParts[2]);</span>
+                
+<span class="nc" id="L94">                Showtime s = new Showtime(m, year, month, day, timeStr, hall);</span>
+                
+                // Reconstruct Seats
+<span class="nc" id="L97">                ArrayList&lt;Seat&gt; seatList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">                if (!seatStr.isEmpty()) {</span>
+<span class="nc" id="L99">                    String[] ids = seatStr.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">                    for (String id : ids) {</span>
+                        // id is like &quot;A1&quot;
+<span class="nc" id="L102">                        char row = id.charAt(0);</span>
+<span class="nc" id="L103">                        int col = Integer.parseInt(id.substring(1));</span>
+<span class="nc" id="L104">                        seatList.add(new Seat(new SeatId(row, col), &quot;Single&quot;, &quot;Sold&quot;, hall));</span>
+                    }
+                }
+                
+                // Create Real Ticket
+<span class="nc" id="L109">                Ticket t = new Ticket(s, seatList.size(), hall, seatList);</span>
+<span class="nc" id="L110">                tickets.add(t);</span>
+<span class="nc" id="L111">            }</span>
+            
+            // --- 2. RECONSTRUCT FOOD ---
+<span class="nc" id="L114">            ArrayList&lt;Food&gt; foods = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L115">            String foodArray = extractArrayString(json, &quot;food&quot;);</span>
+<span class="nc" id="L116">            List&lt;String&gt; foodObjs = splitObjects(foodArray);</span>
+            
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            for (String fJson : foodObjs) {</span>
+<span class="nc" id="L119">                String name = extractString(fJson, &quot;name&quot;);</span>
+<span class="nc" id="L120">                int qty = extractInt(fJson, &quot;qty&quot;);</span>
+<span class="nc" id="L121">                double price = extractDouble(fJson, &quot;price&quot;);</span>
+                
+                // Use Popcorn as generic holder
+<span class="nc" id="L124">                Food f = new Popcorn();</span>
+<span class="nc" id="L125">                f.setName(name);</span>
+<span class="nc" id="L126">                f.setQty(qty);</span>
+<span class="nc" id="L127">                f.setPrice(price); </span>
+<span class="nc" id="L128">                foods.add(f);</span>
+<span class="nc" id="L129">            }</span>
+
+<span class="nc" id="L131">            Payment payment = new Payment(Optional.of(historyCustomer), tickets, foods, totalAmount, true);</span>
+<span class="nc" id="L132">            payment.setPaymentID(paymentId);</span>
+<span class="nc" id="L133">            return payment;</span>
+            
+<span class="nc" id="L135">        } catch (Exception e) {</span>
+<span class="nc" id="L136">            logger.log(Level.SEVERE, &quot;Failed to parse payment: {0}&quot;, e.getMessage());</span>
+<span class="nc" id="L137">            return null;</span>
+        }
+    }
+
+    // --- SAVE LOGIC ---
+    public void savePayment(Payment payment) {
+<span class="nc" id="L143">        paymentHistory.add(payment);</span>
+<span class="nc" id="L144">        List&lt;String&gt; lines = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">        for (Payment p : paymentHistory) {</span>
+<span class="nc" id="L146">            lines.add(paymentToJsonString(p));</span>
+<span class="nc" id="L147">        }</span>
+<span class="nc" id="L148">        DataFileHandler.saveToJsonFile(lines, PAYMENT_FILE);</span>
+<span class="nc" id="L149">    }</span>
+    
+    private String paymentToJsonString(Payment p) {
+<span class="nc" id="L152">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L153">        sb.append(&quot;{&quot;);</span>
+<span class="nc" id="L154">        sb.append(&quot;\&quot;paymentId\&quot;:&quot;).append(p.getPaymentID()).append(&quot;,&quot;);</span>
+<span class="nc" id="L155">        sb.append(&quot;\&quot;customerName\&quot;:\&quot;&quot;).append(p.getCustomer().map(Customer::getName).orElse(&quot;Guest&quot;)).append(&quot;\&quot;,&quot;);</span>
+<span class="nc" id="L156">        sb.append(&quot;\&quot;totalAmount\&quot;:&quot;).append(p.getTotalPrice()).append(&quot;,&quot;);</span>
+        
+        // SAVE TICKETS (With Date, Time, Seats)
+<span class="nc" id="L159">        sb.append(&quot;\&quot;tickets\&quot;:[&quot;);</span>
+<span class="nc" id="L160">        ArrayList&lt;Ticket&gt; tickets = p.getTicket();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        for (int i = 0; i &lt; tickets.size(); i++) {</span>
+<span class="nc" id="L162">            Ticket t = tickets.get(i);</span>
+<span class="nc" id="L163">            Showtime s = t.getShowtime();</span>
+            
+<span class="nc" id="L165">            sb.append(&quot;{&quot;);</span>
+<span class="nc" id="L166">            sb.append(&quot;\&quot;movieName\&quot;:\&quot;&quot;).append(t.getMovieName()).append(&quot;\&quot;,&quot;);</span>
+<span class="nc" id="L167">            sb.append(&quot;\&quot;date\&quot;:\&quot;&quot;).append(s.getDate().toString()).append(&quot;\&quot;,&quot;); // Saves &quot;2023-10-25&quot;</span>
+<span class="nc" id="L168">            sb.append(&quot;\&quot;time\&quot;:\&quot;&quot;).append(s.time()).append(&quot;\&quot;,&quot;);             // Saves &quot;10:00 AM&quot;</span>
+<span class="nc" id="L169">            sb.append(&quot;\&quot;hall\&quot;:\&quot;&quot;).append(t.getHallType()).append(&quot;\&quot;,&quot;);       // Saves &quot;IMAX&quot;</span>
+            
+            // Save Seats as &quot;A1,A2&quot;
+<span class="nc" id="L172">            sb.append(&quot;\&quot;seats\&quot;:\&quot;&quot;);</span>
+<span class="nc" id="L173">            ArrayList&lt;Seat&gt; seats = t.getSeat();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">            for(int j=0; j&lt;seats.size(); j++) {</span>
+<span class="nc" id="L175">                sb.append(seats.get(j).getSeatRow()).append(seats.get(j).getSeatCol());</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if(j &lt; seats.size()-1) sb.append(&quot;,&quot;);</span>
+            }
+<span class="nc" id="L178">            sb.append(&quot;\&quot;,&quot;);</span>
+            
+<span class="nc" id="L180">            sb.append(&quot;\&quot;price\&quot;:&quot;).append(t.getTotalPrice());</span>
+<span class="nc" id="L181">            sb.append(&quot;}&quot;);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            if (i &lt; tickets.size() - 1) sb.append(&quot;,&quot;);</span>
+        }
+<span class="nc" id="L184">        sb.append(&quot;],&quot;);</span>
+        
+        // SAVE FOOD (Same as before)
+<span class="nc" id="L187">        sb.append(&quot;\&quot;food\&quot;:[&quot;);</span>
+<span class="nc" id="L188">        ArrayList&lt;Food&gt; foods = p.getFood();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">        for (int i = 0; i &lt; foods.size(); i++) {</span>
+<span class="nc" id="L190">            Food f = foods.get(i);</span>
+<span class="nc" id="L191">            sb.append(&quot;{&quot;);</span>
+<span class="nc" id="L192">            sb.append(&quot;\&quot;name\&quot;:\&quot;&quot;).append(f.getName()).append(&quot;\&quot;,&quot;);</span>
+<span class="nc" id="L193">            sb.append(&quot;\&quot;qty\&quot;:&quot;).append(f.getQty()).append(&quot;,&quot;);</span>
+<span class="nc" id="L194">            sb.append(&quot;\&quot;price\&quot;:&quot;).append(f.getPrice());</span>
+<span class="nc" id="L195">            sb.append(&quot;}&quot;);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            if (i &lt; foods.size() - 1) sb.append(&quot;,&quot;);</span>
+        }
+<span class="nc" id="L198">        sb.append(&quot;]&quot;);</span>
+        
+<span class="nc" id="L200">        sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L201">        return sb.toString();</span>
+    }
+    
+    public ArrayList&lt;Payment&gt; getAllPayments() {
+<span class="nc" id="L205">        return new ArrayList&lt;&gt;(paymentHistory);</span>
+    }
+
+    // --- PARSING HELPERS (Standard) ---
+    private String extractString(String json, String key) {
+<span class="nc" id="L210">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
+<span class="nc" id="L211">        int start = json.indexOf(search);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
+<span class="nc" id="L213">        start += search.length();</span>
+<span class="nc" id="L214">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
+<span class="nc" id="L215">        return json.substring(start, end);</span>
+    }
+    
+    private int extractInt(String json, String key) {
+<span class="nc" id="L219">        String val = extractValue(json, key);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        return val.isEmpty() ? 0 : Integer.parseInt(val);</span>
+    }
+    
+    private double extractDouble(String json, String key) {
+<span class="nc" id="L224">        String val = extractValue(json, key);</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        return val.isEmpty() ? 0.0 : Double.parseDouble(val);</span>
+    }
+    
+    private String extractValue(String json, String key) {
+<span class="nc" id="L229">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
+<span class="nc" id="L230">        int start = json.indexOf(search);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
+<span class="nc" id="L232">        start += search.length();</span>
+<span class="nc" id="L233">        int endComma = json.indexOf(&quot;,&quot;, start);</span>
+<span class="nc" id="L234">        int endBrace = json.indexOf(&quot;}&quot;, start);</span>
+<span class="nc bnc" id="L235" title="All 4 branches missed.">        if (endComma == -1 &amp;&amp; endBrace == -1) return &quot;&quot;; </span>
+<span class="nc bnc" id="L236" title="All 4 branches missed.">        int end = (endComma == -1) ? endBrace : (endBrace == -1 ? endComma : Math.min(endComma, endBrace));</span>
+<span class="nc" id="L237">        return json.substring(start, end).trim();</span>
+    }
+    
+    private String extractArrayString(String json, String key) {
+<span class="nc" id="L241">        String search = &quot;\&quot;&quot; + key + &quot;\&quot;:[&quot;;</span>
+<span class="nc" id="L242">        int start = json.indexOf(search);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (start == -1) return &quot;&quot;;</span>
+<span class="nc" id="L244">        start += search.length();</span>
+<span class="nc" id="L245">        int end = json.indexOf(&quot;]&quot;, start); </span>
+<span class="nc" id="L246">        return json.substring(start, end);</span>
+    }
+    
+    private List&lt;String&gt; splitObjects(String arrayContent) {
+<span class="nc" id="L250">        List&lt;String&gt; objs = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L251">        int braceCount = 0;</span>
+<span class="nc" id="L252">        StringBuilder current = new StringBuilder();</span>
+        
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        for (char c : arrayContent.toCharArray()) {</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">            if (c == '{') braceCount++;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">            if (c == '}') braceCount--;</span>
+<span class="nc bnc" id="L257" title="All 4 branches missed.">            if (braceCount &gt; 0 || c == '}') current.append(c);</span>
+<span class="nc bnc" id="L258" title="All 6 branches missed.">            if (braceCount == 0 &amp;&amp; c == '}' &amp;&amp; current.length() &gt; 0) {</span>
+<span class="nc" id="L259">                objs.add(current.toString());</span>
+<span class="nc" id="L260">                current.setLength(0);</span>
+            }
+        }
+<span class="nc" id="L263">        return objs;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

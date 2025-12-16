@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.cli</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package presentation.cli;
+
+/**
+ *
+ * @author zhili
+ */
+// AuthController.java - Presentation Layer (I/O &amp; Flow Control)
+import application.services.AuthService;
+import application.services.CustomerService;
+import application.services.OtpService;
+import application.utilities.LoggerSetup;
+import application.utilities.Utility;
+import domain.Customer;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.logging.Logger;
+// Assuming imports for Customer, Utility, AuthService, CustomerService, OtpService, StaffController, LoggerSetup, etc.
+
+public class AuthController {
+    private final Scanner sc;
+    private final AuthService authService;
+    private final CustomerService customerService;
+    private final OtpService otpService;
+    private final StaffController staffController;
+<span class="nc" id="L29">    private static final Logger logger = LoggerSetup.getLogger();</span>
+
+<span class="nc" id="L31">    public AuthController(Scanner sc, AuthService authService, CustomerService customerService, OtpService otpService, StaffController staffController) {</span>
+<span class="nc" id="L32">        this.sc = sc;</span>
+<span class="nc" id="L33">        this.authService = authService;</span>
+<span class="nc" id="L34">        this.customerService = customerService;</span>
+<span class="nc" id="L35">        this.otpService = otpService;</span>
+<span class="nc" id="L36">        this.staffController = staffController;</span>
+<span class="nc" id="L37">    }</span>
+    
+    /**
+     * Orchestrates the top-level Login and Registration menu loop.
+     * @return true if a Customer successfully logs in; false if the program is exited.
+     */
+    public boolean startAuthFlow() {
+<span class="nc" id="L44">        int loginChoice = 0;</span>
+
+        do {
+<span class="nc" id="L47">            System.out.println(&quot;     =============================&quot;);</span>
+<span class="nc" id="L48">            System.out.println(&quot;     // Welcome to YSCM Cinema! //&quot;);</span>
+<span class="nc" id="L49">            System.out.println(&quot;     =============================&quot;);</span>
+<span class="nc" id="L50">            System.out.println(&quot;\n\t|| 1 | Login         ||\n\t|| 2 | Register      ||\n\t|| 3 | Exit program  ||\n&quot;);</span>
+<span class="nc" id="L51">            System.out.print(&quot;Choose one of the option from menu above ~ &quot;);</span>
+            
+<span class="nc" id="L53">            loginChoice = Utility.checkError(sc, 1, 3);</span>
+
+<span class="nc bnc" id="L55" title="All 4 branches missed.">            switch (loginChoice) {</span>
+                case 1 -&gt; {
+                    // Login
+<span class="nc" id="L58">                    Optional&lt;String&gt; result = handleLoginTypeSelection();</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                    if (result.isPresent()) {</span>
+<span class="nc" id="L60">                        String name = result.get();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">                        if (!name.equalsIgnoreCase(AuthService.STAFF_ID)) {</span>
+<span class="nc" id="L62">                            System.out.println(&quot;Proceeding to main menu...&quot;);</span>
+<span class="nc" id="L63">                            return true; // Customer successfully logged in</span>
+                        }
+                        // Staff was logged in, staffController handles its own loop
+                        // Execution continues the loop (do-while) after staff logs out.
+                    }
+<span class="nc" id="L68">                }</span>
+                case 2 -&gt; // Register
+<span class="nc" id="L70">                    handleRegistrationUI();</span>
+                case 3 -&gt; {
+                    // Exit program
+<span class="nc" id="L73">                    System.out.println(&quot;Exiting application...&quot;);</span>
+<span class="nc" id="L74">                    return false; // Indicates exit</span>
+                }
+            }
+<span class="nc" id="L77">        } while (true);</span>
+    }
+    
+    /**
+     * Handles the choice between Customer and Staff login.
+     * @return Optional&lt;String&gt; with the logged-in name (Customer or Staff ID), or Optional.empty().
+     */
+    private Optional&lt;String&gt; handleLoginTypeSelection() {
+<span class="nc" id="L85">        System.out.println(&quot;\n\tLogin as &gt; \n\t|| 1 | Customer      ||\n\t|| 2 | Staff         ||\n\t|| 3 | Back          ||\n&quot;);</span>
+<span class="nc" id="L86">        System.out.print(&quot;Choose one of the option from menu above ~ &quot;);</span>
+        
+<span class="nc" id="L88">        int staffOrCust = Utility.checkError(sc, 1, 3);</span>
+
+<span class="nc bnc" id="L90" title="All 3 branches missed.">        switch (staffOrCust) {</span>
+            case 1: // Customer Login
+<span class="nc" id="L92">                return handleCustomerLoginUI();</span>
+            case 2: // Staff Login
+<span class="nc" id="L94">                return handleStaffLoginUI();</span>
+            case 3: // Back
+            default:
+<span class="nc" id="L97">                return Optional.empty();</span>
+        }
+    }
+
+    /**
+     * Handles the user interaction for Customer login.
+     * Calls authenticateCustomer (returns Optional&lt;Customer&gt;) and returns the name (String).
+     * @return The name of the authenticated customer (String), or Optional.empty().
+     */
+    private Optional&lt;String&gt; handleCustomerLoginUI() {
+<span class="nc" id="L107">        System.out.println(&quot;\n----------&lt; Welcome to Customer Login &gt;----------&quot;);</span>
+
+<span class="nc" id="L109">        System.out.print(&quot;\nPlease enter your name (0 for Back): &quot;);</span>
+<span class="nc" id="L110">        String name = sc.nextLine().trim();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (name.equals(&quot;0&quot;)) return Optional.empty();</span>
+        
+<span class="nc" id="L113">        System.out.print(&quot;Please enter your 6-character password: &quot;);</span>
+<span class="nc" id="L114">        String password = sc.nextLine().trim();</span>
+        
+        // Delegate core logic to AuthService (Now returns Optional&lt;Customer&gt;)
+<span class="nc" id="L117">        Optional&lt;Customer&gt; customerResult = authService.authenticateCustomer(customerService.getCustomerList(), name, password);</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">        if (customerResult.isPresent()) {</span>
+<span class="nc" id="L120">            Customer customer = customerResult.get();</span>
+            // Store the logged-in customer object
+<span class="nc" id="L122">            customerService.setLoggedInCustomer(customer); </span>
+
+<span class="nc" id="L124">            System.out.println(&quot;\nWelcome, &quot; + customer.getName() + &quot;!&quot;);</span>
+            // Return the customer name (String) to match the expected flow
+<span class="nc" id="L126">            return Optional.of(customer.getName());</span>
+        } else {
+            // Error message covers both user not found and password incorrect
+<span class="nc" id="L129">            System.out.println(&quot;\n&lt;!&gt; Wrong username or wrong password. Please reenter. &lt;!&gt;&quot;);</span>
+<span class="nc" id="L130">            return Optional.empty();</span>
+        }
+    }
+    
+    /**
+     * Handles the user interaction for Staff login.
+     * Calls authenticateStaff (returns Optional&lt;String&gt;).
+     * @return The name of the authenticated staff (&quot;admin&quot;), or Optional.empty().
+     */
+    private Optional&lt;String&gt; handleStaffLoginUI() {
+<span class="nc" id="L140">        System.out.println(&quot;\n----------&lt; Welcome to Staff Login &gt;----------&quot;);</span>
+
+<span class="nc" id="L142">        System.out.print(&quot;\nEnter login ID (0 for Back): &quot;);</span>
+<span class="nc" id="L143">        String id = sc.nextLine().trim();</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (id.equals(&quot;0&quot;)) return Optional.empty();</span>
+        
+<span class="nc" id="L146">        System.out.print(&quot;Enter password: &quot;);</span>
+<span class="nc" id="L147">        String password = sc.nextLine().trim();</span>
+        
+        // Delegate core logic to AuthService (Calls authenticateStaff)
+<span class="nc" id="L150">        Optional&lt;String&gt; authResult = authService.authenticateStaff(id, password);</span>
+        
+<span class="nc bnc" id="L152" title="All 4 branches missed.">        if (authResult.isPresent() &amp;&amp; authResult.get().equalsIgnoreCase(AuthService.STAFF_ID)) {</span>
+<span class="nc" id="L153">            System.out.println(&quot;\nWelcome Staff!&quot;);</span>
+            
+            // Staff is logged in, transfer control to StaffController menu loop
+<span class="nc" id="L156">            staffController.staffMainMenu(customerService.getCustomerList());</span>
+            
+            // Execution returns here when the staff logs out.
+<span class="nc" id="L159">            return Optional.of(AuthService.STAFF_ID); </span>
+        } else {
+<span class="nc" id="L161">            System.out.println(&quot;\n &lt;!&gt; Invalid ID or password! &lt;!&gt;&quot;);</span>
+<span class="nc" id="L162">            return Optional.empty();</span>
+        }
+    }
+
+    /**
+     * Handles customer registration flow (I/O, validation feedback, OTP).
+     * @return An Optional containing the newly registered Customer, or Optional.empty().
+     */
+    public Optional&lt;Customer&gt; handleRegistrationUI() {
+<span class="nc" id="L171">        System.out.println(&quot;\n----------&lt; Welcome to Registration &gt;----------&quot;);</span>
+<span class="nc" id="L172">        String name = &quot;&quot;;</span>
+<span class="nc" id="L173">        String password = &quot;&quot;;</span>
+<span class="nc" id="L174">        String generatedOtp = &quot;&quot;;</span>
+
+        while(true) {
+<span class="nc" id="L177">            System.out.print(&quot;\nPlease enter your name for registration: &quot;);</span>
+<span class="nc" id="L178">            name = sc.nextLine().trim();</span>
+            
+            // --- Password Input and Validation Loop ---
+<span class="nc" id="L181">            boolean validPassword = false;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">            while (!validPassword) {</span>
+<span class="nc" id="L183">                System.out.print(&quot;Please enter a password (Must be 8-16 characters long and include at least 1 alphabet, 1 number, and 1 symbol): &quot;);</span>
+<span class="nc" id="L184">                password = sc.nextLine().trim();</span>
+                
+<span class="nc bnc" id="L186" title="All 2 branches missed.">                if (AuthService.isPasswordValid(password)) {</span>
+<span class="nc" id="L187">                    validPassword = true;</span>
+                } else {
+<span class="nc" id="L189">                    System.out.println(&quot; &lt;!&gt; Password does not meet criteria: Must be 8-16 characters long and include at least one alphabet, one number, and one symbol. Please re-enter. &lt;!&gt;&quot;);</span>
+                }
+            }
+            
+            try {
+                // Delegate validation and OTP generation to AuthService
+<span class="nc" id="L195">                generatedOtp = authService.startRegistration(customerService.getCustomerList(), name, password);</span>
+<span class="nc" id="L196">                break;</span>
+<span class="nc" id="L197">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L198">                System.out.println(&quot; &lt;!&gt; &quot; + e.getMessage() + &quot;. Please try again. &lt;!&gt;&quot;);</span>
+            }
+<span class="nc" id="L200">        }</span>
+
+<span class="nc" id="L202">        System.out.println(&quot;Generated OTP: &quot; + generatedOtp); </span>
+<span class="nc" id="L203">        System.out.print(&quot;Please enter the 6-digit OTP: &quot;);</span>
+<span class="nc" id="L204">        String enteredOtp = sc.nextLine().trim();</span>
+
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (!otpService.verifyOtp(enteredOtp, generatedOtp)) {</span>
+<span class="nc" id="L207">            System.out.println(&quot;\n &lt;!&gt; Invalid OTP. Registration failed. &lt;!&gt;&quot;);</span>
+<span class="nc" id="L208">            return Optional.empty();</span>
+        }
+        
+        // Finalize Registration (Logic handled by AuthService, persistence by CustomerService)
+<span class="nc" id="L212">        Customer newCustomer = authService.finalizeCustomerRegistration(name, password);</span>
+<span class="nc" id="L213">        customerService.addCustomer(newCustomer); // Save the new customer immediately</span>
+        
+<span class="nc" id="L215">        System.out.println(&quot;Registration successful for &quot; + newCustomer.getName() + &quot;!&quot;);</span>
+<span class="nc" id="L216">        return Optional.of(newCustomer);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ViewManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui</a> &gt; <span class="el_source">ViewManager.java</span></div><h1>ViewManager.java</h1><pre class="source lang-java linenums">package presentation.gui;
+
+import application.services.*;
+import domain.Customer;
+import domain.Food;
+import domain.Ticket;
+import infrastructure.repositories.PaymentRepository;
+import infrastructure.repositories.CartManager;
+import infrastructure.repositories.FileSeatRepository;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import presentation.gui.views.*;
+
+import java.util.ArrayList;
+import java.util.Optional;
+
+public class ViewManager {
+    
+    private final Stage primaryStage;
+    private final AuthService authService;
+    private final CustomerService customerService;
+    private final BookingService bookingService;
+    private final FoodService foodService;
+    private final PaymentService paymentService;
+    private final StaffService staffService;
+    private final PaymentRepository paymentRepository;
+    private final OtpService otpService;
+    
+    // NEW: Cart management
+    private final CartManager cartManager;
+    private final FileSeatRepository seatRepository;
+    
+<span class="nc" id="L33">    private Optional&lt;Customer&gt; currentUser = Optional.empty();</span>
+<span class="nc" id="L34">    private ArrayList&lt;Ticket&gt; ticketCart = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L35">    private ArrayList&lt;Food&gt; foodCart = new ArrayList&lt;&gt;();</span>
+    
+    public ViewManager(Stage primaryStage, AuthService authService, 
+                      CustomerService customerService, BookingService bookingService,
+                      FoodService foodService, PaymentService paymentService,
+                      StaffService staffService, PaymentRepository paymentRepository,
+                      OtpService otpService, CartManager cartManager,
+<span class="nc" id="L42">                      FileSeatRepository seatRepository) {</span>
+<span class="nc" id="L43">        this.primaryStage = primaryStage;</span>
+<span class="nc" id="L44">        this.authService = authService;</span>
+<span class="nc" id="L45">        this.customerService = customerService;</span>
+<span class="nc" id="L46">        this.bookingService = bookingService;</span>
+<span class="nc" id="L47">        this.foodService = foodService;</span>
+<span class="nc" id="L48">        this.paymentService = paymentService;</span>
+<span class="nc" id="L49">        this.staffService = staffService;</span>
+<span class="nc" id="L50">        this.paymentRepository = paymentRepository;</span>
+<span class="nc" id="L51">        this.otpService = otpService;</span>
+<span class="nc" id="L52">        this.cartManager = cartManager;</span>
+<span class="nc" id="L53">        this.seatRepository = seatRepository;</span>
+<span class="nc" id="L54">    }</span>
+    
+    public void showLoginView() {
+<span class="nc" id="L57">        LoginView loginView = new LoginView(this, authService, customerService, otpService);</span>
+<span class="nc" id="L58">        setScene(loginView, &quot;YSCM Cinema - Login&quot;);</span>
+<span class="nc" id="L59">    }</span>
+    
+    public void showMainMenu(Customer customer) {
+<span class="nc" id="L62">        this.currentUser = Optional.of(customer);</span>
+<span class="nc" id="L63">        customerService.setLoggedInCustomer(customer);</span>
+        
+        // RESTORE CART from persistence
+<span class="nc" id="L66">        CartManager.CartData savedCart = cartManager.loadCart(customer);</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (savedCart != null) {</span>
+<span class="nc" id="L68">            this.ticketCart = savedCart.tickets;</span>
+<span class="nc" id="L69">            this.foodCart = savedCart.food;</span>
+<span class="nc" id="L70">            System.out.println(&quot;✓ Restored cart: &quot; + ticketCart.size() + &quot; tickets, &quot; + foodCart.size() + &quot; food items&quot;);</span>
+        }
+        
+<span class="nc" id="L73">        MainMenuView mainMenuView = new MainMenuView(this, customer);</span>
+<span class="nc" id="L74">        setScene(mainMenuView, &quot;YSCM Cinema - Main Menu&quot;);</span>
+<span class="nc" id="L75">    }</span>
+    
+    public void showStaffMenu() {
+<span class="nc" id="L78">        StaffMenuView staffMenuView = new StaffMenuView(this, staffService, customerService);</span>
+<span class="nc" id="L79">        setScene(staffMenuView, &quot;YSCM Cinema - Staff Portal&quot;);</span>
+<span class="nc" id="L80">    }</span>
+    
+    public void showBookingView() {
+<span class="nc" id="L83">        BookingView bookingView = new BookingView(this, bookingService, ticketCart);</span>
+<span class="nc" id="L84">        setScene(bookingView, &quot;YSCM Cinema - Book Tickets&quot;);</span>
+<span class="nc" id="L85">    }</span>
+    
+    public void showFoodOrderView() {
+<span class="nc" id="L88">        FoodOrderView foodOrderView = new FoodOrderView(this, foodService, foodCart);</span>
+<span class="nc" id="L89">        setScene(foodOrderView, &quot;YSCM Cinema - Order Food &amp; Beverage&quot;);</span>
+<span class="nc" id="L90">    }</span>
+    
+    public void showPaymentView() {
+<span class="nc" id="L93">        PaymentView paymentView = new PaymentView(</span>
+            this, paymentService, paymentRepository, seatRepository,
+            ticketCart, foodCart, currentUser
+        );
+<span class="nc" id="L97">        setScene(paymentView, &quot;YSCM Cinema - Payment&quot;);</span>
+<span class="nc" id="L98">    }</span>
+    
+    private void setScene(javafx.scene.Parent root, String title) {
+<span class="nc" id="L101">        Scene scene = new Scene(root, 1200, 800);</span>
+        try {
+<span class="nc" id="L103">            scene.getStylesheets().add(</span>
+<span class="nc" id="L104">                getClass().getResource(&quot;/styles.css&quot;).toExternalForm()</span>
+            );
+<span class="nc" id="L106">        } catch (Exception e) {</span>
+            // CSS file not found, continue without styling
+<span class="nc" id="L108">        }</span>
+<span class="nc" id="L109">        primaryStage.setScene(scene);</span>
+<span class="nc" id="L110">        primaryStage.setTitle(title);</span>
+<span class="nc" id="L111">    }</span>
+    
+    /**
+     * UPDATED: Save cart after any booking/food changes
+     */
+    public void saveCurrentCart() {
+<span class="nc" id="L117">        currentUser.ifPresent(customer -&gt; {</span>
+<span class="nc" id="L118">            cartManager.saveCart(customer, ticketCart, foodCart);</span>
+<span class="nc" id="L119">        });</span>
+<span class="nc" id="L120">    }</span>
+    
+    /**
+     * UPDATED: Clear cart and release seat reservations
+     */
+    public void clearCart() {
+        // Release seat reservations
+<span class="nc" id="L127">        seatRepository.clearAllCartReservations();</span>
+        
+        // Clear cart data
+<span class="nc" id="L130">        ticketCart.clear();</span>
+<span class="nc" id="L131">        foodCart.clear();</span>
+        
+        // Remove from persistence
+<span class="nc" id="L134">        currentUser.ifPresent(cartManager::clearCart);</span>
+        
+<span class="nc" id="L136">        System.out.println(&quot;✓ Cart cleared and seats released&quot;);</span>
+<span class="nc" id="L137">    }</span>
+    
+    /**
+     * NEW: Cancel specific ticket from cart
+     */
+    public void cancelTicket(Ticket ticket) {
+        // Release seats from cart reservation
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        for (domain.Seat seat : ticket.getSeat()) {</span>
+<span class="nc" id="L145">            seatRepository.cancelCartReservation(</span>
+<span class="nc" id="L146">                ticket.getShowtime(), </span>
+<span class="nc" id="L147">                java.util.List.of(seat.getId())</span>
+            );
+<span class="nc" id="L149">        }</span>
+        
+        // Remove from cart
+<span class="nc" id="L152">        ticketCart.remove(ticket);</span>
+        
+        // Save updated cart
+<span class="nc" id="L155">        saveCurrentCart();</span>
+        
+<span class="nc" id="L157">        System.out.println(&quot;✓ Ticket cancelled and seats released&quot;);</span>
+<span class="nc" id="L158">    }</span>
+    
+    public void logout() {
+        // Save cart before logout
+<span class="nc" id="L162">        saveCurrentCart();</span>
+        
+<span class="nc" id="L164">        currentUser = Optional.empty();</span>
+<span class="nc" id="L165">        customerService.setLoggedInCustomer(null);</span>
+        
+<span class="nc" id="L167">        System.out.println(&quot;✓ Logged out (cart saved)&quot;);</span>
+        
+<span class="nc" id="L169">        showLoginView();</span>
+<span class="nc" id="L170">    }</span>
+    
+    public ArrayList&lt;Ticket&gt; getTicketCart() {
+<span class="nc" id="L173">        return ticketCart;</span>
+    }
+    
+    public ArrayList&lt;Food&gt; getFoodCart() {
+<span class="nc" id="L177">        return foodCart;</span>
+    }
+    
+    public Optional&lt;Customer&gt; getCurrentUser() {
+<span class="nc" id="L181">        return currentUser;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

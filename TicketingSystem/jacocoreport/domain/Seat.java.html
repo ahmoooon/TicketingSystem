@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Seat.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">domain</a> &gt; <span class="el_source">Seat.java</span></div><h1>Seat.java</h1><pre class="source lang-java linenums">package domain;
+
+import domain.valueobjects.SeatId; // New import
+// Assume CinemaHall is also in the 'domain' package
+
+/**
+ * Represents a single seat in a cinema hall.
+ * It is an Entity identified by its SeatId.
+ */
+public class Seat {
+    
+    // Changed primitives to Value Object
+    private final SeatId id; 
+    private String seatType;
+    private String seatStatus;
+    private CinemaHall hall;
+    
+    // Note: Removed default constructor (less necessary for entities)
+    
+<span class="nc" id="L20">    public Seat(SeatId id, String seatType, String seatStatus, CinemaHall hall){</span>
+<span class="nc" id="L21">        this.id = id;</span>
+<span class="nc" id="L22">        this.seatType = seatType;</span>
+<span class="nc" id="L23">        this.seatStatus = seatStatus;</span>
+<span class="nc" id="L24">        this.hall = hall;</span>
+<span class="nc" id="L25">    }</span>
+    
+    // You can now access the row/col via the ID object
+    public char getSeatRow(){
+<span class="nc" id="L29">        return id.getRow();</span>
+    }
+    public int getSeatCol(){
+<span class="nc" id="L32">        return id.getColumn();</span>
+    }
+    
+    // The main identifier getter
+    public SeatId getId() {
+<span class="nc" id="L37">        return id;</span>
+    }
+    
+    // Existing Getters for other fields (no changes)
+    public String getSeatType(){
+<span class="nc" id="L42">        return seatType;</span>
+    }
+    public String getSeatStatus(){
+<span class="nc" id="L45">        return seatStatus;</span>
+    }
+    public CinemaHall getCinemaHall(){
+<span class="nc" id="L48">        return hall;</span>
+    }
+    
+    // Setters: Only include business-valid state changes. 
+    // We remove setters for row/col as they are now immutable parts of the SeatId.
+    // The Seat ID should not change after creation.
+    
+    public void setSeatStatus(String seatStatus){
+<span class="nc" id="L56">        this.seatStatus = seatStatus;</span>
+<span class="nc" id="L57">    }</span>
+    
+    // Note: Removed setSeatRow/Col/Type as they should generally be immutable or 
+    // changed via a business method (e.g., upgradeSeat()).
+
+    // Business Logic (Price calculation is fine here as it's directly tied to the seat's state/hall)
+    public double calculatePrice() {
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (hall != null) {</span>
+<span class="nc" id="L65">            return hall.getBasePrice(); </span>
+        }
+<span class="nc" id="L67">        return 0.0;</span>
+    }
+    
+    @Override
+    public String toString(){
+<span class="nc" id="L72">        return &quot;\nSeat Row &amp; Column    : &quot; + id.toDisplayString() +</span>
+                 &quot;\nSeat Type          : &quot; + seatType +
+                 &quot;\nSeat Status        : &quot; + seatStatus +
+<span class="nc" id="L75">                 &quot;\nSeat Price         : &quot; + calculatePrice();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

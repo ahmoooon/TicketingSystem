@@ -12,7 +12,7 @@ import java.util.logging.SimpleFormatter;
  * @author zhili
  */
 public class LoggerSetup {
-    private static final Logger LOGGER = Logger.getLogger(presentation.cli.MainApplication.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(presentation.gui.CinemaApplication.class.getName());
 
     private LoggerSetup() {
         // Prevent instantiation

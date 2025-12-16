@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">application.services</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package application.services;
+
+/**
+ *
+ * @author zhili
+ */
+// AuthService.java - Business Logic Layer (Core Auth)
+import application.utilities.LoggerSetup;
+import domain.Customer;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+// Assuming imports for Customer, PasswordService, OtpService, LoggerSetup, etc.
+
+public class AuthService {
+<span class="fc" id="L21">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    
+    // Fixed Staff Credentials
+    public static final String STAFF_ID = &quot;admin&quot;;
+    private static final String STAFF_PASSWORD = &quot;staff&quot;; // Plaintext config
+    private final String HASHED_STAFF_PASSWORD;
+
+    private final PasswordService passwordService;
+    private final OtpService otpService;
+
+<span class="fc" id="L31">    public AuthService(PasswordService passwordService, OtpService otpService) {</span>
+<span class="fc" id="L32">        this.passwordService = passwordService;</span>
+<span class="fc" id="L33">        this.otpService = otpService;</span>
+<span class="fc" id="L34">        this.HASHED_STAFF_PASSWORD = passwordService.hashPassword(STAFF_PASSWORD);</span>
+<span class="fc" id="L35">    }</span>
+
+    /**
+     * Authenticates the Staff user.
+     * @param id The ID entered (must be STAFF_ID).
+     * @param password The plaintext password entered.
+     * @return Optional&lt;String&gt; containing STAFF_ID if successful, otherwise Optional.empty().
+     */
+    public Optional&lt;String&gt; authenticateStaff(String id, String password) {
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (!id.equalsIgnoreCase(STAFF_ID)) {</span>
+<span class="fc" id="L45">             logger.warning(&quot;Staff login failed: ID entered is not STAFF_ID.&quot;);</span>
+<span class="fc" id="L46">             return Optional.empty();</span>
+        }
+        
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (passwordService.verifyPassword(password, HASHED_STAFF_PASSWORD)) {</span>
+<span class="fc" id="L50">            logger.info(&quot;Staff logged in successfully: &quot; + STAFF_ID);</span>
+<span class="fc" id="L51">            return Optional.of(STAFF_ID);</span>
+        }
+        
+<span class="fc" id="L54">        logger.warning(() -&gt; &quot;Staff login failed: Incorrect password for ID: &quot; + id);</span>
+<span class="fc" id="L55">        return Optional.empty();</span>
+    }
+
+    /**
+     * Authenticates a Customer against stored credentials.
+     * @param customerList The list of registered customers.
+     * @param name The name entered.
+     * @param password The plaintext password entered.
+     * @return Optional&lt;Customer&gt; object if successful, otherwise Optional.empty().
+     */
+    public Optional&lt;Customer&gt; authenticateCustomer(ArrayList&lt;Customer&gt; customerList, String name, String password) {
+        // CRITICAL CHECK: Staff ID is explicitly forbidden here.
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (name.equalsIgnoreCase(STAFF_ID)) {</span>
+<span class="fc" id="L68">             logger.warning(() -&gt; &quot;Staff ID attempted customer login: &quot; + name);</span>
+<span class="fc" id="L69">             return Optional.empty();</span>
+        }
+
+<span class="fc" id="L72">        Optional&lt;Customer&gt; foundCustomer = customerList.stream()</span>
+<span class="fc" id="L73">            .filter(c -&gt; c.getName().equals(name.trim()))</span>
+<span class="fc" id="L74">            .findFirst();</span>
+
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (foundCustomer.isPresent()) {</span>
+<span class="fc" id="L77">            Customer customer = foundCustomer.get();</span>
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (passwordService.verifyPassword(password, customer.getPassword())) { </span>
+<span class="fc" id="L80">                logger.log(Level.INFO, &quot;Customer logged in successfully: {0}&quot;, customer.getName());</span>
+                // Return the actual Customer object
+<span class="fc" id="L82">                return foundCustomer; </span>
+            }
+        }
+        
+<span class="fc" id="L86">        logger.log(Level.WARNING, &quot;Customer login failed: User not found or incorrect password for {0}&quot;, name);</span>
+<span class="fc" id="L87">        return Optional.empty();</span>
+    }
+
+    // --- Registration Methods ---
+    
+    /**
+     * Performs initial validation and generates an OTP for registration.
+     * @param userList The list of registered customers.
+     * @param name The desired username.
+     * @param password The desired password (validation done in AuthController).
+     * @return The generated OTP string.
+     * @throws IllegalArgumentException if validation fails (name is taken or is STAFF_ID).
+     */
+    public String startRegistration(ArrayList&lt;Customer&gt; userList, String name, String password) throws IllegalArgumentException {
+        // Check for duplicate names (including STAFF_ID)
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (name.equalsIgnoreCase(STAFF_ID)) {</span>
+<span class="fc" id="L103">            throw new IllegalArgumentException(&quot;The name '&quot; + name + &quot;' is reserved.&quot;);</span>
+        }
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (userList.stream().anyMatch(c -&gt; c.getName().equalsIgnoreCase(name))) {</span>
+<span class="fc" id="L106">            throw new IllegalArgumentException(&quot;This name has been used.&quot;);</span>
+        }
+        
+<span class="fc" id="L109">        return otpService.generateOtp();</span>
+    }
+    
+    public static boolean isPasswordValid(String password) {
+        // Regex components:
+        // ^                   # Start of the string.
+        // (?=.*[a-zA-Z])      # Positive lookahead: must contain at least one letter.
+        // (?=.*[0-9])         # Positive lookahead: must contain at least one digit.
+        // (?=.*[^a-zA-Z0-9])  # Positive lookahead: must contain at least one symbol.
+        // .{8,16}             # Must be 8 to 16 characters long.
+        // $                   # End of the string.
+        
+<span class="fc" id="L121">        String regex = &quot;^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,16}$&quot;;</span>
+        
+<span class="fc" id="L123">        return password.matches(regex);</span>
+    }
+    
+    /**
+     * Finalizes registration by hashing the password and creating the new Customer object.
+     * @param name The customer name.
+     * @param password The plaintext password.
+     * @return The newly created Customer object.
+     */
+    public Customer finalizeCustomerRegistration(String name, String password) {
+<span class="fc" id="L133">        String hashedPassword = passwordService.hashPassword(password);</span>
+        // Note: The password passed here is the plaintext password from the UI
+<span class="fc" id="L135">        return new Customer(name, hashedPassword); </span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

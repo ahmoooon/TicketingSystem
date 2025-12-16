@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CinemaApplication.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui</a> &gt; <span class="el_source">CinemaApplication.java</span></div><h1>CinemaApplication.java</h1><pre class="source lang-java linenums">package presentation.gui;
+
+import application.services.*;
+import domain.repositories.*;
+import infrastructure.repositories.*;
+import javafx.application.Application;
+import javafx.stage.Stage;
+
+<span class="nc" id="L9">public class CinemaApplication extends Application {</span>
+    
+    private MovieRepository movieRepository;
+    private ShowtimeRepository showtimeRepository;
+    private FileSeatRepository seatRepository; // Changed to concrete type
+    private PaymentRepository paymentRepository;
+    private CartManager cartManager; // NEW
+    
+    private BookingService bookingService;
+    private CustomerService customerService;
+    private PasswordService passwordService;
+    private OtpService otpService;
+    private AuthService authService;
+    private ReportService reportService;
+    private StaffService staffService;
+    private FoodService foodService;
+    private PaymentService paymentService;
+    
+    private ViewManager viewManager;
+    
+    @Override
+    public void start(Stage primaryStage) {
+        // Initialize repositories
+<span class="nc" id="L32">        movieRepository = new FileMovieRepository();</span>
+<span class="nc" id="L33">        showtimeRepository = new FileShowtimeRepository();</span>
+<span class="nc" id="L34">        seatRepository = new FileSeatRepository(); // Concrete type for cart methods</span>
+<span class="nc" id="L35">        paymentRepository = new PaymentRepository();</span>
+<span class="nc" id="L36">        cartManager = new CartManager(); // NEW: Cart persistence</span>
+        
+        // Initialize services
+<span class="nc" id="L39">        customerService = new CustomerService();</span>
+<span class="nc" id="L40">        passwordService = new PasswordService();</span>
+<span class="nc" id="L41">        otpService = new OtpService();</span>
+<span class="nc" id="L42">        authService = new AuthService(passwordService, otpService);</span>
+<span class="nc" id="L43">        bookingService = new BookingService(movieRepository, showtimeRepository, seatRepository);</span>
+<span class="nc" id="L44">        reportService = new ReportService(paymentRepository);</span>
+<span class="nc" id="L45">        staffService = new StaffService(reportService, customerService);</span>
+<span class="nc" id="L46">        foodService = new FoodService();</span>
+<span class="nc" id="L47">        paymentService = new PaymentService();</span>
+        
+        // Initialize view manager with cart manager
+<span class="nc" id="L50">        viewManager = new ViewManager(</span>
+            primaryStage,
+            authService,
+            customerService,
+            bookingService,
+            foodService,
+            paymentService,
+            staffService,
+            paymentRepository,
+            otpService,
+            cartManager,    
+            seatRepository
+        );
+        
+<span class="nc" id="L64">        viewManager.showLoginView();</span>
+        
+<span class="nc" id="L66">        primaryStage.setTitle(&quot;YSCM Cinema Ticketing System&quot;);</span>
+<span class="nc" id="L67">        primaryStage.setWidth(1200);</span>
+<span class="nc" id="L68">        primaryStage.setHeight(800);</span>
+<span class="nc" id="L69">        primaryStage.show();</span>
+<span class="nc" id="L70">    }</span>
+    
+    public static void main(String[] args) {
+<span class="nc" id="L73">        launch(args);</span>
+<span class="nc" id="L74">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui.views</a> &gt; <span class="el_source">LoginView.java</span></div><h1>LoginView.java</h1><pre class="source lang-java linenums">package presentation.gui.views;
+
+import application.services.AuthService;
+import application.services.CustomerService;
+import application.services.OtpService;
+import domain.Customer;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import presentation.gui.ViewManager;
+
+import java.util.Optional;
+
+public class LoginView extends BorderPane {
+    
+    private final ViewManager viewManager;
+    private final AuthService authService;
+    private final CustomerService customerService;
+    private final OtpService otpService;
+    
+    public LoginView(ViewManager viewManager, AuthService authService, 
+<span class="nc" id="L25">                    CustomerService customerService, OtpService otpService) {</span>
+<span class="nc" id="L26">        this.viewManager = viewManager;</span>
+<span class="nc" id="L27">        this.authService = authService;</span>
+<span class="nc" id="L28">        this.customerService = customerService;</span>
+<span class="nc" id="L29">        this.otpService = otpService;</span>
+        
+<span class="nc" id="L31">        initializeUI();</span>
+<span class="nc" id="L32">    }</span>
+    
+    private void initializeUI() {
+<span class="nc" id="L35">        Label titleLabel = new Label(&quot;Welcome to YSCM Cinema!&quot;);</span>
+<span class="nc" id="L36">        titleLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 32));</span>
+<span class="nc" id="L37">        titleLabel.setStyle(&quot;-fx-text-fill: #2c3e50;&quot;);</span>
+        
+<span class="nc" id="L39">        Label subtitleLabel = new Label(&quot;Your Premier Movie Experience&quot;);</span>
+<span class="nc" id="L40">        subtitleLabel.setFont(Font.font(&quot;Arial&quot;, 16));</span>
+<span class="nc" id="L41">        subtitleLabel.setStyle(&quot;-fx-text-fill: #7f8c8d;&quot;);</span>
+        
+<span class="nc" id="L43">        VBox titleBox = new VBox(10, titleLabel, subtitleLabel);</span>
+<span class="nc" id="L44">        titleBox.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L45">        titleBox.setPadding(new Insets(40, 0, 20, 0));</span>
+        
+<span class="nc" id="L47">        Button customerLoginBtn = createStyledButton(&quot;Customer Login&quot;, &quot;#3498db&quot;);</span>
+<span class="nc" id="L48">        Button staffLoginBtn = createStyledButton(&quot;Staff Login&quot;, &quot;#e74c3c&quot;);</span>
+<span class="nc" id="L49">        Button registerBtn = createStyledButton(&quot;Register New Account&quot;, &quot;#2ecc71&quot;);</span>
+<span class="nc" id="L50">        Button exitBtn = createStyledButton(&quot;Exit&quot;, &quot;#95a5a6&quot;);</span>
+        
+<span class="nc" id="L52">        customerLoginBtn.setOnAction(e -&gt; showCustomerLogin());</span>
+<span class="nc" id="L53">        staffLoginBtn.setOnAction(e -&gt; showStaffLogin());</span>
+<span class="nc" id="L54">        registerBtn.setOnAction(e -&gt; showRegistration());</span>
+<span class="nc" id="L55">        exitBtn.setOnAction(e -&gt; System.exit(0));</span>
+        
+<span class="nc" id="L57">        VBox buttonBox = new VBox(15, customerLoginBtn, staffLoginBtn, registerBtn, exitBtn);</span>
+<span class="nc" id="L58">        buttonBox.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L59">        buttonBox.setPadding(new Insets(20));</span>
+<span class="nc" id="L60">        buttonBox.setMaxWidth(400);</span>
+        
+<span class="nc" id="L62">        VBox mainContainer = new VBox(30, titleBox, buttonBox);</span>
+<span class="nc" id="L63">        mainContainer.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L64">        mainContainer.setStyle(&quot;-fx-background-color: #ecf0f1;&quot;);</span>
+        
+<span class="nc" id="L66">        setCenter(mainContainer);</span>
+<span class="nc" id="L67">    }</span>
+    
+    private Button createStyledButton(String text, String color) {
+<span class="nc" id="L70">        Button button = new Button(text);</span>
+<span class="nc" id="L71">        button.setPrefWidth(300);</span>
+<span class="nc" id="L72">        button.setPrefHeight(50);</span>
+<span class="nc" id="L73">        button.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 14));</span>
+<span class="nc" id="L74">        button.setStyle(</span>
+            &quot;-fx-background-color: &quot; + color + &quot;;&quot; +
+            &quot;-fx-text-fill: white;&quot; +
+            &quot;-fx-background-radius: 8;&quot; +
+            &quot;-fx-cursor: hand;&quot;
+        );
+        
+<span class="nc" id="L81">        button.setOnMouseEntered(e -&gt; </span>
+<span class="nc" id="L82">            button.setStyle(button.getStyle() + &quot;-fx-opacity: 0.8;&quot;)</span>
+        );
+<span class="nc" id="L84">        button.setOnMouseExited(e -&gt; </span>
+<span class="nc" id="L85">            button.setStyle(button.getStyle().replace(&quot;-fx-opacity: 0.8;&quot;, &quot;&quot;))</span>
+        );
+        
+<span class="nc" id="L88">        return button;</span>
+    }
+    
+    private void showCustomerLogin() {
+<span class="nc" id="L92">        Dialog&lt;Customer&gt; dialog = new Dialog&lt;&gt;();</span>
+<span class="nc" id="L93">        dialog.setTitle(&quot;Customer Login&quot;);</span>
+<span class="nc" id="L94">        dialog.setHeaderText(&quot;Please enter your credentials&quot;);</span>
+        
+<span class="nc" id="L96">        ButtonType loginButtonType = new ButtonType(&quot;Login&quot;, ButtonBar.ButtonData.OK_DONE);</span>
+<span class="nc" id="L97">        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);</span>
+        
+<span class="nc" id="L99">        GridPane grid = new GridPane();</span>
+<span class="nc" id="L100">        grid.setHgap(10);</span>
+<span class="nc" id="L101">        grid.setVgap(10);</span>
+<span class="nc" id="L102">        grid.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L104">        TextField nameField = new TextField();</span>
+<span class="nc" id="L105">        nameField.setPromptText(&quot;Username&quot;);</span>
+<span class="nc" id="L106">        PasswordField passwordField = new PasswordField();</span>
+<span class="nc" id="L107">        passwordField.setPromptText(&quot;Password&quot;);</span>
+        
+<span class="nc" id="L109">        grid.add(new Label(&quot;Name:&quot;), 0, 0);</span>
+<span class="nc" id="L110">        grid.add(nameField, 1, 0);</span>
+<span class="nc" id="L111">        grid.add(new Label(&quot;Password:&quot;), 0, 1);</span>
+<span class="nc" id="L112">        grid.add(passwordField, 1, 1);</span>
+        
+<span class="nc" id="L114">        dialog.getDialogPane().setContent(grid);</span>
+        
+<span class="nc" id="L116">        dialog.setResultConverter(dialogButton -&gt; {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            if (dialogButton == loginButtonType) {</span>
+<span class="nc" id="L118">                String name = nameField.getText().trim();</span>
+<span class="nc" id="L119">                String password = passwordField.getText().trim();</span>
+                
+<span class="nc" id="L121">                Optional&lt;Customer&gt; result = authService.authenticateCustomer(</span>
+<span class="nc" id="L122">                    customerService.getCustomerList(), name, password</span>
+                );
+                
+<span class="nc bnc" id="L125" title="All 2 branches missed.">                if (result.isPresent()) {</span>
+<span class="nc" id="L126">                    return result.get();</span>
+                } else {
+<span class="nc" id="L128">                    showError(&quot;Login Failed&quot;, &quot;Invalid username or password&quot;);</span>
+<span class="nc" id="L129">                    return null;</span>
+                }
+            }
+<span class="nc" id="L132">            return null;</span>
+        });
+        
+<span class="nc" id="L135">        Optional&lt;Customer&gt; result = dialog.showAndWait();</span>
+<span class="nc" id="L136">        result.ifPresent(customer -&gt; viewManager.showMainMenu(customer));</span>
+<span class="nc" id="L137">    }</span>
+    
+    private void showStaffLogin() {
+<span class="nc" id="L140">        Dialog&lt;Boolean&gt; dialog = new Dialog&lt;&gt;();</span>
+<span class="nc" id="L141">        dialog.setTitle(&quot;Staff Login&quot;);</span>
+<span class="nc" id="L142">        dialog.setHeaderText(&quot;Please enter staff credentials&quot;);</span>
+        
+<span class="nc" id="L144">        ButtonType loginButtonType = new ButtonType(&quot;Login&quot;, ButtonBar.ButtonData.OK_DONE);</span>
+<span class="nc" id="L145">        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);</span>
+        
+<span class="nc" id="L147">        GridPane grid = new GridPane();</span>
+<span class="nc" id="L148">        grid.setHgap(10);</span>
+<span class="nc" id="L149">        grid.setVgap(10);</span>
+<span class="nc" id="L150">        grid.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L152">        TextField idField = new TextField();</span>
+<span class="nc" id="L153">        idField.setPromptText(&quot;Staff ID&quot;);</span>
+<span class="nc" id="L154">        PasswordField passwordField = new PasswordField();</span>
+<span class="nc" id="L155">        passwordField.setPromptText(&quot;Password&quot;);</span>
+        
+<span class="nc" id="L157">        grid.add(new Label(&quot;ID:&quot;), 0, 0);</span>
+<span class="nc" id="L158">        grid.add(idField, 1, 0);</span>
+<span class="nc" id="L159">        grid.add(new Label(&quot;Password:&quot;), 0, 1);</span>
+<span class="nc" id="L160">        grid.add(passwordField, 1, 1);</span>
+        
+<span class="nc" id="L162">        dialog.getDialogPane().setContent(grid);</span>
+        
+<span class="nc" id="L164">        dialog.setResultConverter(dialogButton -&gt; {</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">            if (dialogButton == loginButtonType) {</span>
+<span class="nc" id="L166">                String id = idField.getText().trim();</span>
+<span class="nc" id="L167">                String password = passwordField.getText().trim();</span>
+                
+<span class="nc" id="L169">                Optional&lt;String&gt; result = authService.authenticateStaff(id, password);</span>
+                
+<span class="nc bnc" id="L171" title="All 2 branches missed.">                if (result.isPresent()) {</span>
+<span class="nc" id="L172">                    return true;</span>
+                } else {
+<span class="nc" id="L174">                    showError(&quot;Login Failed&quot;, &quot;Invalid staff ID or password&quot;);</span>
+<span class="nc" id="L175">                    return false;</span>
+                }
+            }
+<span class="nc" id="L178">            return false;</span>
+        });
+        
+<span class="nc" id="L181">        Optional&lt;Boolean&gt; result = dialog.showAndWait();</span>
+<span class="nc bnc" id="L182" title="All 4 branches missed.">        if (result.isPresent() &amp;&amp; result.get()) {</span>
+<span class="nc" id="L183">            viewManager.showStaffMenu();</span>
+        }
+<span class="nc" id="L185">    }</span>
+    
+    private void showRegistration() {
+<span class="nc" id="L188">        Dialog&lt;Customer&gt; dialog = new Dialog&lt;&gt;();</span>
+<span class="nc" id="L189">        dialog.setTitle(&quot;Registration&quot;);</span>
+<span class="nc" id="L190">        dialog.setHeaderText(&quot;Create a new account&quot;);</span>
+        
+<span class="nc" id="L192">        ButtonType registerButtonType = new ButtonType(&quot;Register&quot;, ButtonBar.ButtonData.OK_DONE);</span>
+<span class="nc" id="L193">        dialog.getDialogPane().getButtonTypes().addAll(registerButtonType, ButtonType.CANCEL);</span>
+        
+<span class="nc" id="L195">        GridPane grid = new GridPane();</span>
+<span class="nc" id="L196">        grid.setHgap(10);</span>
+<span class="nc" id="L197">        grid.setVgap(10);</span>
+<span class="nc" id="L198">        grid.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L200">        TextField nameField = new TextField();</span>
+<span class="nc" id="L201">        nameField.setPromptText(&quot;Username&quot;);</span>
+<span class="nc" id="L202">        PasswordField passwordField = new PasswordField();</span>
+<span class="nc" id="L203">        passwordField.setPromptText(&quot;Password (8-16 chars, 1 letter, 1 number, 1 symbol)&quot;);</span>
+<span class="nc" id="L204">        TextField otpField = new TextField();</span>
+<span class="nc" id="L205">        otpField.setPromptText(&quot;Enter OTP&quot;);</span>
+<span class="nc" id="L206">        otpField.setDisable(true);</span>
+        
+<span class="nc" id="L208">        Label generatedOtpLabel = new Label();</span>
+<span class="nc" id="L209">        generatedOtpLabel.setStyle(&quot;-fx-text-fill: #27ae60; -fx-font-weight: bold;&quot;);</span>
+        
+<span class="nc" id="L211">        Button generateOtpBtn = new Button(&quot;Generate OTP&quot;);</span>
+<span class="nc" id="L212">        generateOtpBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L213">            String name = nameField.getText().trim();</span>
+<span class="nc" id="L214">            String password = passwordField.getText().trim();</span>
+            
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (!AuthService.isPasswordValid(password)) {</span>
+<span class="nc" id="L217">                showError(&quot;Invalid Password&quot;, </span>
+                    &quot;Password must be 8-16 characters with at least 1 letter, 1 number, and 1 symbol&quot;);
+<span class="nc" id="L219">                return;</span>
+            }
+            
+            try {
+<span class="nc" id="L223">                String otp = authService.startRegistration(</span>
+<span class="nc" id="L224">                    customerService.getCustomerList(), name, password</span>
+                );
+<span class="nc" id="L226">                generatedOtpLabel.setText(&quot;Your OTP: &quot; + otp);</span>
+<span class="nc" id="L227">                otpField.setDisable(false);</span>
+<span class="nc" id="L228">            } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L229">                showError(&quot;Registration Error&quot;, ex.getMessage());</span>
+<span class="nc" id="L230">            }</span>
+<span class="nc" id="L231">        });</span>
+        
+<span class="nc" id="L233">        grid.add(new Label(&quot;Name:&quot;), 0, 0);</span>
+<span class="nc" id="L234">        grid.add(nameField, 1, 0);</span>
+<span class="nc" id="L235">        grid.add(new Label(&quot;Password:&quot;), 0, 1);</span>
+<span class="nc" id="L236">        grid.add(passwordField, 1, 1);</span>
+<span class="nc" id="L237">        grid.add(generateOtpBtn, 1, 2);</span>
+<span class="nc" id="L238">        grid.add(generatedOtpLabel, 1, 3);</span>
+<span class="nc" id="L239">        grid.add(new Label(&quot;OTP:&quot;), 0, 4);</span>
+<span class="nc" id="L240">        grid.add(otpField, 1, 4);</span>
+        
+<span class="nc" id="L242">        dialog.getDialogPane().setContent(grid);</span>
+        
+<span class="nc" id="L244">        dialog.setResultConverter(dialogButton -&gt; {</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (dialogButton == registerButtonType) {</span>
+<span class="nc" id="L246">                String enteredOtp = otpField.getText().trim();</span>
+<span class="nc" id="L247">                String generatedOtp = generatedOtpLabel.getText().replace(&quot;Your OTP: &quot;, &quot;&quot;);</span>
+                
+<span class="nc bnc" id="L249" title="All 2 branches missed.">                if (otpService.verifyOtp(enteredOtp, generatedOtp)) {</span>
+<span class="nc" id="L250">                    Customer newCustomer = authService.finalizeCustomerRegistration(</span>
+<span class="nc" id="L251">                        nameField.getText().trim(), </span>
+<span class="nc" id="L252">                        passwordField.getText().trim()</span>
+                    );
+<span class="nc" id="L254">                    customerService.addCustomer(newCustomer);</span>
+<span class="nc" id="L255">                    showInfo(&quot;Success&quot;, &quot;Registration successful!&quot;);</span>
+<span class="nc" id="L256">                    return newCustomer;</span>
+                } else {
+<span class="nc" id="L258">                    showError(&quot;Invalid OTP&quot;, &quot;The OTP you entered is incorrect&quot;);</span>
+<span class="nc" id="L259">                    return null;</span>
+                }
+            }
+<span class="nc" id="L262">            return null;</span>
+        });
+        
+<span class="nc" id="L265">        dialog.showAndWait();</span>
+<span class="nc" id="L266">    }</span>
+    
+    private void showError(String title, String message) {
+<span class="nc" id="L269">        Alert alert = new Alert(Alert.AlertType.ERROR);</span>
+<span class="nc" id="L270">        alert.setTitle(title);</span>
+<span class="nc" id="L271">        alert.setHeaderText(null);</span>
+<span class="nc" id="L272">        alert.setContentText(message);</span>
+<span class="nc" id="L273">        alert.showAndWait();</span>
+<span class="nc" id="L274">    }</span>
+    
+    private void showInfo(String title, String message) {
+<span class="nc" id="L277">        Alert alert = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L278">        alert.setTitle(title);</span>
+<span class="nc" id="L279">        alert.setHeaderText(null);</span>
+<span class="nc" id="L280">        alert.setContentText(message);</span>
+<span class="nc" id="L281">        alert.showAndWait();</span>
+<span class="nc" id="L282">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodOrderView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui.views</a> &gt; <span class="el_source">FoodOrderView.java</span></div><h1>FoodOrderView.java</h1><pre class="source lang-java linenums">package presentation.gui.views;
+
+import application.services.FoodService;
+import domain.Food;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import presentation.gui.ViewManager;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FoodOrderView extends BorderPane {
+    
+    private final ViewManager viewManager;
+    private final FoodService foodService;
+    private final ArrayList&lt;Food&gt; foodCart;
+    private ListView&lt;Food&gt; cartListView;
+    
+    public FoodOrderView(ViewManager viewManager, FoodService foodService, 
+<span class="nc" id="L24">                        ArrayList&lt;Food&gt; foodCart) {</span>
+<span class="nc" id="L25">        this.viewManager = viewManager;</span>
+<span class="nc" id="L26">        this.foodService = foodService;</span>
+<span class="nc" id="L27">        this.foodCart = foodCart;</span>
+<span class="nc" id="L28">        initializeUI();</span>
+<span class="nc" id="L29">    }</span>
+    
+    private void initializeUI() {
+<span class="nc" id="L32">        setTop(createTopBar());</span>
+        
+<span class="nc" id="L34">        VBox orderForm = createOrderForm();</span>
+<span class="nc" id="L35">        VBox cartView = createCartView();</span>
+        
+<span class="nc" id="L37">        SplitPane splitPane = new SplitPane(orderForm, cartView);</span>
+<span class="nc" id="L38">        splitPane.setDividerPositions(0.6);</span>
+<span class="nc" id="L39">        setCenter(splitPane);</span>
+<span class="nc" id="L40">    }</span>
+    
+    private HBox createTopBar() {
+<span class="nc" id="L43">        Label titleLabel = new Label(&quot;Order Food &amp; Beverage&quot;);</span>
+<span class="nc" id="L44">        titleLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 24));</span>
+<span class="nc" id="L45">        titleLabel.setStyle(&quot;-fx-text-fill: white;&quot;);</span>
+        
+<span class="nc" id="L47">        Button backBtn = new Button(&quot;← Back to Main Menu&quot;);</span>
+<span class="nc" id="L48">        backBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;&quot;);</span>
+<span class="nc" id="L49">        backBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L50">            viewManager.showMainMenu(</span>
+<span class="nc" id="L51">                viewManager.getCurrentUser().orElse(new domain.Customer(&quot;User&quot;, &quot;&quot;))</span>
+            );
+<span class="nc" id="L53">        });</span>
+        
+<span class="nc" id="L55">        HBox topBar = new HBox(20, titleLabel, backBtn);</span>
+<span class="nc" id="L56">        topBar.setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L57">        topBar.setPadding(new Insets(20));</span>
+<span class="nc" id="L58">        topBar.setStyle(&quot;-fx-background-color: #34495e;&quot;);</span>
+<span class="nc" id="L59">        HBox.setHgrow(titleLabel, Priority.ALWAYS);</span>
+        
+<span class="nc" id="L61">        return topBar;</span>
+    }
+    
+    private VBox createOrderForm() {
+<span class="nc" id="L65">        Label formTitle = new Label(&quot;Select Items&quot;);</span>
+<span class="nc" id="L66">        formTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+<span class="nc" id="L68">        ComboBox&lt;String&gt; categoryComboBox = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L69">        categoryComboBox.setPromptText(&quot;Select Category&quot;);</span>
+<span class="nc" id="L70">        categoryComboBox.setPrefWidth(300);</span>
+<span class="nc" id="L71">        categoryComboBox.getItems().addAll(&quot;Beverage&quot;, &quot;Popcorn&quot;, &quot;HotFood&quot;);</span>
+        
+<span class="nc" id="L73">        ListView&lt;Food&gt; menuListView = new ListView&lt;&gt;();</span>
+<span class="nc" id="L74">        menuListView.setPrefHeight(200);</span>
+<span class="nc" id="L75">        menuListView.setCellFactory(lv -&gt; new ListCell&lt;Food&gt;() {</span>
+            @Override
+            protected void updateItem(Food food, boolean empty) {
+<span class="nc" id="L78">                super.updateItem(food, empty);</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">                if (empty || food == null) {</span>
+<span class="nc" id="L80">                    setText(null);</span>
+                } else {
+<span class="nc" id="L82">                    setText(String.format(&quot;%s - RM%.2f&quot;, </span>
+<span class="nc" id="L83">                        food.getName(), food.getPrice()));</span>
+                }
+<span class="nc" id="L85">            }</span>
+        });
+        
+<span class="nc" id="L88">        Spinner&lt;Integer&gt; quantitySpinner = new Spinner&lt;&gt;(1, 99, 1);</span>
+<span class="nc" id="L89">        quantitySpinner.setPrefWidth(150);</span>
+<span class="nc" id="L90">        quantitySpinner.setDisable(true);</span>
+        
+<span class="nc" id="L92">        Button addToCartBtn = new Button(&quot;Add to Cart&quot;);</span>
+<span class="nc" id="L93">        addToCartBtn.setStyle(&quot;-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;&quot;);</span>
+<span class="nc" id="L94">        addToCartBtn.setDisable(true);</span>
+        
+<span class="nc" id="L96">        categoryComboBox.setOnAction(e -&gt; {</span>
+<span class="nc" id="L97">            String category = categoryComboBox.getValue();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            if (category != null) {</span>
+<span class="nc" id="L99">                List&lt;Food&gt; menuItems = foodService.getMenuByType(category);</span>
+<span class="nc" id="L100">                menuListView.getItems().clear();</span>
+<span class="nc" id="L101">                menuListView.getItems().addAll(menuItems);</span>
+            }
+<span class="nc" id="L103">        });</span>
+        
+<span class="nc" id="L105">        menuListView.getSelectionModel().selectedItemProperty().addListener((obs, old, newVal) -&gt; {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            boolean hasSelection = newVal != null;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">            quantitySpinner.setDisable(!hasSelection);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">            addToCartBtn.setDisable(!hasSelection);</span>
+<span class="nc" id="L109">        });</span>
+        
+<span class="nc" id="L111">        addToCartBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L112">            Food selected = menuListView.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">            if (selected != null) {</span>
+<span class="nc" id="L114">                int qty = quantitySpinner.getValue();</span>
+                
+                // Create new food item for order
+<span class="nc" id="L117">                Food orderItem = createFoodInstance(selected.getFoodType());</span>
+<span class="nc" id="L118">                orderItem.setName(selected.getName());</span>
+<span class="nc" id="L119">                orderItem.setPrice(selected.getPrice()); // Unit price</span>
+<span class="nc" id="L120">                orderItem.setQty(qty);</span>
+<span class="nc" id="L121">                orderItem.calPrice(); // Calculate total</span>
+                
+                // Add or merge with existing order
+<span class="nc" id="L124">                foodService.addOrMergeOrder(foodCart, orderItem, selected.getPrice());</span>
+                
+                // SAVE CART to persistence
+<span class="nc" id="L127">                viewManager.saveCurrentCart();</span>
+                
+<span class="nc" id="L129">                cartListView.getItems().setAll(foodCart);</span>
+<span class="nc" id="L130">                showInfo(&quot;Success&quot;, &quot;Item added to cart!&quot;);</span>
+                
+<span class="nc" id="L132">                quantitySpinner.getValueFactory().setValue(1);</span>
+            }
+<span class="nc" id="L134">        });</span>
+        
+<span class="nc" id="L136">        VBox form = new VBox(15,</span>
+            formTitle,
+            new Label(&quot;Category:&quot;), categoryComboBox,
+            new Label(&quot;Menu Items:&quot;), menuListView,
+            new Label(&quot;Quantity:&quot;), quantitySpinner,
+            addToCartBtn
+        );
+<span class="nc" id="L143">        form.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L145">        return form;</span>
+    }
+    
+    private Food createFoodInstance(String type) {
+<span class="nc bnc" id="L149" title="All 4 branches missed.">        switch (type) {</span>
+<span class="nc" id="L150">            case &quot;Popcorn&quot;: return new domain.Popcorn();</span>
+<span class="nc" id="L151">            case &quot;Beverage&quot;: return new domain.Beverage();</span>
+<span class="nc" id="L152">            case &quot;HotFood&quot;: return new domain.HotFood();</span>
+<span class="nc" id="L153">            default: return new domain.Popcorn(); // Default fallback</span>
+        }
+    }
+    
+    private VBox createCartView() {
+<span class="nc" id="L158">        Label cartTitle = new Label(&quot;Your Food Cart&quot;);</span>
+<span class="nc" id="L159">        cartTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+<span class="nc" id="L161">        cartListView = new ListView&lt;&gt;();</span>
+<span class="nc" id="L162">        cartListView.getItems().addAll(foodCart);</span>
+<span class="nc" id="L163">        cartListView.setCellFactory(lv -&gt; new ListCell&lt;Food&gt;() {</span>
+            @Override
+            protected void updateItem(Food food, boolean empty) {
+<span class="nc" id="L166">                super.updateItem(food, empty);</span>
+<span class="nc bnc" id="L167" title="All 4 branches missed.">                if (empty || food == null) {</span>
+<span class="nc" id="L168">                    setText(null);</span>
+                } else {
+<span class="nc" id="L170">                    setText(String.format(&quot;%s\nQty: %d - RM%.2f&quot;,</span>
+<span class="nc" id="L171">                        food.getName(),</span>
+<span class="nc" id="L172">                        food.getQty(),</span>
+<span class="nc" id="L173">                        food.getPrice()</span>
+                    ));
+                }
+<span class="nc" id="L176">            }</span>
+        });
+        
+<span class="nc" id="L179">        Label totalLabel = new Label();</span>
+<span class="nc" id="L180">        totalLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 16));</span>
+<span class="nc" id="L181">        updateTotalLabel(totalLabel);</span>
+        
+<span class="nc" id="L183">        Button removeBtn = new Button(&quot;Remove Selected&quot;);</span>
+<span class="nc" id="L184">        removeBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white;&quot;);</span>
+<span class="nc" id="L185">        removeBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L186">            int selectedIdx = cartListView.getSelectionModel().getSelectedIndex();</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            if (selectedIdx &gt;= 0) {</span>
+<span class="nc" id="L188">                foodService.removeOrderItem(foodCart, selectedIdx);</span>
+<span class="nc" id="L189">                cartListView.getItems().setAll(foodCart);</span>
+<span class="nc" id="L190">                updateTotalLabel(totalLabel);</span>
+            }
+<span class="nc" id="L192">        });</span>
+        
+<span class="nc" id="L194">        VBox cartView = new VBox(15, cartTitle, cartListView, totalLabel, removeBtn);</span>
+<span class="nc" id="L195">        cartView.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L197">        return cartView;</span>
+    }
+    
+    private void updateTotalLabel(Label label) {
+<span class="nc" id="L201">        double total = foodService.calculateTotal(foodCart);</span>
+<span class="nc" id="L202">        label.setText(String.format(&quot;Total: RM%.2f&quot;, total));</span>
+<span class="nc" id="L203">    }</span>
+    
+    private void showInfo(String title, String message) {
+<span class="nc" id="L206">        Alert alert = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L207">        alert.setTitle(title);</span>
+<span class="nc" id="L208">        alert.setContentText(message);</span>
+<span class="nc" id="L209">        alert.showAndWait();</span>
+<span class="nc" id="L210">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainApplication.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.cli</a> &gt; <span class="el_source">MainApplication.java</span></div><h1>MainApplication.java</h1><pre class="source lang-java linenums">// src/presentation/cli/MainApplication.java (Final Cleaned Version)
+package presentation.cli;
+
+import application.services.AuthService;
+import application.services.BookingService;
+import application.services.CustomerService;
+import application.services.FoodService;
+import application.services.OtpService;
+import application.services.PasswordService;
+import application.services.PaymentService;
+import application.services.ReportService;
+import application.services.StaffService;
+import application.utilities.LoggerSetup;
+import application.utilities.Utility;
+import domain.Customer;
+import domain.Ticket;
+import infrastructure.repositories.FileMovieRepository;
+import infrastructure.repositories.FileSeatRepository;
+import infrastructure.repositories.FileShowtimeRepository;
+import domain.repositories.MovieRepository;
+import domain.repositories.SeatRepository;
+import domain.repositories.ShowtimeRepository;
+
+import java.util.Scanner;
+import java.util.ArrayList;
+import domain.Food;
+import domain.Payment;
+import infrastructure.repositories.PaymentRepository;
+import java.util.Optional;
+import java.util.logging.Logger;
+// Removed unnecessary domain imports that are now handled by BookingCliHandler
+
+// We assume the original monolithic classes (Food, Payment, etc.) 
+// are still in the original 'ticketingsystem' package for now.
+
+<span class="nc" id="L36">public class MainApplication {</span>
+    
+    public static void logo(int num) {
+<span class="nc bnc" id="L39" title="All 3 branches missed.">        switch (num) {</span>
+            case 1:
+<span class="nc" id="L41">                System.out.println(&quot;___  ___      _        ___  ___                 &quot;);</span>
+<span class="nc" id="L42">                System.out.println(&quot;|  \\/  |     (_)       |  \\/  |                 &quot;);</span>
+<span class="nc" id="L43">                System.out.println(&quot;| .  . | __ _ _ _ __   | .  . | ___ _ __  _   _ &quot;);</span>
+<span class="nc" id="L44">                System.out.println(&quot;| |\\/| |/ _` | | '_ \\  | |\\/| |/ _ \\ '_ \\| | | |&quot;);</span>
+<span class="nc" id="L45">                System.out.println(&quot;| |  | | (_| | | | | | | |  | |  __/ | | | |_| |&quot;);</span>
+<span class="nc" id="L46">                System.out.println(&quot;\\_|  |_/\\__,_|_|_| |_| \\_|  |_/\\___|_| |_|\\__,_|&quot;);</span>
+<span class="nc" id="L47">                System.out.println(&quot;                                                &quot;);</span>
+<span class="nc" id="L48">                System.out.println();</span>
+<span class="nc" id="L49">                System.out.println(&quot;\n----------&lt; Welcome to Main Menu &gt;----------&quot;);</span>
+<span class="nc" id="L50">                break;</span>
+            case 2:
+<span class="nc" id="L52">                System.out.println(&quot; ____               _    _             &quot;);</span>
+<span class="nc" id="L53">                System.out.println(&quot; |  _ \\            | |  (_)            &quot;);</span>
+<span class="nc" id="L54">                System.out.println(&quot; | |_) | ___   ___ | | ___ _ __   __ _ &quot;);</span>
+<span class="nc" id="L55">                System.out.println(&quot; |  _ &lt; / _ \\ / _ \\| |/ / | '_ \\ / _` |&quot;);</span>
+<span class="nc" id="L56">                System.out.println(&quot; | |_) | (_) | (_) |   &lt;| | | | | (_| |&quot;);</span>
+<span class="nc" id="L57">                System.out.println(&quot; |____/ \\___/ \\___/|_|\\_\\_|_| |_|\\__, |&quot;);</span>
+<span class="nc" id="L58">                System.out.println(&quot;                                  __/ |&quot;);</span>
+<span class="nc" id="L59">                System.out.println(&quot;                                 |___/ &quot;);</span>
+<span class="nc" id="L60">                System.out.println();</span>
+<span class="nc" id="L61">                System.out.println(&quot;\n----------&lt; Welcome to Booking &gt;----------&quot;);</span>
+<span class="nc" id="L62">                break;</span>
+            default:
+                break;
+        }
+<span class="nc" id="L66">    }</span>
+
+    public static void main(String[] args) {
+        // --- CORE APPLICATION RESOURCES ---
+<span class="nc" id="L70">        Scanner sc = new Scanner(System.in);</span>
+<span class="nc" id="L71">        Logger logger = LoggerSetup.getLogger();</span>
+        
+<span class="nc" id="L73">        logger.info(&quot;=== CINEMA TICKETING SYSTEM STARTING ===&quot;);</span>
+        
+        // Infrastructure Layer Setup (Concrete implementations)
+<span class="nc" id="L76">        MovieRepository movieRepository = new FileMovieRepository();</span>
+<span class="nc" id="L77">        ShowtimeRepository showtimeRepository = new FileShowtimeRepository();</span>
+<span class="nc" id="L78">        SeatRepository seatRepository = new FileSeatRepository();</span>
+<span class="nc" id="L79">        PaymentRepository paymentRepository = new PaymentRepository();</span>
+
+        // Application Layer Setup (Services injected with Repositories)
+<span class="nc" id="L82">        BookingService bookingService = new BookingService(</span>
+            movieRepository, 
+            showtimeRepository, 
+            seatRepository
+        );
+<span class="nc" id="L87">        CustomerService customerService = new CustomerService(); </span>
+<span class="nc" id="L88">        PasswordService passwordService = new PasswordService();</span>
+<span class="nc" id="L89">        OtpService otpService = new OtpService();</span>
+<span class="nc" id="L90">        AuthService authService = new AuthService(passwordService, otpService);</span>
+<span class="nc" id="L91">        ReportService reportService = new ReportService(paymentRepository); </span>
+<span class="nc" id="L92">        StaffService staffService = new StaffService(reportService, customerService);</span>
+<span class="nc" id="L93">        FoodService foodService = new FoodService();</span>
+<span class="nc" id="L94">        PaymentService payService = new PaymentService(); </span>
+
+        // Presentation Layer Setup (CLI Handlers/Controllers injected with Services/Scanner)
+<span class="nc" id="L97">        BookingCliHandler bookingHandler = new BookingCliHandler(bookingService, sc);</span>
+<span class="nc" id="L98">        StaffController staffController = new StaffController(sc, staffService);</span>
+<span class="nc" id="L99">        PaymentCliHandler payHandler = new PaymentCliHandler(payService, paymentRepository, sc);</span>
+<span class="nc" id="L100">        AuthController authController = new AuthController(</span>
+            sc, authService, customerService, otpService, staffController
+        );
+<span class="nc" id="L103">        FoodOrderController foodController = new FoodOrderController(sc, foodService);</span>
+        
+        // --- DATA STORAGE (Lists initialized centrally) ---
+<span class="nc" id="L106">        ArrayList&lt;Ticket&gt; currentTicketOrders = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L107">        ArrayList&lt;Food&gt; currentFoodOrders = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L108">        ArrayList&lt;Payment&gt; paymentHistory = new ArrayList&lt;&gt;();</span>
+        
+<span class="nc" id="L110">        logger.info(&quot;Application initialized. Starting Authentication flow.&quot;);</span>
+        
+
+        // --- START AUTH FLOW ---
+<span class="nc" id="L114">        boolean proceedToMain = authController.startAuthFlow(); </span>
+        
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (!proceedToMain) {</span>
+<span class="nc" id="L117">            System.out.println(&quot;Application closed.&quot;);</span>
+<span class="nc" id="L118">            sc.close();</span>
+<span class="nc" id="L119">            return;</span>
+        }
+
+<span class="nc" id="L122">        int mainMenu = 0;</span>
+
+        // Main menu
+<span class="nc" id="L125">        logo(1);</span>
+
+        while(true) {
+<span class="nc" id="L128">            Optional&lt;Customer&gt; currentUser = customerService.getLoggedInCustomer();</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            if (currentUser.isEmpty()) break;</span>
+<span class="nc" id="L130">            System.out.println(&quot;\n\t|| 1 | Book Ticket        ||\n\t|| 2 | Order F&amp;B          ||\n\t|| 3 | Payment            ||\n\t|| 4 | Exit Program       ||\n\t|| 5 | Logout             ||\n&quot;);</span>
+<span class="nc" id="L131">            System.out.print(&quot;Choose one of the option from menu above ~ &quot;);</span>
+<span class="nc" id="L132">            mainMenu = Utility.checkError(sc, 1, 5);</span>
+<span class="nc bnc" id="L133" title="All 6 branches missed.">            switch (mainMenu) {</span>
+                case 1://Booking Menu
+                    // DELEGATE to the new Handler
+<span class="nc" id="L136">                    currentTicketOrders = bookingHandler.handleBookingMenu(currentTicketOrders); </span>
+<span class="nc" id="L137">                    break;</span>
+                case 2://F&amp;B Menu (Uses unrefactored static methods)
+<span class="nc" id="L139">                    foodController.startOrdering(currentFoodOrders);</span>
+<span class="nc" id="L140">                    break;</span>
+                case 3: // Payment
+<span class="nc" id="L142">                    Payment paid = payHandler.handlePaymentMenu(currentTicketOrders, currentFoodOrders, currentUser, paymentHistory);</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                    if (paid != null) {</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                        if (paid.getPaymentMade()) {</span>
+                            // SUCCESS: Clear cart and add to history
+<span class="nc" id="L147">                            paymentHistory.add(paid);</span>
+<span class="nc" id="L148">                            currentTicketOrders.clear();</span>
+<span class="nc" id="L149">                            currentFoodOrders.clear();</span>
+                        } else {
+<span class="nc" id="L151">                            System.out.println(&quot;\n &lt;$&gt; Payment hasn't been done! &lt;$&gt; &quot;);</span>
+<span class="nc" id="L152">                            logger.info(&quot;Payment completed. Cart cleared.&quot;);</span>
+                        }
+                    }
+                    break;
+                case 4://Exit the program
+<span class="nc" id="L157">                    System.out.println(&quot;\nThank you for using YSCM Cinema Ticketing System. Goodbye!&quot;);</span>
+<span class="nc" id="L158">                    sc.close();</span>
+<span class="nc" id="L159">                    System.exit(0);</span>
+<span class="nc" id="L160">                    break;</span>
+                case 5://Logout
+<span class="nc" id="L162">                    customerService.setLoggedInCustomer(null); </span>
+<span class="nc" id="L163">                    logger.info(&quot;User logged out. Returning to Login Menu.&quot;);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">                    if (!authController.startAuthFlow()) { </span>
+<span class="nc" id="L165">                        System.out.println(&quot;\nThank you for using YSCM Cinema Ticketing System. Goodbye!&quot;);</span>
+<span class="nc" id="L166">                        sc.close();</span>
+<span class="nc" id="L167">                        return;</span>
+                    }
+                    // Clear cart on logout for security
+<span class="nc" id="L170">                    currentTicketOrders.clear();</span>
+<span class="nc" id="L171">                    currentFoodOrders.clear();</span>
+<span class="nc" id="L172">                    logger.info(&quot;Cart cleared on logout.&quot;);</span>
+                    break;
+            }
+<span class="nc" id="L175">        }</span>
+<span class="nc" id="L176">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

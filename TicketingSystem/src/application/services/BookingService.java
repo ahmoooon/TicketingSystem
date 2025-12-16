@@ -18,12 +18,10 @@ import domain.Seat;
 
 public class BookingService {
     
-    // Dependencies are defined as interfaces (DIP)
     private final MovieRepository movieRepository;
     private final ShowtimeRepository showtimeRepository;
     private final SeatRepository seatRepository;
 
-    // Dependency Injection via Constructor
     public BookingService(MovieRepository movieRepository, 
                           ShowtimeRepository showtimeRepository, 
                           SeatRepository seatRepository) {
@@ -68,7 +66,7 @@ public class BookingService {
     }
     
     /**
-     * NEW: Retrieves all available cinema halls.
+     * Retrieves all available cinema halls.
      */
     public List<CinemaHall> getAllHalls() {
         if (seatRepository instanceof FileSeatRepository) {
@@ -78,7 +76,7 @@ public class BookingService {
     }
     
     /**
-     * NEW: Retrieves halls of a specific type.
+     * Retrieves halls of a specific type.
      */
     public List<CinemaHall> getHallsByType(String hallType) {
         if (seatRepository instanceof FileSeatRepository) {
@@ -88,7 +86,7 @@ public class BookingService {
     }
     
     /**
-     * NEW: Retrieves seat availability for a specific showtime.
+     * Retrieves seat availability for a specific showtime.
      */
     public List<Seat> getSeatsByShowtime(Movie movie, LocalDate date, String time, int hallId) {
         Showtime showtime = showtimeRepository.findAvailableShowtime(

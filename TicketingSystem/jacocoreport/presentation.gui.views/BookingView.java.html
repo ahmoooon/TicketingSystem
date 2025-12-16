@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui.views</a> &gt; <span class="el_source">BookingView.java</span></div><h1>BookingView.java</h1><pre class="source lang-java linenums">package presentation.gui.views;
+
+import application.dto.BookingRequest;
+import application.dto.BookingResult;
+import application.services.BookingService;
+import domain.*;
+import domain.valueobjects.SeatId;
+import infrastructure.repositories.SeatUnavailableException;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.util.StringConverter;
+import presentation.gui.ViewManager;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+public class BookingView extends BorderPane {
+    
+    private final ViewManager viewManager;
+    private final BookingService bookingService;
+    private final ArrayList&lt;Ticket&gt; ticketCart;
+    private ListView&lt;Ticket&gt; cartListView;
+    
+    // Seat selection state
+    private GridPane seatGrid;
+    private Set&lt;SeatId&gt; selectedSeats;
+    private Label selectedCountLabel;
+    private Button bookBtn;
+    
+    // Current selection state
+    private Movie selectedMovie;
+    private LocalDate selectedDate;
+    private String selectedTime;
+    private CinemaHall selectedHall;
+    
+    public BookingView(ViewManager viewManager, BookingService bookingService, 
+<span class="nc" id="L44">                      ArrayList&lt;Ticket&gt; ticketCart) {</span>
+<span class="nc" id="L45">        this.viewManager = viewManager;</span>
+<span class="nc" id="L46">        this.bookingService = bookingService;</span>
+<span class="nc" id="L47">        this.ticketCart = ticketCart;</span>
+<span class="nc" id="L48">        this.selectedSeats = new HashSet&lt;&gt;();</span>
+<span class="nc" id="L49">        initializeUI();</span>
+<span class="nc" id="L50">    }</span>
+    
+    private void initializeUI() {
+<span class="nc" id="L53">        setTop(createTopBar());</span>
+        
+<span class="nc" id="L55">        VBox bookingForm = createBookingForm();</span>
+<span class="nc" id="L56">        VBox cartView = createCartView();</span>
+        
+<span class="nc" id="L58">        SplitPane splitPane = new SplitPane(bookingForm, cartView);</span>
+<span class="nc" id="L59">        splitPane.setDividerPositions(0.65);</span>
+<span class="nc" id="L60">        setCenter(splitPane);</span>
+<span class="nc" id="L61">    }</span>
+    
+    private HBox createTopBar() {
+<span class="nc" id="L64">        Label titleLabel = new Label(&quot;Book Tickets&quot;);</span>
+<span class="nc" id="L65">        titleLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 24));</span>
+<span class="nc" id="L66">        titleLabel.setStyle(&quot;-fx-text-fill: white;&quot;);</span>
+        
+<span class="nc" id="L68">        Button backBtn = new Button(&quot;← Back to Main Menu&quot;);</span>
+<span class="nc" id="L69">        backBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;&quot;);</span>
+<span class="nc" id="L70">        backBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L71">            Customer c = viewManager.getCurrentUser().orElse(new Customer(&quot;User&quot;, &quot;&quot;));</span>
+<span class="nc" id="L72">            viewManager.showMainMenu(c);</span>
+<span class="nc" id="L73">        });</span>
+        
+<span class="nc" id="L75">        HBox topBar = new HBox(20, titleLabel, backBtn);</span>
+<span class="nc" id="L76">        topBar.setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L77">        topBar.setPadding(new Insets(20));</span>
+<span class="nc" id="L78">        topBar.setStyle(&quot;-fx-background-color: #34495e;&quot;);</span>
+<span class="nc" id="L79">        HBox.setHgrow(titleLabel, Priority.ALWAYS);</span>
+        
+<span class="nc" id="L81">        return topBar;</span>
+    }
+    
+    private VBox createBookingForm() {
+<span class="nc" id="L85">        Label formTitle = new Label(&quot;Select Movie &amp; Showtime&quot;);</span>
+<span class="nc" id="L86">        formTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+        // Movie Selection
+<span class="nc" id="L89">        ComboBox&lt;Movie&gt; movieComboBox = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L90">        movieComboBox.setPromptText(&quot;Select Movie&quot;);</span>
+<span class="nc" id="L91">        movieComboBox.setPrefWidth(400);</span>
+<span class="nc" id="L92">        List&lt;Movie&gt; movies = bookingService.getAvailableMovies();</span>
+<span class="nc" id="L93">        movieComboBox.getItems().addAll(movies);</span>
+        
+        // Date Selection
+<span class="nc" id="L96">        ComboBox&lt;LocalDate&gt; dateComboBox = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L97">        dateComboBox.setPromptText(&quot;Select Date&quot;);</span>
+<span class="nc" id="L98">        dateComboBox.setPrefWidth(400);</span>
+<span class="nc" id="L99">        dateComboBox.setDisable(true);</span>
+        
+        // Time Selection
+<span class="nc" id="L102">        ComboBox&lt;String&gt; timeComboBox = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L103">        timeComboBox.setPromptText(&quot;Select Time&quot;);</span>
+<span class="nc" id="L104">        timeComboBox.setPrefWidth(400);</span>
+<span class="nc" id="L105">        timeComboBox.setDisable(true);</span>
+        
+        // Hall Selection - NOW SHOWS SPECIFIC HALLS
+<span class="nc" id="L108">        ComboBox&lt;CinemaHall&gt; hallComboBox = new ComboBox&lt;&gt;();</span>
+<span class="nc" id="L109">        hallComboBox.setPromptText(&quot;Select Hall&quot;);</span>
+<span class="nc" id="L110">        hallComboBox.setPrefWidth(400);</span>
+<span class="nc" id="L111">        hallComboBox.setDisable(true);</span>
+        
+        // Custom display for halls
+<span class="nc" id="L114">        hallComboBox.setConverter(new StringConverter&lt;CinemaHall&gt;() {</span>
+            @Override
+            public String toString(CinemaHall hall) {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                if (hall == null) return &quot;&quot;;</span>
+<span class="nc" id="L118">                int capacity = hall.getRowAmt() * hall.getColAmt();</span>
+<span class="nc" id="L119">                return String.format(&quot;Hall %d - %s (%d seats)&quot;, </span>
+<span class="nc" id="L120">                    hall.getHallId(), </span>
+<span class="nc" id="L121">                    hall.getHallType(),</span>
+<span class="nc" id="L122">                    capacity);</span>
+            }
+            
+            @Override
+            public CinemaHall fromString(String string) {
+<span class="nc" id="L127">                return null;</span>
+            }
+        });
+        
+        // Load all available halls
+<span class="nc" id="L132">        hallComboBox.getItems().addAll(bookingService.getAllHalls());</span>
+        
+        // Seat Legend
+<span class="nc" id="L135">        HBox legend = createSeatLegend();</span>
+        
+        // Seat Selection Grid Container
+<span class="nc" id="L138">        ScrollPane seatScrollPane = new ScrollPane();</span>
+<span class="nc" id="L139">        seatScrollPane.setPrefHeight(350);</span>
+<span class="nc" id="L140">        seatScrollPane.setFitToWidth(true);</span>
+<span class="nc" id="L141">        seatScrollPane.setStyle(&quot;-fx-background: white; -fx-border-color: #bdc3c7; -fx-border-radius: 5;&quot;);</span>
+        
+<span class="nc" id="L143">        seatGrid = new GridPane();</span>
+<span class="nc" id="L144">        seatGrid.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L145">        seatGrid.setHgap(5);</span>
+<span class="nc" id="L146">        seatGrid.setVgap(5);</span>
+<span class="nc" id="L147">        seatGrid.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L149">        Label seatPlaceholder = new Label(&quot;Please select movie, date, time, and hall to view seats&quot;);</span>
+<span class="nc" id="L150">        seatPlaceholder.setStyle(&quot;-fx-font-size: 14; -fx-text-fill: #7f8c8d;&quot;);</span>
+<span class="nc" id="L151">        seatGrid.add(seatPlaceholder, 0, 0);</span>
+        
+<span class="nc" id="L153">        seatScrollPane.setContent(seatGrid);</span>
+        
+        // Selected seats counter
+<span class="nc" id="L156">        selectedCountLabel = new Label(&quot;Selected: 0 seats&quot;);</span>
+<span class="nc" id="L157">        selectedCountLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 14));</span>
+<span class="nc" id="L158">        selectedCountLabel.setStyle(&quot;-fx-text-fill: #2c3e50;&quot;);</span>
+        
+        // Book button
+<span class="nc" id="L161">        bookBtn = new Button(&quot;Add to Cart&quot;);</span>
+<span class="nc" id="L162">        bookBtn.setDisable(true);</span>
+<span class="nc" id="L163">        bookBtn.setPrefWidth(200);</span>
+<span class="nc" id="L164">        bookBtn.setPrefHeight(40);</span>
+<span class="nc" id="L165">        bookBtn.setStyle(&quot;-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16;&quot;);</span>
+        
+        // Event Handlers
+<span class="nc" id="L168">        movieComboBox.setOnAction(e -&gt; {</span>
+<span class="nc" id="L169">            selectedMovie = movieComboBox.getValue();</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">            if (selectedMovie != null) {</span>
+<span class="nc" id="L171">                dateComboBox.getItems().clear();</span>
+<span class="nc" id="L172">                List&lt;Showtime&gt; dates = bookingService.getAvailableShowtimeDates(selectedMovie);</span>
+<span class="nc" id="L173">                dates.forEach(st -&gt; dateComboBox.getItems().add(st.getDate()));</span>
+<span class="nc" id="L174">                dateComboBox.setDisable(false);</span>
+<span class="nc" id="L175">                resetSeatSelection();</span>
+            }
+<span class="nc" id="L177">        });</span>
+        
+<span class="nc" id="L179">        dateComboBox.setOnAction(e -&gt; {</span>
+<span class="nc" id="L180">            selectedDate = dateComboBox.getValue();</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">            if (selectedDate != null) {</span>
+<span class="nc" id="L182">                timeComboBox.getItems().clear();</span>
+<span class="nc" id="L183">                timeComboBox.getItems().addAll(</span>
+                    &quot;10:00 AM&quot;, &quot;11:40 AM&quot;, &quot;01:20 PM&quot;, &quot;03:00 PM&quot;,
+                    &quot;04:40 PM&quot;, &quot;06:20 PM&quot;, &quot;08:00 PM&quot;
+                );
+<span class="nc" id="L187">                timeComboBox.setDisable(false);</span>
+<span class="nc" id="L188">                resetSeatSelection();</span>
+            }
+<span class="nc" id="L190">        });</span>
+        
+<span class="nc" id="L192">        timeComboBox.setOnAction(e -&gt; {</span>
+<span class="nc" id="L193">            selectedTime = timeComboBox.getValue();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">            if (selectedTime != null) {</span>
+<span class="nc" id="L195">                hallComboBox.setDisable(false);</span>
+<span class="nc" id="L196">                resetSeatSelection();</span>
+            }
+<span class="nc" id="L198">        });</span>
+        
+<span class="nc" id="L200">        hallComboBox.setOnAction(e -&gt; {</span>
+<span class="nc" id="L201">            selectedHall = hallComboBox.getValue();</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">            if (selectedHall != null) {</span>
+<span class="nc" id="L203">                loadSeatMap();</span>
+            }
+<span class="nc" id="L205">        });</span>
+        
+<span class="nc" id="L207">        bookBtn.setOnAction(e -&gt; handleBooking());</span>
+        
+<span class="nc" id="L209">        VBox form = new VBox(15,</span>
+            formTitle,
+            new Label(&quot;Movie:&quot;), movieComboBox,
+            new Label(&quot;Date:&quot;), dateComboBox,
+            new Label(&quot;Time:&quot;), timeComboBox,
+            new Label(&quot;Hall:&quot;), hallComboBox,
+            new Separator(),
+            legend,
+            new Label(&quot;Select Your Seats:&quot;),
+            seatScrollPane,
+            selectedCountLabel,
+            bookBtn
+        );
+<span class="nc" id="L222">        form.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L224">        return form;</span>
+    }
+    
+    private HBox createSeatLegend() {
+        // Available seat
+<span class="nc" id="L229">        Button availableBtn = new Button(&quot;  &quot;);</span>
+<span class="nc" id="L230">        availableBtn.setStyle(&quot;-fx-background-color: #2ecc71; -fx-min-width: 30; -fx-min-height: 30;&quot;);</span>
+<span class="nc" id="L231">        availableBtn.setDisable(true);</span>
+<span class="nc" id="L232">        Label availableLabel = new Label(&quot;Available&quot;);</span>
+        
+        // Selected seat
+<span class="nc" id="L235">        Button selectedBtn = new Button(&quot;  &quot;);</span>
+<span class="nc" id="L236">        selectedBtn.setStyle(&quot;-fx-background-color: #3498db; -fx-min-width: 30; -fx-min-height: 30;&quot;);</span>
+<span class="nc" id="L237">        selectedBtn.setDisable(true);</span>
+<span class="nc" id="L238">        Label selectedLabel = new Label(&quot;Selected&quot;);</span>
+        
+        // Booked seat
+<span class="nc" id="L241">        Button bookedBtn = new Button(&quot;  &quot;);</span>
+<span class="nc" id="L242">        bookedBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-min-width: 30; -fx-min-height: 30;&quot;);</span>
+<span class="nc" id="L243">        bookedBtn.setDisable(true);</span>
+<span class="nc" id="L244">        Label bookedLabel = new Label(&quot;Booked&quot;);</span>
+        
+<span class="nc" id="L246">        HBox legend = new HBox(15,</span>
+            availableBtn, availableLabel,
+            selectedBtn, selectedLabel,
+            bookedBtn, bookedLabel
+        );
+<span class="nc" id="L251">        legend.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L252">        legend.setPadding(new Insets(10));</span>
+<span class="nc" id="L253">        legend.setStyle(&quot;-fx-background-color: #ecf0f1; -fx-background-radius: 5;&quot;);</span>
+        
+<span class="nc" id="L255">        return legend;</span>
+    }
+    
+    private void loadSeatMap() {
+<span class="nc bnc" id="L259" title="All 8 branches missed.">        if (selectedMovie == null || selectedDate == null || </span>
+            selectedTime == null || selectedHall == null) {
+<span class="nc" id="L261">            return;</span>
+        }
+        
+<span class="nc" id="L264">        seatGrid.getChildren().clear();</span>
+<span class="nc" id="L265">        selectedSeats.clear();</span>
+<span class="nc" id="L266">        updateSelectedCount();</span>
+        
+<span class="nc" id="L268">        int rows = selectedHall.getRowAmt();</span>
+<span class="nc" id="L269">        int cols = selectedHall.getColAmt();</span>
+        
+        // Add screen indicator
+<span class="nc" id="L272">        Label screenLabel = new Label(&quot;🎬 SCREEN 🎬&quot;);</span>
+<span class="nc" id="L273">        screenLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 16));</span>
+<span class="nc" id="L274">        screenLabel.setStyle(&quot;-fx-text-fill: #34495e;&quot;);</span>
+<span class="nc" id="L275">        GridPane.setColumnSpan(screenLabel, cols + 1);</span>
+<span class="nc" id="L276">        GridPane.setHalignment(screenLabel, javafx.geometry.HPos.CENTER);</span>
+<span class="nc" id="L277">        seatGrid.add(screenLabel, 0, 0);</span>
+        
+        // Get booked seats for this showtime
+<span class="nc" id="L280">        List&lt;Seat&gt; allSeats = bookingService.getSeatsByShowtime(</span>
+<span class="nc" id="L281">            selectedMovie, selectedDate, selectedTime, selectedHall.getHallId()</span>
+        );
+        
+<span class="nc" id="L284">        Set&lt;SeatId&gt; bookedSeats = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">        for (Seat seat : allSeats) {</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">            if (seat.getSeatStatus().equals(&quot;Booked&quot;)) {</span>
+<span class="nc" id="L287">                bookedSeats.add(seat.getId());</span>
+            }
+<span class="nc" id="L289">        }</span>
+        
+        // Create seat buttons
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        for (int row = 0; row &lt; rows; row++) {</span>
+<span class="nc" id="L293">            char rowLetter = (char) ('A' + row);</span>
+            
+            // Row label
+<span class="nc" id="L296">            Label rowLabel = new Label(String.valueOf(rowLetter));</span>
+<span class="nc" id="L297">            rowLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 14));</span>
+<span class="nc" id="L298">            rowLabel.setStyle(&quot;-fx-text-fill: #7f8c8d;&quot;);</span>
+<span class="nc" id="L299">            rowLabel.setPrefWidth(30);</span>
+<span class="nc" id="L300">            rowLabel.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L301">            seatGrid.add(rowLabel, 0, row + 2);</span>
+            
+<span class="nc bnc" id="L303" title="All 2 branches missed.">            for (int col = 0; col &lt; cols; col++) {</span>
+<span class="nc" id="L304">                int colNum = col + 1;</span>
+<span class="nc" id="L305">                SeatId seatId = new SeatId(rowLetter, colNum);</span>
+                
+<span class="nc" id="L307">                Button seatBtn = createSeatButton(seatId, bookedSeats.contains(seatId));</span>
+<span class="nc" id="L308">                seatGrid.add(seatBtn, col + 1, row + 2);</span>
+            }
+        }
+        
+        // Add column numbers at bottom
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        for (int col = 0; col &lt; cols; col++) {</span>
+<span class="nc" id="L314">            Label colLabel = new Label(String.valueOf(col + 1));</span>
+<span class="nc" id="L315">            colLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 12));</span>
+<span class="nc" id="L316">            colLabel.setStyle(&quot;-fx-text-fill: #7f8c8d;&quot;);</span>
+<span class="nc" id="L317">            colLabel.setPrefWidth(40);</span>
+<span class="nc" id="L318">            colLabel.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L319">            seatGrid.add(colLabel, col + 1, rows + 2);</span>
+        }
+<span class="nc" id="L321">    }</span>
+    
+    private Button createSeatButton(SeatId seatId, boolean isBooked) {
+<span class="nc" id="L324">        Button seatBtn = new Button(seatId.toDisplayString());</span>
+<span class="nc" id="L325">        seatBtn.setMinSize(40, 40);</span>
+<span class="nc" id="L326">        seatBtn.setMaxSize(40, 40);</span>
+<span class="nc" id="L327">        seatBtn.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 10));</span>
+        
+<span class="nc bnc" id="L329" title="All 2 branches missed.">        if (isBooked) {</span>
+<span class="nc" id="L330">            seatBtn.setStyle(</span>
+                &quot;-fx-background-color: #e74c3c; &quot; +
+                &quot;-fx-text-fill: white; &quot; +
+                &quot;-fx-border-color: #c0392b; &quot; +
+                &quot;-fx-border-width: 2; &quot; +
+                &quot;-fx-background-radius: 5;&quot;
+            );
+<span class="nc" id="L337">            seatBtn.setDisable(true);</span>
+        } else {
+<span class="nc" id="L339">            seatBtn.setStyle(</span>
+                &quot;-fx-background-color: #2ecc71; &quot; +
+                &quot;-fx-text-fill: white; &quot; +
+                &quot;-fx-border-color: #27ae60; &quot; +
+                &quot;-fx-border-width: 2; &quot; +
+                &quot;-fx-background-radius: 5; &quot; +
+                &quot;-fx-cursor: hand;&quot;
+            );
+            
+<span class="nc" id="L348">            seatBtn.setOnAction(e -&gt; toggleSeatSelection(seatId, seatBtn));</span>
+        }
+        
+<span class="nc" id="L351">        return seatBtn;</span>
+    }
+    
+    private void toggleSeatSelection(SeatId seatId, Button seatBtn) {
+<span class="nc bnc" id="L355" title="All 2 branches missed.">        if (selectedSeats.contains(seatId)) {</span>
+            // Deselect
+<span class="nc" id="L357">            selectedSeats.remove(seatId);</span>
+<span class="nc" id="L358">            seatBtn.setStyle(</span>
+                &quot;-fx-background-color: #2ecc71; &quot; +
+                &quot;-fx-text-fill: white; &quot; +
+                &quot;-fx-border-color: #27ae60; &quot; +
+                &quot;-fx-border-width: 2; &quot; +
+                &quot;-fx-background-radius: 5; &quot; +
+                &quot;-fx-cursor: hand;&quot;
+            );
+        } else {
+            // Select
+<span class="nc" id="L368">            selectedSeats.add(seatId);</span>
+<span class="nc" id="L369">            seatBtn.setStyle(</span>
+                &quot;-fx-background-color: #3498db; &quot; +
+                &quot;-fx-text-fill: white; &quot; +
+                &quot;-fx-border-color: #2980b9; &quot; +
+                &quot;-fx-border-width: 2; &quot; +
+                &quot;-fx-background-radius: 5; &quot; +
+                &quot;-fx-cursor: hand;&quot;
+            );
+        }
+        
+<span class="nc" id="L379">        updateSelectedCount();</span>
+<span class="nc" id="L380">    }</span>
+    
+    private void updateSelectedCount() {
+<span class="nc" id="L383">        selectedCountLabel.setText(&quot;Selected: &quot; + selectedSeats.size() + &quot; seat(s)&quot;);</span>
+<span class="nc" id="L384">        bookBtn.setDisable(selectedSeats.isEmpty());</span>
+<span class="nc" id="L385">    }</span>
+    
+    private void resetSeatSelection() {
+<span class="nc" id="L388">        selectedSeats.clear();</span>
+<span class="nc" id="L389">        seatGrid.getChildren().clear();</span>
+        
+<span class="nc" id="L391">        Label placeholder = new Label(&quot;Please complete all selections to view seats&quot;);</span>
+<span class="nc" id="L392">        placeholder.setStyle(&quot;-fx-font-size: 14; -fx-text-fill: #7f8c8d;&quot;);</span>
+<span class="nc" id="L393">        seatGrid.add(placeholder, 0, 0);</span>
+        
+<span class="nc" id="L395">        updateSelectedCount();</span>
+<span class="nc" id="L396">    }</span>
+    
+    private void handleBooking() {
+        try {
+<span class="nc" id="L400">            BookingRequest request = new BookingRequest(</span>
+<span class="nc" id="L401">                selectedMovie.getId(), </span>
+                selectedDate, 
+                selectedTime, 
+<span class="nc" id="L404">                selectedHall.getHallId(),</span>
+                new ArrayList&lt;&gt;(selectedSeats)
+            );
+            
+<span class="nc" id="L408">            BookingResult result = bookingService.bookTickets(request);</span>
+            
+<span class="nc" id="L410">            Ticket ticket = new Ticket(</span>
+<span class="nc" id="L411">                result.getShowtime(),</span>
+<span class="nc" id="L412">                result.getSeats().size(),</span>
+<span class="nc" id="L413">                result.getShowtime().getCinemaHall(),</span>
+<span class="nc" id="L414">                new ArrayList&lt;&gt;(result.getSeats())</span>
+            );
+            
+<span class="nc" id="L417">            ticketCart.add(ticket);</span>
+<span class="nc" id="L418">            cartListView.getItems().setAll(ticketCart);</span>
+            
+            // SAVE CART to persistence
+<span class="nc" id="L421">            viewManager.saveCurrentCart();</span>
+            
+<span class="nc" id="L423">            String seatList = selectedSeats.stream()</span>
+<span class="nc" id="L424">                .map(SeatId::toDisplayString)</span>
+<span class="nc" id="L425">                .reduce((a, b) -&gt; a + &quot;, &quot; + b)</span>
+<span class="nc" id="L426">                .orElse(&quot;&quot;);</span>
+            
+<span class="nc" id="L428">            showInfo(&quot;Success&quot;, </span>
+<span class="nc" id="L429">                String.format(&quot;Tickets added to cart!\n\nHall: %d - %s\nSeats: %s&quot;, </span>
+<span class="nc" id="L430">                    selectedHall.getHallId(),</span>
+<span class="nc" id="L431">                    selectedHall.getHallType(),</span>
+                    seatList));
+            
+            // Refresh seat map
+<span class="nc" id="L435">            selectedSeats.clear();</span>
+<span class="nc" id="L436">            loadSeatMap();</span>
+            
+<span class="nc" id="L438">        } catch (SeatUnavailableException ex) {</span>
+<span class="nc" id="L439">            showError(&quot;Booking Failed&quot;, ex.getMessage());</span>
+<span class="nc" id="L440">            loadSeatMap(); // Refresh to show newly booked seats</span>
+<span class="nc" id="L441">        } catch (Exception ex) {</span>
+<span class="nc" id="L442">            showError(&quot;Error&quot;, ex.getMessage());</span>
+<span class="nc" id="L443">        }</span>
+<span class="nc" id="L444">    }</span>
+    
+    private VBox createCartView() {
+<span class="nc" id="L447">        Label cartTitle = new Label(&quot;Your Cart&quot;);</span>
+<span class="nc" id="L448">        cartTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+<span class="nc" id="L450">        cartListView = new ListView&lt;&gt;();</span>
+<span class="nc" id="L451">        cartListView.getItems().addAll(ticketCart);</span>
+<span class="nc" id="L452">        cartListView.setCellFactory(lv -&gt; new ListCell&lt;Ticket&gt;() {</span>
+            @Override
+            protected void updateItem(Ticket ticket, boolean empty) {
+<span class="nc" id="L455">                super.updateItem(ticket, empty);</span>
+<span class="nc bnc" id="L456" title="All 4 branches missed.">                if (empty || ticket == null) {</span>
+<span class="nc" id="L457">                    setText(null);</span>
+<span class="nc" id="L458">                    setGraphic(null);</span>
+                } else {
+<span class="nc" id="L460">                    VBox content = new VBox(5);</span>
+<span class="nc" id="L461">                    content.setPadding(new Insets(5));</span>
+                    
+<span class="nc" id="L463">                    Label movieLabel = new Label(&quot;🎬 &quot; + ticket.getMovieName());</span>
+<span class="nc" id="L464">                    movieLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 14));</span>
+                    
+<span class="nc" id="L466">                    Label detailsLabel = new Label(</span>
+<span class="nc" id="L467">                        String.format(&quot;📅 %s | 🕐 %s | 🎭 Hall %d (%s)&quot;,</span>
+<span class="nc" id="L468">                        ticket.getSchedule(),</span>
+<span class="nc" id="L469">                        ticket.time(),</span>
+<span class="nc" id="L470">                        ticket.getHallId(),</span>
+<span class="nc" id="L471">                        ticket.getHallType())</span>
+                    );
+                    
+<span class="nc" id="L474">                    StringBuilder seatsText = new StringBuilder(&quot;💺 Seats: &quot;);</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">                    for (int i = 0; i &lt; ticket.getSeat().size(); i++) {</span>
+<span class="nc" id="L476">                        Seat seat = ticket.getSeat().get(i);</span>
+<span class="nc" id="L477">                        seatsText.append(seat.getId().toDisplayString());</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">                        if (i &lt; ticket.getSeat().size() - 1) {</span>
+<span class="nc" id="L479">                            seatsText.append(&quot;, &quot;);</span>
+                        }
+                    }
+<span class="nc" id="L482">                    Label seatsLabel = new Label(seatsText.toString());</span>
+                    
+<span class="nc" id="L484">                    Label priceLabel = new Label(String.format(&quot;💰 RM%.2f&quot;, ticket.getTotalPrice()));</span>
+<span class="nc" id="L485">                    priceLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 13));</span>
+<span class="nc" id="L486">                    priceLabel.setStyle(&quot;-fx-text-fill: #27ae60;&quot;);</span>
+                    
+<span class="nc" id="L488">                    content.getChildren().addAll(movieLabel, detailsLabel, seatsLabel, priceLabel);</span>
+<span class="nc" id="L489">                    setGraphic(content);</span>
+                }
+<span class="nc" id="L491">            }</span>
+        });
+        
+<span class="nc" id="L494">        Button removeBtn = new Button(&quot;Remove Selected&quot;);</span>
+<span class="nc" id="L495">        removeBtn.setPrefWidth(150);</span>
+<span class="nc" id="L496">        removeBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;&quot;);</span>
+<span class="nc" id="L497">        removeBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L498">            Ticket selected = cartListView.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">            if (selected != null) {</span>
+<span class="nc" id="L500">                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L501">                confirm.setTitle(&quot;Confirm Removal&quot;);</span>
+<span class="nc" id="L502">                confirm.setHeaderText(&quot;Remove Ticket&quot;);</span>
+<span class="nc" id="L503">                confirm.setContentText(&quot;Remove this ticket from cart? This will release the seats.&quot;);</span>
+                
+<span class="nc" id="L505">                confirm.showAndWait().ifPresent(response -&gt; {</span>
+<span class="nc bnc" id="L506" title="All 2 branches missed.">                    if (response == ButtonType.OK) {</span>
+                        // Cancel ticket (releases seats)
+<span class="nc" id="L508">                        viewManager.cancelTicket(selected);</span>
+<span class="nc" id="L509">                        cartListView.getItems().setAll(ticketCart);</span>
+                        
+<span class="nc" id="L511">                        showInfo(&quot;Ticket Removed&quot;, &quot;Ticket removed and seats released&quot;);</span>
+                    }
+<span class="nc" id="L513">                });</span>
+            }
+<span class="nc" id="L515">        });</span>
+        
+<span class="nc" id="L517">        VBox cartView = new VBox(15, cartTitle, cartListView, removeBtn);</span>
+<span class="nc" id="L518">        cartView.setPadding(new Insets(20));</span>
+        
+<span class="nc" id="L520">        return cartView;</span>
+    }
+    
+    private void showError(String title, String message) {
+<span class="nc" id="L524">        Alert alert = new Alert(Alert.AlertType.ERROR);</span>
+<span class="nc" id="L525">        alert.setTitle(title);</span>
+<span class="nc" id="L526">        alert.setContentText(message);</span>
+<span class="nc" id="L527">        alert.showAndWait();</span>
+<span class="nc" id="L528">    }</span>
+    
+    private void showInfo(String title, String message) {
+<span class="nc" id="L531">        Alert alert = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L532">        alert.setTitle(title);</span>
+<span class="nc" id="L533">        alert.setContentText(message);</span>
+<span class="nc" id="L534">        alert.showAndWait();</span>
+<span class="nc" id="L535">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

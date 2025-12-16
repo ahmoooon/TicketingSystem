@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PaymentCliHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.cli</a> &gt; <span class="el_source">PaymentCliHandler.java</span></div><h1>PaymentCliHandler.java</h1><pre class="source lang-java linenums">// src/presentation/cli/PaymentCliHandler.java
+package presentation.cli;
+
+import application.dto.PaymentRequest;
+import application.dto.PaymentResult;
+import application.services.PaymentService;
+import application.utilities.Utility;
+import domain.Customer;
+import domain.Ticket;
+import domain.Food;
+import domain.Payment;
+import infrastructure.repositories.PaymentRepository;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Optional;
+import java.util.Scanner;
+
+public class PaymentCliHandler {
+
+    private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
+    private final Scanner scanner;
+
+<span class="nc" id="L26">    public PaymentCliHandler(PaymentService paymentService, PaymentRepository paymentRepository, Scanner scanner) {</span>
+<span class="nc" id="L27">        this.paymentService = paymentService;</span>
+<span class="nc" id="L28">        this.paymentRepository = paymentRepository;</span>
+<span class="nc" id="L29">        this.scanner = scanner;</span>
+<span class="nc" id="L30">    }</span>
+
+    public Payment handlePaymentMenu(ArrayList&lt;Ticket&gt; ticketArr, ArrayList&lt;Food&gt; foodArr, 
+                                     Optional&lt;Customer&gt; currentUser, ArrayList&lt;Payment&gt; paymentHistory) {
+<span class="nc" id="L34">        boolean back = false;</span>
+<span class="nc" id="L35">        Payment completedPayment = null;</span>
+        
+        do {
+<span class="nc" id="L38">            System.out.println(&quot;\n----------&lt; Payment Module &gt;----------&quot;);</span>
+<span class="nc" id="L39">            System.out.println(&quot;\t|| 1 | Make Payment           ||&quot;);</span>
+<span class="nc" id="L40">            System.out.println(&quot;\t|| 2 | View Current Cart      ||&quot;);</span>
+<span class="nc" id="L41">            System.out.println(&quot;\t|| 3 | View Payment History   ||&quot;);</span>
+<span class="nc" id="L42">            System.out.println(&quot;\t|| 4 | Back to Main Menu      ||&quot;);</span>
+<span class="nc" id="L43">            System.out.print(&quot;\nChoose option ~ &quot;);</span>
+            
+<span class="nc" id="L45">            int choice = Utility.checkError(scanner, 1, 4);</span>
+            
+<span class="nc bnc" id="L47" title="All 5 branches missed.">            switch (choice) {</span>
+                case 1: 
+<span class="nc" id="L49">                    completedPayment = handlePaymentModule(ticketArr, foodArr, currentUser, paymentHistory);</span>
+<span class="nc bnc" id="L50" title="All 4 branches missed.">                    if (completedPayment != null &amp;&amp; completedPayment.getPaymentMade()) {</span>
+<span class="nc" id="L51">                        paymentRepository.savePayment(completedPayment);</span>
+<span class="nc" id="L52">                        System.out.println(&quot;\n Payment history saved successfully!&quot;);</span>
+<span class="nc" id="L53">                        return completedPayment;</span>
+                    }
+                    break;
+<span class="nc" id="L56">                case 2: displayCurrentCart(ticketArr, foodArr); break;</span>
+<span class="nc" id="L57">                case 3: displayPaymentHistory(); break;</span>
+<span class="nc" id="L58">                case 4: back = true; break;</span>
+            }
+<span class="nc bnc" id="L60" title="All 2 branches missed.">        } while (!back);</span>
+<span class="nc" id="L61">        return null;</span>
+    }
+    
+    private void displayCurrentCart(ArrayList&lt;Ticket&gt; ticketArr, ArrayList&lt;Food&gt; foodArr) {
+<span class="nc" id="L65">        System.out.println(&quot;\n---&lt; Current Cart (Unpaid) &gt;---&quot;);</span>
+<span class="nc bnc" id="L66" title="All 4 branches missed.">        if (ticketArr.isEmpty() &amp;&amp; foodArr.isEmpty()) {</span>
+<span class="nc" id="L67">            System.out.println(&quot;Your cart is empty.&quot;);</span>
+<span class="nc" id="L68">            return;</span>
+        }
+        // ... (Keep existing display logic if desired) ...
+<span class="nc" id="L71">        double total = calculateTotal(ticketArr, foodArr);</span>
+<span class="nc" id="L72">        System.out.printf(&quot;%nTOTAL: RM%.2f%n&quot;, total);</span>
+<span class="nc" id="L73">    }</span>
+    
+    private void displayPaymentHistory() {
+<span class="nc" id="L76">        ArrayList&lt;Payment&gt; history = paymentRepository.getAllPayments();</span>
+<span class="nc" id="L77">        System.out.println(&quot;\n---&lt; Payment History &gt;---&quot;);</span>
+        
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (history.isEmpty()) {</span>
+<span class="nc" id="L80">            System.out.println(&quot;No payment records found.&quot;);</span>
+<span class="nc" id="L81">            return;</span>
+        }
+        
+<span class="nc" id="L84">        System.out.println(&quot;=======================================================================&quot;);</span>
+<span class="nc" id="L85">        System.out.printf(&quot;%-12s %-15s %-12s %-12s %-15s%n&quot;, </span>
+            &quot;Payment ID&quot;, &quot;Customer&quot;, &quot;Tickets&quot;, &quot;Food Items&quot;, &quot;Total Amount&quot;);
+<span class="nc" id="L87">        System.out.println(&quot;=======================================================================&quot;);</span>
+        
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        for (Payment p : history) {</span>
+<span class="nc" id="L90">            String customerName = p.getCustomer().map(Customer::getName).orElse(&quot;Guest&quot;);</span>
+            
+            // CLEANER: Using the smart getters that work for both New and History payments
+<span class="nc" id="L93">            System.out.printf(&quot;%-12d %-15s %-12d %-12d RM %.2f%n&quot;,</span>
+<span class="nc" id="L94">                p.getPaymentID(),</span>
+                customerName,
+<span class="nc" id="L96">                p.getTicketAmt(), // Uses summaryTicketCount if list is empty</span>
+<span class="nc" id="L97">                p.getFoodQty(),   // Uses summaryFoodCount if list is empty</span>
+<span class="nc" id="L98">                p.getTotalPrice()); // Uses stored totalPricing</span>
+<span class="nc" id="L99">        }</span>
+<span class="nc" id="L100">        System.out.println(&quot;=======================================================================&quot;);</span>
+        
+<span class="nc" id="L102">        System.out.print(&quot;\nEnter Payment ID to view details (0 to back): &quot;);</span>
+<span class="nc" id="L103">        int id = Utility.checkError(scanner, 0, 9999);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (id != 0) displayPaymentDetails(history, id);</span>
+<span class="nc" id="L105">    }</span>
+    
+    private void displayPaymentDetails(ArrayList&lt;Payment&gt; history, int paymentId) {
+<span class="nc bnc" id="L108" title="All 2 branches missed.">        Optional&lt;Payment&gt; paymentOpt = history.stream().filter(p -&gt; p.getPaymentID() == paymentId).findFirst();</span>
+        
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (paymentOpt.isEmpty()) {</span>
+<span class="nc" id="L111">            System.out.println(&quot;\n &lt;!&gt; Payment ID not found! &lt;!&gt;&quot;);</span>
+<span class="nc" id="L112">            return;</span>
+        }
+        
+<span class="nc" id="L115">        Payment p = paymentOpt.get();</span>
+<span class="nc" id="L116">        System.out.println(&quot;\n========== Payment Details ==========&quot;);</span>
+<span class="nc" id="L117">        System.out.println(&quot;Payment ID: &quot; + p.getPaymentID());</span>
+<span class="nc" id="L118">        System.out.println(&quot;Customer: &quot; + p.getCustomer().map(Customer::getName).orElse(&quot;Guest&quot;));</span>
+        
+        // HANDLING HISTORY VS NEW DATA
+<span class="nc bnc" id="L121" title="All 4 branches missed.">        if (p.getTicket().isEmpty() &amp;&amp; p.getFood().isEmpty()) {</span>
+<span class="nc" id="L122">            System.out.println(&quot;\n[NOTICE] Detailed item list is not available for historical records.&quot;);</span>
+<span class="nc" id="L123">            System.out.println(&quot;Summary:&quot;);</span>
+<span class="nc" id="L124">            System.out.println(&quot;  Total Tickets: &quot; + p.getTicketAmt());</span>
+<span class="nc" id="L125">            System.out.println(&quot;  Total Food:    &quot; + p.getFoodQty());</span>
+        } else {
+<span class="nc" id="L127">            System.out.println(&quot;\nTICKETS:&quot;);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">            for (Ticket t : p.getTicket()) {</span>
+<span class="nc" id="L129">                System.out.printf(&quot;  %s (x%d) - RM%.2f%n&quot;, t.getMovieName(), t.getTicketAmt(), t.getTotalPrice());</span>
+<span class="nc" id="L130">            }</span>
+<span class="nc" id="L131">            System.out.println(&quot;\nFOOD:&quot;);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">            for (Food f : p.getFood()) {</span>
+<span class="nc" id="L133">                System.out.printf(&quot;  %s (x%d) - RM%.2f%n&quot;, f.getName(), f.getQty(), f.getPrice());</span>
+<span class="nc" id="L134">            }</span>
+        }
+        
+<span class="nc" id="L137">        System.out.printf(&quot;%nGRAND TOTAL: RM%.2f%n&quot;, p.getTotalPrice());</span>
+<span class="nc" id="L138">        System.out.println(&quot;=====================================&quot;);</span>
+<span class="nc" id="L139">    }</span>
+
+    public Payment handlePaymentModule(ArrayList&lt;Ticket&gt; ticketArr, ArrayList&lt;Food&gt; foodArr, 
+                                       Optional&lt;Customer&gt; currentUser, ArrayList&lt;Payment&gt; oldPayment) {
+<span class="nc" id="L143">        double sumOfPrices = calculateTotal(ticketArr, foodArr);</span>
+<span class="nc" id="L144">        int receiptId = getNextReceiptId(oldPayment);</span>
+<span class="nc" id="L145">        printReceipt(ticketArr, foodArr, receiptId, sumOfPrices);</span>
+
+<span class="nc bnc" id="L147" title="All 4 branches missed.">        if (ticketArr.isEmpty() &amp;&amp; foodArr.isEmpty()) {</span>
+<span class="nc" id="L148">            System.out.println(&quot;\n &lt;!&gt; Cart is empty! Nothing to pay. &lt;!&gt;&quot;);</span>
+<span class="nc" id="L149">            return null;</span>
+        }
+
+<span class="nc" id="L152">        boolean back = false;</span>
+<span class="nc" id="L153">        Payment payment = null;</span>
+
+        do {
+<span class="nc" id="L156">            System.out.println(&quot;\n\tWould you like to pay by &gt; &quot;);</span>
+<span class="nc" id="L157">            System.out.println(&quot;\n\t|| 1 | Bank Transfer      ||&quot;);</span>
+<span class="nc" id="L158">            System.out.println(&quot;\n\t|| 2 | Cash               ||&quot;);</span>
+<span class="nc" id="L159">            System.out.println(&quot;\n\t|| 3 | Cancel Payment     ||&quot;);</span>
+<span class="nc" id="L160">            System.out.print(&quot;\nChoose one of the option from menu above ~ &quot;);</span>
+            
+<span class="nc" id="L162">            int payChoice = Utility.checkError(scanner, 1, 3);</span>
+
+<span class="nc bnc" id="L164" title="All 4 branches missed.">            switch (payChoice) {</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                case 1: payment = handleBankTransfer(sumOfPrices, ticketArr, foodArr, currentUser); if(payment!=null) back=true; break;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">                case 2: payment = handleCashPayment(sumOfPrices, ticketArr, foodArr, currentUser); if(payment!=null) back=true; break;</span>
+<span class="nc" id="L167">                case 3: return null;</span>
+            }
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        } while (!back);</span>
+
+<span class="nc" id="L171">        return payment;</span>
+    }
+
+    // ... (Keep handleBankTransfer, handleCashPayment, calculateTotal, printReceipt methods exactly as before) ...
+    
+    private Payment handleBankTransfer(double amount, ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; foodOrders, Optional&lt;Customer&gt; currentUser) {
+<span class="nc" id="L177">        boolean valid = false;</span>
+<span class="nc" id="L178">        String bankNum = &quot;&quot;;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">        while (!valid) {</span>
+<span class="nc" id="L180">            System.out.print(&quot;\nEnter bank account number (9 digits): &quot;);</span>
+<span class="nc" id="L181">            bankNum = scanner.next();</span>
+<span class="nc" id="L182">            scanner.nextLine(); </span>
+<span class="nc" id="L183">            PaymentRequest request = new PaymentRequest(amount, &quot;Bank Transfer&quot;, bankNum, tickets, foodOrders, currentUser);</span>
+<span class="nc" id="L184">            PaymentResult result = paymentService.processPayment(request);</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">            if (result.isSuccess()) {</span>
+<span class="nc" id="L186">                System.out.println(&quot;\n\t&lt;$&gt; Payment successful! &lt;$&gt;\n-----&lt; Thank you! Come Again! &gt;-----&quot;);</span>
+<span class="nc" id="L187">                return new Payment(currentUser, tickets, foodOrders, amount, true);</span>
+            } else {
+<span class="nc" id="L189">                System.out.println(&quot;\n &lt;!&gt; &quot; + result.getMessage() + &quot; &lt;!&gt;&quot;);</span>
+<span class="nc" id="L190">                System.out.print(&quot;Try again? (Y/N): &quot;);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                if (scanner.next().toUpperCase().charAt(0) != 'Y') return null;</span>
+            }
+<span class="nc" id="L193">        }</span>
+<span class="nc" id="L194">        return null;</span>
+    }
+
+    private Payment handleCashPayment(double amount, ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; foodOrders, Optional&lt;Customer&gt; currentUser) {
+<span class="nc" id="L198">        System.out.printf(&quot;\nIs the amount: RM%.2f correct? (Y: Yes/N: No) &gt; &quot;, amount);</span>
+<span class="nc" id="L199">        char correct = scanner.next().toUpperCase().charAt(0);</span>
+<span class="nc" id="L200">        scanner.nextLine();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if (correct == 'Y') {</span>
+<span class="nc" id="L202">            paymentService.processPayment(new PaymentRequest(amount, &quot;Cash&quot;, null, tickets, foodOrders, currentUser));</span>
+<span class="nc" id="L203">            System.out.println(&quot;\n\t&lt;$&gt; Payment successful! &lt;$&gt;\n-----&lt; Thank you! Come Again! &gt;-----&quot;);</span>
+<span class="nc" id="L204">            return new Payment(currentUser, tickets, foodOrders, amount, true);</span>
+        }
+<span class="nc" id="L206">        System.out.println(&quot;\n &lt;!&gt; Payment cancelled. &lt;!&gt;&quot;);</span>
+<span class="nc" id="L207">        return null;</span>
+    }
+
+    private double calculateTotal(ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; foods) {
+<span class="nc" id="L211">        double sum = 0;</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        for (Ticket t : tickets) sum += t.getTotalPrice();</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">        for (Food f : foods) sum += f.getPrice();</span>
+<span class="nc" id="L214">        return sum;</span>
+    }
+
+    private int getNextReceiptId(ArrayList&lt;Payment&gt; oldPayments) {
+<span class="nc" id="L218">        return paymentRepository.getAllPayments().size() + 1;</span>
+    }
+    
+    private void printReceipt(ArrayList&lt;Ticket&gt; tickets, ArrayList&lt;Food&gt; foods, int receiptId, double total) {
+        // ... (Keep existing receipt printing logic) ...
+        // Ensure you copy the printing logic from your previous file here
+<span class="nc" id="L224">        System.out.println(&quot;\n---&lt; Receipt &gt;--- \nTotal: RM&quot; + String.format(&quot;%.2f&quot;, total));</span>
+<span class="nc" id="L225">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

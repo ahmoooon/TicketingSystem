@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Payment.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">domain</a> &gt; <span class="el_source">Payment.java</span></div><h1>Payment.java</h1><pre class="source lang-java linenums">// src/domain/Payment.java
+package domain;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Optional;
+
+public class Payment implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private ArrayList&lt;Ticket&gt; ticket;
+    private ArrayList&lt;Food&gt; food;
+    private double totalPricing;
+<span class="nc" id="L13">    private int paymentID = 0;</span>
+<span class="nc" id="L14">    private static int lastID = 0;</span>
+    private boolean paymentMade;
+    private Optional&lt;Customer&gt; customer;
+    
+<span class="nc" id="L18">    public Payment(){</span>
+<span class="nc" id="L19">        this.ticket = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L20">        this.food = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L21">        this.customer = Optional.empty();</span>
+<span class="nc" id="L22">    }</span>
+    
+<span class="nc" id="L24">    public Payment(Optional&lt;Customer&gt; customer, ArrayList&lt;Ticket&gt; ticket, ArrayList&lt;Food&gt; food, double totalPricing, boolean paymentMade){</span>
+        // Create copies of the lists to prevent data loss when cart is cleared
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        this.ticket = (ticket != null) ? new ArrayList&lt;&gt;(ticket) : new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L27" title="All 2 branches missed.">        this.food = (food != null) ? new ArrayList&lt;&gt;(food) : new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L28">        this.customer = customer;</span>
+<span class="nc" id="L29">        this.totalPricing = totalPricing;</span>
+<span class="nc" id="L30">        this.paymentMade = paymentMade;</span>
+<span class="nc" id="L31">        this.paymentID = ++lastID;</span>
+<span class="nc" id="L32">    }</span>
+    
+    // --- STATIC SETTERS ---
+    public static void setLastID(int id){
+<span class="nc" id="L36">        lastID = id;</span>
+<span class="nc" id="L37">    }</span>
+    
+    // --- SETTERS FOR HISTORY LOADING ---
+    public void setPaymentID(int paymentId) {
+<span class="nc" id="L41">        this.paymentID = paymentId;</span>
+        // Ensure static counter doesn't lag behind if we load a high ID
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        if (paymentId &gt; lastID) {</span>
+<span class="nc" id="L44">            lastID = paymentId;</span>
+        }
+<span class="nc" id="L46">    }</span>
+
+    // --- GETTERS ---
+    
+    public int getPaymentID(){
+<span class="nc" id="L51">        return paymentID;</span>
+    }
+    
+    public boolean getPaymentMade(){
+<span class="nc" id="L55">        return paymentMade;</span>
+    }
+    
+    public Optional&lt;Customer&gt; getCustomer(){
+<span class="nc" id="L59">        return customer;</span>
+    }
+    
+    public ArrayList&lt;Ticket&gt; getTicket(){
+<span class="nc" id="L63">        return ticket;   </span>
+    }
+    
+    public ArrayList&lt;Food&gt; getFood(){
+<span class="nc" id="L67">        return food;</span>
+    }
+    
+    /**
+     * CLEAN CODE FIX: Returns the stored total directly. 
+     * No need to recalculate, which prevents errors if lists are empty.
+     */
+    public double getTotalPrice(){
+<span class="nc" id="L75">        return totalPricing;</span>
+    }
+    
+    // --- SMART GETTERS (No separate summary variables needed) ---
+    
+    public int getTicketAmt() {
+<span class="nc bnc" id="L81" title="All 4 branches missed.">        if (ticket == null || ticket.isEmpty()) return 0;</span>
+        
+<span class="nc" id="L83">        int total = 0;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        for(Ticket t : ticket) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">            if(t != null) total += t.getTicketAmt();</span>
+<span class="nc" id="L86">        }</span>
+<span class="nc" id="L87">        return total;</span>
+    }
+    
+    public int getTotalTicketPrice() {
+<span class="nc bnc" id="L91" title="All 4 branches missed.">        if (ticket == null || ticket.isEmpty()) return 0;</span>
+        
+<span class="nc" id="L93">        int total = 0;</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        for(Ticket t : ticket) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if(t != null) total += t.getTotalPrice();</span>
+<span class="nc" id="L96">        }</span>
+<span class="nc" id="L97">        return total;</span>
+    }
+    
+    
+    public int getFoodQty() {
+<span class="nc bnc" id="L102" title="All 4 branches missed.">        if (food == null || food.isEmpty()) return 0;</span>
+        
+<span class="nc" id="L104">        int total = 0;</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        for(Food f : food) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if(f != null) total += f.getQty();</span>
+<span class="nc" id="L107">        }</span>
+<span class="nc" id="L108">        return total;</span>
+    }
+    
+    public double getTotalFoodPrice() {
+<span class="nc bnc" id="L112" title="All 4 branches missed.">        if (food == null || food.isEmpty()) return 0;</span>
+        
+<span class="nc" id="L114">        double total = 0;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        for(Food f : food) {</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            if(f != null) total += f.getPrice();</span>
+<span class="nc" id="L117">        }</span>
+<span class="nc" id="L118">        return total;</span>
+    }
+    
+    public String getMovieName(){
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for(Ticket t: ticket){</span>
+<span class="nc bnc" id="L123" title="All 4 branches missed.">            if(t != null &amp;&amp; t.getMovieName() != null){</span>
+<span class="nc" id="L124">              return t.getMovieName();  </span>
+            }
+<span class="nc" id="L126">        }</span>
+<span class="nc" id="L127">        return &quot;N/A&quot;;</span>
+    }
+    
+    @Override
+    public String toString(){
+<span class="nc" id="L132">        return &quot;Payment ID: &quot; + paymentID + &quot; | Total: &quot; + totalPricing;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StaffService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">application.services</a> &gt; <span class="el_source">StaffService.java</span></div><h1>StaffService.java</h1><pre class="source lang-java linenums">package application.services;
+
+import application.utilities.LoggerSetup;
+import domain.Customer;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Service layer for staff operations.
+ * Handles customer management and report generation.
+ */
+public class StaffService {
+<span class="nc" id="L16">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    
+    private final ReportService reportService;
+    private final CustomerService customerService; 
+    
+<span class="nc" id="L21">    public StaffService(ReportService reportService, CustomerService customerService) {</span>
+<span class="nc" id="L22">        this.reportService = reportService;</span>
+<span class="nc" id="L23">        this.customerService = customerService;</span>
+<span class="nc" id="L24">        logger.info(&quot;StaffService initialized.&quot;);</span>
+<span class="nc" id="L25">    }</span>
+
+    // ========== TEXT REPORT METHODS (Existing) ==========
+    
+    public String getCustomerListReport(ArrayList&lt;Customer&gt; customer) {
+<span class="nc" id="L30">        logger.info(&quot;Retrieving Customer List Report.&quot;);</span>
+<span class="nc" id="L31">        return reportService.getCustomerListReport(customer);</span>
+    }
+
+    public String getMoviePurchaseReport() {
+<span class="nc" id="L35">        logger.info(&quot;Retrieving Movie Purchase Report.&quot;);</span>
+<span class="nc" id="L36">        return reportService.getMoviePurchaseReport();</span>
+    }
+
+    public String getFoodPurchaseReport() {
+<span class="nc" id="L40">        logger.info(&quot;Retrieving Food Purchase Report.&quot;);</span>
+<span class="nc" id="L41">        return reportService.getFoodPurchaseReport();</span>
+    }
+    
+    public String getSalesSummaryReport() {
+<span class="nc" id="L45">        logger.info(&quot;Retrieving Sales Summary Report.&quot;);</span>
+<span class="nc" id="L46">        return reportService.generateSalesSummaryReport();</span>
+    }
+    
+    // ========== PDF EXPORT METHODS (New) ==========
+    
+    /**
+     * Exports Customer List Report to PDF file.
+     * 
+     * @param customers List of customers to include in report
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation or file writing fails
+     */
+    public void exportCustomerListToPdf(ArrayList&lt;Customer&gt; customers, File outputFile) 
+            throws IOException {
+<span class="nc" id="L60">        logger.log(Level.INFO, &quot;Exporting Customer List Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="nc" id="L61">        reportService.exportCustomerListToPdf(customers, outputFile);</span>
+<span class="nc" id="L62">    }</span>
+    
+    /**
+     * Exports Movie Purchase Report to PDF file.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation or file writing fails
+     */
+    public void exportMoviePurchaseToPdf(File outputFile) throws IOException {
+<span class="nc" id="L71">        logger.log(Level.INFO, &quot;Exporting Movie Purchase Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="nc" id="L72">        reportService.exportMoviePurchaseToPdf(outputFile);</span>
+<span class="nc" id="L73">    }</span>
+    
+    /**
+     * Exports Food Purchase Report to PDF file.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation or file writing fails
+     */
+    public void exportFoodPurchaseToPdf(File outputFile) throws IOException {
+<span class="nc" id="L82">        logger.log(Level.INFO, &quot;Exporting Food Purchase Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="nc" id="L83">        reportService.exportFoodPurchaseToPdf(outputFile);</span>
+<span class="nc" id="L84">    }</span>
+    
+    /**
+     * Exports Sales Summary Report to PDF file.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation or file writing fails
+     */
+    public void exportSalesSummaryToPdf(File outputFile) throws IOException {
+<span class="nc" id="L93">        logger.log(Level.INFO, &quot;Exporting Sales Summary Report to PDF: {0}&quot;, outputFile.getName());</span>
+<span class="nc" id="L94">        reportService.exportSalesSummaryToPdf(outputFile);</span>
+<span class="nc" id="L95">    }</span>
+    
+    // ========== CUSTOMER MANAGEMENT (Existing) ==========
+    
+    public boolean deleteCustomerAccount(String name) {
+<span class="nc" id="L100">        logger.log(Level.INFO, &quot;Attempting to delete customer account: {0}&quot;, name);</span>
+<span class="nc" id="L101">        return customerService.deleteCustomer(name);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

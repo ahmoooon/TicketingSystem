@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomerService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">application.services</a> &gt; <span class="el_source">CustomerService.java</span></div><h1>CustomerService.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package application.services;
+
+/**
+ *
+ * @author zhili
+ */
+// CustomerService.java - Business Logic Layer (Domain Management)
+// CustomerService.java - Business Logic Layer (Domain Management)
+import application.utilities.LoggerSetup;
+import domain.Customer;
+import infrastructure.repositories.DataFileHandler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+public class CustomerService {
+    private final String customerFile;
+    // &lt;&lt;&lt; Logger Initialization added &gt;&gt;&gt;
+<span class="nc" id="L26">    private static final Logger logger = LoggerSetup.getLogger();</span>
+<span class="nc" id="L27">    private Customer loggedInCustomer = null;</span>
+    private ArrayList&lt;Customer&gt; customerList;
+
+    public CustomerService() {
+<span class="nc" id="L31">        this(&quot;customer_data.json&quot;);</span>
+<span class="nc" id="L32">    }</span>
+
+    // 👇 test-friendly constructor
+<span class="nc" id="L35">    public CustomerService(String customerFile) {</span>
+<span class="nc" id="L36">        this.customerFile = customerFile;</span>
+<span class="nc" id="L37">        this.customerList = loadCustomers();</span>
+<span class="nc" id="L38">        logger.log(Level.INFO, &quot;CustomerService initialized with {0} existing customers.&quot;, this.customerList.size());</span>
+<span class="nc" id="L39">        this.customerList.removeIf(c -&gt; c.getName().equalsIgnoreCase(AuthService.STAFF_ID));</span>
+<span class="nc" id="L40">    }</span>
+    
+    // --- Persistence Logic ---
+    private ArrayList&lt;Customer&gt; loadCustomers() {
+<span class="nc" id="L44">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(customerFile);</span>
+<span class="nc" id="L45">        return jsonLines.stream()</span>
+<span class="nc" id="L46">            .map(Customer::fromJsonString) </span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            .filter(c -&gt; c != null)       </span>
+<span class="nc" id="L48">            .collect(Collectors.toCollection(ArrayList::new));</span>
+    }
+    
+    public void setLoggedInCustomer(Customer customer) {
+<span class="nc" id="L52">        this.loggedInCustomer = customer;</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (customer != null) {</span>
+<span class="nc" id="L54">            logger.log(Level.INFO, &quot;Current user set to: {0}&quot;, customer.getName());</span>
+        }
+<span class="nc" id="L56">    }</span>
+
+    // NEW: Getter for the currently logged-in user
+    public Optional&lt;Customer&gt; getLoggedInCustomer() {
+<span class="nc" id="L60">        return Optional.ofNullable(loggedInCustomer);</span>
+    }
+    
+    private void saveCustomers() {
+<span class="nc" id="L64">        List&lt;String&gt; jsonLines = this.customerList.stream()</span>
+<span class="nc" id="L65">            .map(Customer::toJsonString) </span>
+<span class="nc" id="L66">            .collect(Collectors.toList());</span>
+            
+<span class="nc" id="L68">        DataFileHandler.saveToJsonFile(jsonLines, customerFile);</span>
+<span class="nc" id="L69">    }</span>
+    
+    // --- Core Management Logic ---
+    public ArrayList&lt;Customer&gt; getCustomerList() {
+<span class="nc" id="L73">        return this.customerList;</span>
+    }
+
+    public boolean deleteCustomer(String nameToDelete) {
+<span class="nc bnc" id="L77" title="All 6 branches missed.">        if (nameToDelete == null || nameToDelete.trim().isEmpty() || nameToDelete.equalsIgnoreCase(AuthService.STAFF_ID)) {</span>
+<span class="nc" id="L78">            logger.warning(&quot;Attempted to delete customer with invalid name or tried to delete Staff account.&quot;);</span>
+<span class="nc" id="L79">            return false;</span>
+        }
+        
+<span class="nc" id="L82">        boolean removed = this.customerList.removeIf(c -&gt; c.getName().equalsIgnoreCase(nameToDelete.trim()));</span>
+
+<span class="nc bnc" id="L84" title="All 2 branches missed.">        if (removed) {</span>
+<span class="nc" id="L85">            saveCustomers();</span>
+<span class="nc" id="L86">            logger.log(Level.INFO, &quot;Customer deleted successfully: {0}&quot;, nameToDelete);</span>
+        } else {
+<span class="nc" id="L88">            logger.log(Level.WARNING, &quot;Deletion failed: Customer not found: {0}&quot;, nameToDelete);</span>
+        }
+<span class="nc" id="L90">        return removed;</span>
+    }
+    
+    public void addCustomer(Customer newCustomer) {
+<span class="nc" id="L94">        this.customerList.add(newCustomer);</span>
+<span class="nc" id="L95">        saveCustomers();</span>
+<span class="nc" id="L96">        logger.info(() -&gt; &quot;New customer added and data saved: &quot; + newCustomer.getName());</span>
+<span class="nc" id="L97">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

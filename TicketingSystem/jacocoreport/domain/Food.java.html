@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Food.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">domain</a> &gt; <span class="el_source">Food.java</span></div><h1>Food.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package domain;
+
+/**
+ *
+ * @author MOON
+ */
+// Food.java - ADAPTED Domain Model (Abstract Base Class)
+import java.util.Scanner;
+import java.util.ArrayList;
+
+public abstract class Food {
+    protected int foodNum;
+    protected String name;
+    protected double price; // Note: This field is used for both Unit Price (in inventory) and Total Price (in order) in your logic.
+    protected int qty;
+<span class="nc" id="L20">    protected static int lastNum = 1;</span>
+    
+    // Constructor 1: Default (Used when loading menu items)
+<span class="nc" id="L23">    Food(String name, double unitPrice) {</span>
+<span class="nc" id="L24">        foodNum = lastNum;</span>
+<span class="nc" id="L25">        lastNum++;</span>
+<span class="nc" id="L26">        this.name = name;</span>
+        // In the inventory, price stores the unit price
+<span class="nc" id="L28">        this.price = unitPrice; </span>
+<span class="nc" id="L29">        this.qty = 1; </span>
+<span class="nc" id="L30">    }</span>
+
+    // Constructor 2: For merging existing orders (kept minimal)
+<span class="nc" id="L33">    Food() { </span>
+<span class="nc" id="L34">        this.qty = 0;</span>
+<span class="nc" id="L35">    }</span>
+    
+    // Constructor 3: Used when creating a new item from menu choice
+<span class="nc" id="L38">    Food(int num) {</span>
+<span class="nc" id="L39">        foodNum = num;</span>
+<span class="nc" id="L40">    }</span>
+    
+    // --- Getters and Setters (Retaining your exact methods) ---
+<span class="nc" id="L43">    public int getFoodNum() { return foodNum; }</span>
+<span class="nc" id="L44">    public void setFoodNum(int foodNum) { this.foodNum = foodNum; }</span>
+    
+<span class="nc" id="L46">    public String getName() { return name; }</span>
+<span class="nc" id="L47">    public void setName(String name) { this.name = name; }</span>
+    
+<span class="nc" id="L49">    public double getPrice() { return price; }</span>
+<span class="nc" id="L50">    public void setPrice(double price) { this.price = price; }</span>
+
+<span class="nc" id="L52">    public int getQty() { return qty; }</span>
+<span class="nc" id="L53">    public void setQty(int qty) { this.qty = qty; }</span>
+
+<span class="nc" id="L55">    public static int getLastNum() { return lastNum; }</span>
+<span class="nc" id="L56">    public static void setLastNum(int lastNum) { Food.lastNum = lastNum; }</span>
+    
+    // --- Logic Methods ---
+    
+    // Calculates the total price and stores it back in the 'price' field
+    public void calPrice() {
+        // NOTE: This logic assumes 'price' currently holds the unit price before this call.
+        // In the new architecture, we will manage unit price separate from total price.
+        // For compatibility with your final object state, we calculate the total here.
+<span class="nc" id="L65">        this.price = this.qty * this.price; </span>
+<span class="nc" id="L66">    }</span>
+
+    // Matches your original logic
+    public void incrementQty(int amount) {
+<span class="nc" id="L70">        this.qty += amount;</span>
+        // We will update the total price in the controller/service layer to avoid ambiguity
+<span class="nc" id="L72">    }</span>
+    
+    // Matches your original logic
+    public void incrementPrice(double amount) {
+<span class="nc" id="L76">        this.price += amount;</span>
+<span class="nc" id="L77">    }</span>
+    
+    // Abstract method to differentiate types for the factory/service
+    public abstract String getFoodType(); 
+    
+    // --- Display Methods (Retaining your exact formatting) ---
+    public String toString() {
+        // Used to display the menu items (number, name, unit price)
+<span class="nc" id="L85">        return String.format(&quot;%3d %-35s RM %6.2f&quot;, foodNum, name, price);</span>
+    }
+    
+    public String printOrder() {
+        // Used to display items in the order list (name, qty, total price)
+<span class="nc" id="L90">        return String.format(&quot;%-35s %3d RM %6.2f&quot;, name, qty, price);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

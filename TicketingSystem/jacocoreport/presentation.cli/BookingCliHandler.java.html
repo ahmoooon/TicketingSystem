@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingCliHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.cli</a> &gt; <span class="el_source">BookingCliHandler.java</span></div><h1>BookingCliHandler.java</h1><pre class="source lang-java linenums">package presentation.cli;
+
+import application.dto.BookingRequest;
+import application.dto.BookingResult;
+import application.services.BookingService;
+import application.utilities.Utility;
+import domain.CinemaHall;
+import domain.Movie;
+import domain.Showtime;
+import domain.Ticket;
+import domain.valueobjects.SeatId;
+import infrastructure.repositories.SeatUnavailableException;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import static presentation.cli.MainApplication.logo;
+
+public class BookingCliHandler {
+    
+    private final BookingService bookingService;
+    private final Scanner scanner;
+
+<span class="nc" id="L25">    public BookingCliHandler(BookingService bookingService, Scanner scanner) {</span>
+<span class="nc" id="L26">        this.bookingService = bookingService;</span>
+<span class="nc" id="L27">        this.scanner = scanner;</span>
+<span class="nc" id="L28">    }</span>
+    
+    /**
+     * Replaces the old TicketingSystem.BookingMenu() (Switch/Loop)
+     * @param currentTickets
+     */
+    public ArrayList&lt;Ticket&gt; handleBookingMenu(ArrayList&lt;Ticket&gt; currentTickets) {
+<span class="nc" id="L35">        boolean back = false;</span>
+<span class="nc" id="L36">        int menuChoice = 0;</span>
+
+        do {
+<span class="nc" id="L39">            logo(2); // Display Booking Logo</span>
+<span class="nc" id="L40">            System.out.println(&quot;\n\t|| 0 | Back               ||\n\t|| 1 | Booking            ||\n\t|| 2 | View Cart          ||\n\t|| 3 | View Seat Details  ||\n\t|| 4 | Delete Ticket      ||\n\t|| 5 | Exit to Main Menu  ||\n&quot;);</span>
+<span class="nc" id="L41">            System.out.print(&quot;Choose one of the option from menu above ~ &quot;);</span>
+            
+<span class="nc" id="L43">            menuChoice = Utility.checkError(scanner, 0, 5); </span>
+
+<span class="nc bnc" id="L45" title="All 6 branches missed.">            switch (menuChoice) {</span>
+                case 1:
+<span class="nc" id="L47">                    Ticket newTicket = handleBookingFlow();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                    if (newTicket != null) {</span>
+<span class="nc" id="L49">                        currentTickets.add(newTicket);</span>
+                    }
+                    break;
+                case 2:
+<span class="nc" id="L53">                    displayCart(currentTickets);</span>
+<span class="nc" id="L54">                    break;</span>
+                case 3:
+<span class="nc" id="L56">                    displaySeatDetails(currentTickets);</span>
+<span class="nc" id="L57">                    break;</span>
+                case 4:
+                    // This logic still uses the old, monolithic deletion logic from MainApplication
+<span class="nc" id="L60">                    deleteTicket(currentTickets);</span>
+<span class="nc" id="L61">                    break;</span>
+                case 5:
+<span class="nc" id="L63">                    back = true;</span>
+                    break;
+            }
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        } while (!back);</span>
+        
+<span class="nc" id="L68">        return currentTickets;</span>
+    }
+    
+    /**
+     * Replaces the old TicketingSystem.bookingModule() (Transaction Orchestration)
+     */
+    private Ticket handleBookingFlow() {
+        try {
+            // 1. I/O: Movie Selection (Uses MovieRepository via Service)
+<span class="nc" id="L77">            Movie movie = promptForMovieSelection();</span>
+            
+            // 2. I/O: Date Selection (Uses ShowtimeRepository via Service)
+<span class="nc" id="L80">            LocalDate date = promptForDateSelection(movie);</span>
+            
+            // 3. I/O: Time Selection 
+<span class="nc" id="L83">            String timeString = promptForTimeSelection(movie, date);</span>
+            
+            // 4. I/O: Hall &amp; Seat Amount Selection
+<span class="nc" id="L86">            int hallId = promptForHallSelection();</span>
+<span class="nc" id="L87">            int seatAmt = promptForSeatAmount();</span>
+            
+            // 5. I/O: Seat ID Selection (Uses SeatId Value Object)
+<span class="nc" id="L90">            List&lt;SeatId&gt; seatIds = promptForSeatSelection(hallId, seatAmt);</span>
+            
+            // --- Application Layer Call (The Core Logic) ---
+            // NOTE: Assuming Movie has an ID field for this request DTO
+<span class="nc" id="L94">            BookingRequest request = new BookingRequest(</span>
+<span class="nc" id="L95">                movie.getId(), // Placeholder Movie ID. You need to implement Movie.getId()</span>
+                date, 
+                timeString, 
+                hallId, 
+                seatIds
+            );
+            
+<span class="nc" id="L102">            BookingResult result = bookingService.bookTickets(request);</span>
+            
+            // 6. Output: Success
+<span class="nc" id="L105">            System.out.println(&quot;\n Booking successful! Details:&quot;);</span>
+            
+            // Re-creating the final Ticket Entity from the result
+<span class="nc" id="L108">            return new Ticket(</span>
+<span class="nc" id="L109">                result.getShowtime(), </span>
+<span class="nc" id="L110">                result.getSeats().size(), </span>
+<span class="nc" id="L111">                result.getShowtime().getCinemaHall(), </span>
+<span class="nc" id="L112">                new ArrayList&lt;&gt;(result.getSeats())</span>
+            );
+            
+<span class="nc" id="L115">        } catch (IllegalArgumentException | SeatUnavailableException e) {</span>
+            // Clean Error Handling (Reporting service exception messages to user)
+<span class="nc" id="L117">            System.err.println(&quot;\n Booking Failed: &quot; + e.getMessage());</span>
+<span class="nc" id="L118">            return null;</span>
+<span class="nc" id="L119">        } catch (Exception e) {</span>
+<span class="nc" id="L120">            System.err.println(&quot;\n An unexpected error occurred: &quot; + e.getMessage());</span>
+<span class="nc" id="L121">            return null;</span>
+        }
+    }
+    
+    // --- Helper Methods (I/O Logic) ---
+    
+    private Movie promptForMovieSelection() {
+<span class="nc" id="L128">        List&lt;Movie&gt; movies = bookingService.getAvailableMovies();</span>
+<span class="nc" id="L129">        int count = 1;</span>
+<span class="nc" id="L130">        System.out.println(&quot;\n---&lt; Available Movies &gt;---&quot;);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        for (Movie m : movies) {</span>
+<span class="nc" id="L132">            System.out.println(&quot;(&quot; + count++ + &quot;) &quot; + m.toString() + &quot;\n&quot;);</span>
+<span class="nc" id="L133">        }</span>
+<span class="nc" id="L134">        printSaleTicket(1); </span>
+<span class="nc" id="L135">        int movieInput = Utility.checkError(scanner, 1, movies.size());</span>
+        
+        // IMPORTANT: Assuming Movie objects are immutable, we return the entity.
+<span class="nc" id="L138">        return bookingService.getMovieById(movieInput);</span>
+    }
+    
+    private LocalDate promptForDateSelection(Movie movie) {
+        // This should use bookingService.getAvailableShowtimeDates(movie)
+<span class="nc" id="L143">        List&lt;Showtime&gt; dates = bookingService.getAvailableShowtimeDates(movie);</span>
+<span class="nc" id="L144">        int count = 1;</span>
+<span class="nc" id="L145">        System.out.println(&quot;\n---&lt; Date Selection &gt;---&quot;);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        for (Showtime s : dates) {</span>
+<span class="nc" id="L147">            System.out.println(&quot;(&quot; + count++ + &quot;) &quot; + s.getDate());</span>
+<span class="nc" id="L148">        }</span>
+<span class="nc" id="L149">        printSaleTicket(2);</span>
+<span class="nc" id="L150">        int dateInput = Utility.checkError(scanner, 1, dates.size());</span>
+        
+<span class="nc" id="L152">        return dates.get(dateInput - 1).getDate();</span>
+    }
+    
+    private String promptForTimeSelection(Movie movie, LocalDate date) {
+        // NOTE: This simulation must eventually use ShowtimeRepository helpers
+<span class="nc" id="L157">        System.out.println(&quot;\n---&lt; Time Selection &gt;---&quot;);</span>
+        // We will stick to hardcoded values for simplicity as the generation logic is complex
+<span class="nc" id="L159">        System.out.println(&quot;(1) 10:00 AM\n(2) 11:40 AM\n(3) 01:20 PM\n(4) 03:00 PM\n(5) 04:40 PM\n(6) 06:20 PM\n(7) 08:00 PM&quot;);</span>
+<span class="nc" id="L160">        printSaleTicket(3);</span>
+<span class="nc" id="L161">        int timeInput = Utility.checkError(scanner, 1, 7);</span>
+        
+<span class="nc" id="L163">        String[] times = {&quot;10:00 AM&quot;, &quot;11:40 AM&quot;, &quot;01:20 PM&quot;, &quot;03:00 PM&quot;, &quot;04:40 PM&quot;, &quot;06:20 PM&quot;, &quot;08:00 PM&quot;};</span>
+<span class="nc" id="L164">        return times[timeInput - 1];</span>
+    }
+    
+    private int promptForHallSelection() {
+        // This should list halls using a HallRepository if it existed.
+<span class="nc" id="L169">        System.out.println(&quot;\n---&lt; Hall Selection &gt;---&quot;);</span>
+<span class="nc" id="L170">        System.out.println(&quot;1: &quot; + CinemaHall.HALL_TYPE_STANDARD);</span>
+<span class="nc" id="L171">        System.out.println(&quot;2: &quot; + CinemaHall.HALL_TYPE_IMAX);</span>
+<span class="nc" id="L172">        System.out.println(&quot;3: &quot; + CinemaHall.HALL_TYPE_LOUNGE);</span>
+<span class="nc" id="L173">        printSaleTicket(4);</span>
+<span class="nc" id="L174">        return Utility.checkError(scanner, 1, 3);</span>
+    }
+    
+    private int promptForSeatAmount() {
+<span class="nc" id="L178">        printSaleTicket(5); </span>
+<span class="nc" id="L179">        return Utility.checkError(scanner, 1, 100);</span>
+    }
+    
+    private List&lt;SeatId&gt; promptForSeatSelection(int hallId, int seatAmt) {
+<span class="nc" id="L183">        List&lt;SeatId&gt; selectedIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L184">        System.out.println(&quot;\n---&lt; Seat Selection (Hall ID: &quot; + hallId + &quot;) &gt;---&quot;);</span>
+        
+        // Visual Logic: Determine which seat map to print based on the selected Hall ID
+        // 1=Standard (Map 6), 2=IMAX (Map 7), 3=Lounge (Map 8)
+        int mapType;
+<span class="nc bnc" id="L189" title="All 3 branches missed.">        switch (hallId) {</span>
+            case 2:
+<span class="nc" id="L191">                mapType = 7; // IMAX</span>
+<span class="nc" id="L192">                break;</span>
+            case 3:
+<span class="nc" id="L194">                mapType = 8; // Lounge</span>
+<span class="nc" id="L195">                break;</span>
+            default:
+<span class="nc" id="L197">                mapType = 6; // Standard</span>
+                break;
+        }
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        for (int i = 0; i &lt; seatAmt; i++) {</span>
+<span class="nc" id="L202">            System.out.println(&quot;Selecting seat &quot; + (i + 1) + &quot; of &quot; + seatAmt);</span>
+<span class="nc" id="L203">            printSaleTicket(mapType); </span>
+            
+<span class="nc" id="L205">            System.out.print(&quot;Please select seat row (e.g: A ) &gt; &quot;);</span>
+<span class="nc" id="L206">            String rowInput = scanner.next();</span>
+<span class="nc" id="L207">            char row = rowInput.toUpperCase().charAt(0);</span>
+            
+<span class="nc" id="L209">            System.out.print(&quot;Please select seat column (e.g: 3 ) &gt; &quot;);</span>
+<span class="nc" id="L210">            int col = scanner.nextInt();</span>
+            
+            try {
+<span class="nc" id="L213">                selectedIds.add(new SeatId(row, col));</span>
+<span class="nc" id="L214">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L215">                System.err.println(&quot;Invalid seat input: &quot; + e.getMessage() + &quot;. Please re-enter this seat.&quot;);</span>
+<span class="nc" id="L216">                i--; </span>
+<span class="nc" id="L217">            }</span>
+        }
+<span class="nc" id="L219">        scanner.nextLine();</span>
+<span class="nc" id="L220">        return selectedIds;</span>
+    }
+    
+    private void displayCart(ArrayList&lt;Ticket&gt; tickets) {
+<span class="nc" id="L224">        System.out.println(&quot;\n---&lt; Your cart &gt;---&quot;);</span>
+<span class="nc" id="L225">        System.out.println(&quot;==========================================================================&quot;);</span>
+<span class="nc" id="L226">        System.out.println(&quot;Movie                Qty    TicketID    Showtime    Date           Hall ID&quot;);</span>
+<span class="nc" id="L227">        System.out.println(&quot;==========================================================================&quot;);</span>
+        
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (tickets.isEmpty()) {</span>
+<span class="nc" id="L230">            System.out.println(&quot;                               (Cart is Empty)                            &quot;);</span>
+        } else {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            for (Ticket t : tickets) {</span>
+<span class="nc" id="L233">                System.out.printf(&quot;%-21s%-5d%3d%19s%14s%6d\n&quot;, </span>
+<span class="nc" id="L234">                    t.getMovieName(), </span>
+<span class="nc" id="L235">                    t.getTicketAmt(), </span>
+<span class="nc" id="L236">                    t.getTicketID(), </span>
+<span class="nc" id="L237">                    t.time(), </span>
+<span class="nc" id="L238">                    t.getSchedule(), </span>
+<span class="nc" id="L239">                    t.getHallId()</span>
+                );
+<span class="nc" id="L241">            }</span>
+        }
+<span class="nc" id="L243">    }</span>
+    
+    private void displaySeatDetails(ArrayList&lt;Ticket&gt; tickets) {
+<span class="nc" id="L246">        System.out.println(&quot;\n---&lt; Your seat information &gt;--- &quot;);</span>
+        
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (tickets.isEmpty()) {</span>
+<span class="nc" id="L249">            System.out.println(&quot;&lt;!&gt; No tickets booked yet. &lt;!&gt;&quot;);</span>
+<span class="nc" id="L250">            return;</span>
+        }
+
+<span class="nc" id="L253">        System.out.println(&quot;=====================&quot;);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">        for (Ticket t : tickets) {</span>
+<span class="nc" id="L255">            System.out.println(&quot;Ticket ID  : &quot; + t.getTicketID());</span>
+<span class="nc" id="L256">            System.out.println(&quot;=====================&quot;);</span>
+<span class="nc" id="L257">            System.out.println(&quot;Hall type  : &quot; + t.getHallType());</span>
+<span class="nc" id="L258">            System.out.println(&quot;Hall ID    : &quot; + t.getHallId());</span>
+            // This relies on Ticket.displaySeatArray() which prints directly to console
+<span class="nc" id="L260">            t.displaySeatArray(); </span>
+<span class="nc" id="L261">            System.out.println(&quot;=====================&quot;);</span>
+<span class="nc" id="L262">            System.out.println();</span>
+<span class="nc" id="L263">        }</span>
+<span class="nc" id="L264">    }</span>
+    
+    private void deleteTicket(ArrayList&lt;Ticket&gt; tickets) {
+<span class="nc bnc" id="L267" title="All 2 branches missed.">        if (tickets.isEmpty()) {</span>
+<span class="nc" id="L268">            System.out.println(&quot;&lt;!&gt; No record found! &lt;!&gt;&quot;);</span>
+<span class="nc" id="L269">            return;</span>
+        } 
+        
+        // Reuse displaySeatDetails to show what can be deleted
+<span class="nc" id="L273">        displaySeatDetails(tickets);</span>
+        
+<span class="nc" id="L275">        System.out.print(&quot;\nSelect the ticket ID to delete (0 to Back): &quot;);</span>
+        
+<span class="nc" id="L277">        int selectID = Utility.checkError(scanner, 0, 100);</span>
+        
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if (selectID == 0) {</span>
+<span class="nc" id="L280">            return;</span>
+        }
+        
+<span class="nc" id="L283">        Ticket ticketToRemove = null;</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">        for (Ticket t : tickets) {</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">            if (t.getTicketID() == selectID) {</span>
+<span class="nc" id="L286">                ticketToRemove = t;</span>
+<span class="nc" id="L287">                break;</span>
+            }
+<span class="nc" id="L289">        }</span>
+
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        if (ticketToRemove != null) {</span>
+<span class="nc" id="L292">            System.out.print(&quot;\nConfirm to delete ticket with Ticket ID (Y: Yes/N: No): (&quot; + ticketToRemove.getTicketID() + &quot;)? &quot;);</span>
+<span class="nc" id="L293">            char confirm = scanner.next().toUpperCase().charAt(0);</span>
+            
+<span class="nc bnc" id="L295" title="All 2 branches missed.">            if (confirm == 'Y') {</span>
+<span class="nc" id="L296">                tickets.remove(ticketToRemove);</span>
+<span class="nc" id="L297">                System.out.println(&quot;\nSuccessfully removed ticket with Ticket ID: (&quot; + ticketToRemove.getTicketID() + &quot;).&quot;);</span>
+            } else {
+<span class="nc" id="L299">                System.out.println(&quot;\nDeletion cancelled.&quot;);</span>
+            }
+<span class="nc" id="L301">        } else {</span>
+<span class="nc" id="L302">            System.out.println(&quot;\n &lt;!&gt; Ticket ID not found! Please try again. &lt;!&gt;&quot;);</span>
+        }
+<span class="nc" id="L304">        scanner.nextLine(); </span>
+<span class="nc" id="L305">    }</span>
+    private static void printSaleTicket(int choice) {
+<span class="nc bnc" id="L307" title="All 9 branches missed.">        switch (choice) {</span>
+            case 1:
+<span class="nc" id="L309">                System.out.print(&quot;\nPlease select the movie (1 to 5):&quot;);</span>
+<span class="nc" id="L310">                break;</span>
+            case 2:
+<span class="nc" id="L312">                System.out.print(&quot;\nPlease select the Date (1 to 3):&quot;);</span>
+<span class="nc" id="L313">                break;</span>
+            case 3:
+<span class="nc" id="L315">                System.out.print(&quot;\nPlease select the Time(1 to 7):&quot;);</span>
+<span class="nc" id="L316">                break;</span>
+            case 4:
+<span class="nc" id="L318">                System.out.print(&quot;\nPlease select the type of hall(1 to 3):&quot;);</span>
+<span class="nc" id="L319">                break;</span>
+            case 5:
+<span class="nc" id="L321">                System.out.print(&quot;\nPlease enter the amount of seats &gt; &quot;);</span>
+<span class="nc" id="L322">                break;</span>
+            case 6:
+<span class="nc" id="L324">                System.out.println(&quot; &quot;);</span>
+<span class="nc" id="L325">                System.out.println(&quot;A 1 2 3 4 5 6 7 8 9 10&quot;);</span>
+<span class="nc" id="L326">                System.out.println(&quot;B 1 2 3 4 5 6 7 8 9 10&quot;);</span>
+<span class="nc" id="L327">                System.out.println(&quot;C 1 2 3 4 5 6 7 8 9 10&quot;);</span>
+<span class="nc" id="L328">                System.out.println(&quot;D 1 2 3 4 5 6 7 8 9 10&quot;);</span>
+<span class="nc" id="L329">                System.out.println(&quot;E 1 2 3 4 5 6 7 8 9 10&quot;);</span>
+<span class="nc" id="L330">                System.out.println(&quot;***Please select the Seat ID\n&quot;);</span>
+<span class="nc" id="L331">                break;</span>
+            case 7:
+<span class="nc" id="L333">                System.out.println(&quot; &quot;);</span>
+<span class="nc" id="L334">                System.out.println(&quot;A 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L335">                System.out.println(&quot;B 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L336">                System.out.println(&quot;C 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L337">                System.out.println(&quot;D 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L338">                System.out.println(&quot;E 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L339">                System.out.println(&quot;F 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L340">                System.out.println(&quot;G 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L341">                System.out.println(&quot;H 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15&quot;);</span>
+<span class="nc" id="L342">                System.out.println(&quot;***Please select the Seat ID\n&quot;);</span>
+<span class="nc" id="L343">                break;</span>
+            case 8:
+<span class="nc" id="L345">                System.out.println(&quot; &quot;);</span>
+<span class="nc" id="L346">                System.out.println(&quot;A 1 2 3 4 5&quot;);</span>
+<span class="nc" id="L347">                System.out.println(&quot;B 1 2 3 4 5&quot;);</span>
+<span class="nc" id="L348">                System.out.println(&quot;C 1 2 3 4 5&quot;);</span>
+<span class="nc" id="L349">                System.out.println(&quot;D 1 2 3 4 5&quot;);</span>
+<span class="nc" id="L350">                System.out.println(&quot;E 1 2 3 4 5&quot;);</span>
+<span class="nc" id="L351">                System.out.println(&quot;***Please select the Seat ID\n&quot;);</span>
+            default:
+                break;
+        }
+<span class="nc" id="L355">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

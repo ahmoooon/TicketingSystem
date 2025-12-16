@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Showtime.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">domain</a> &gt; <span class="el_source">Showtime.java</span></div><h1>Showtime.java</h1><pre class="source lang-java linenums">package domain;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Represents a scheduled screening of a Movie in a specific CinemaHall.
+ */
+public class Showtime {
+    private final Movie movie; 
+    private final LocalDate date; 
+    private final String showtime; 
+    private final CinemaHall hall; 
+
+    // Primary Constructor
+<span class="nc" id="L19">    public Showtime(Movie movie, int year, int month, int day, String showtime, CinemaHall hall) {</span>
+<span class="nc" id="L20">        this.movie = movie;</span>
+<span class="nc" id="L21">        this.date = LocalDate.of(year, month, day);</span>
+<span class="nc" id="L22">        this.showtime = showtime;</span>
+<span class="nc" id="L23">        this.hall = hall;</span>
+<span class="nc" id="L24">    }</span>
+    
+    // Legacy constructor
+    public Showtime(Movie movie, int year, int month, int day, String showtime) {
+<span class="nc" id="L28">        this(movie, year, month, day, showtime, null); </span>
+<span class="nc" id="L29">    }</span>
+    
+    // --- Getters (as fixed previously) ---
+    
+    public String getShowtime() {
+<span class="nc" id="L34">        return showtime;</span>
+    }
+    
+    public String getMovieName() {
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (movie == null) return &quot;N/A&quot;;</span>
+<span class="nc" id="L39">        return movie.getMovieName();</span>
+    }
+    
+    public CinemaHall getCinemaHall(){
+<span class="nc" id="L43">        return hall;</span>
+    }
+    
+    public int getHallId() {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        if (hall == null) {</span>
+<span class="nc" id="L48">            throw new IllegalStateException(&quot;Showtime object has not been assigned a CinemaHall.&quot;);</span>
+        }
+<span class="nc" id="L50">        return hall.getHallId();</span>
+    }
+    
+    public LocalDate getDate() {
+<span class="nc" id="L54">        return date;</span>
+    }
+
+    public String time() {
+<span class="nc" id="L58">        return showtime;</span>
+    }
+    
+    public String getHallType() {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        if (hall == null) return null;</span>
+<span class="nc" id="L63">        return hall.getHallType();</span>
+    }
+    
+    // --- FIX: Method restored from original monolithic code ---
+    /**
+     * Generates a list of possible showtimes based on a start time, end time, and interval.
+     * This logic was extracted from the old MainApplication.
+     */
+    public List&lt;LocalTime&gt; generateShowtimes(LocalTime startTime, LocalTime endTime, int intervalMinutes) {
+<span class="nc" id="L72">        List&lt;LocalTime&gt; generatedShowtimes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L73">        LocalTime currentTime = startTime;</span>
+        
+<span class="nc bnc" id="L75" title="All 4 branches missed.">        while (currentTime.isBefore(endTime) || currentTime.equals(endTime)) {</span>
+<span class="nc" id="L76">            generatedShowtimes.add(currentTime);</span>
+<span class="nc" id="L77">            currentTime = currentTime.plusMinutes(intervalMinutes);</span>
+        }
+<span class="nc" id="L79">        return generatedShowtimes;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L84">        return &quot;\nMovie: &quot; + getMovieName() + </span>
+               &quot;\nDate: &quot; + date + 
+               &quot;\nTime: &quot; + showtime + 
+<span class="nc bnc" id="L87" title="All 2 branches missed.">               &quot;\nHall: &quot; + (hall != null ? hall.getHallType() : &quot;N/A&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

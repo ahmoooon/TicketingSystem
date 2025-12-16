@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">application.services</a> &gt; <span class="el_source">FoodService.java</span></div><h1>FoodService.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package application.services;
+
+/**
+ *
+ * @author zhili
+ */
+// FoodService.java - Business Logic Layer (Inventory and Order Management)
+import application.utilities.LoggerSetup;
+import domain.Food;
+import domain.factory.FoodFactory;
+import infrastructure.repositories.DataFileHandler;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class FoodService {
+<span class="nc" id="L24">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    
+    private final Map&lt;String, List&lt;Food&gt;&gt; inventory;
+
+<span class="nc" id="L28">    public FoodService() {</span>
+<span class="nc" id="L29">        this.inventory = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L30">        loadInventory();</span>
+<span class="nc" id="L31">    }</span>
+
+    private void loadInventory() {
+        // MATCHING ORIGINAL LOGIC: Reset Food numbering before loading menu
+<span class="nc" id="L35">        Food.setLastNum(1); </span>
+
+<span class="nc" id="L37">        loadCategory(&quot;Beverage&quot;, &quot;beverage.json&quot;);</span>
+<span class="nc" id="L38">        loadCategory(&quot;Popcorn&quot;, &quot;popcorn.json&quot;);</span>
+<span class="nc" id="L39">        loadCategory(&quot;HotFood&quot;, &quot;hotfood.json&quot;);</span>
+        
+<span class="nc" id="L41">        logger.log(Level.INFO, &quot;Food inventory loaded. Next item ID will be: {0}&quot;, Food.getLastNum());</span>
+<span class="nc" id="L42">    }</span>
+    
+    private void loadCategory(String type, String filename) {
+<span class="nc" id="L45">        List&lt;Map&lt;String, Object&gt;&gt; data = DataFileHandler.loadFoodInventoryData(filename);</span>
+<span class="nc" id="L46">        List&lt;Food&gt; items = new ArrayList&lt;&gt;();</span>
+        
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        for (Map&lt;String, Object&gt; item : data) {</span>
+<span class="nc" id="L49">            String name = (String) item.get(&quot;name&quot;);</span>
+<span class="nc" id="L50">            Double price = (Double) item.getOrDefault(&quot;price&quot;, 0.0);</span>
+            
+            try {
+                // Use the factory to create the item, which increments lastNum
+<span class="nc" id="L54">                items.add(FoodFactory.createMenuItem(type, name, price));</span>
+<span class="nc" id="L55">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L56">                logger.log(Level.WARNING, &quot;Skipping item due to unknown type or parsing error: {0}&quot;, name);</span>
+<span class="nc" id="L57">            }</span>
+<span class="nc" id="L58">        }</span>
+<span class="nc" id="L59">        inventory.put(type, items);</span>
+<span class="nc" id="L60">        logger.log(Level.INFO, &quot;Loaded {0} items for category: {1}&quot;, new Object[]{items.size(), type});</span>
+<span class="nc" id="L61">    }</span>
+    
+    public List&lt;Food&gt; getMenuByType(String type) {
+<span class="nc" id="L64">        return new ArrayList&lt;&gt;(inventory.getOrDefault(type, List.of()));</span>
+    }
+    
+    /**
+     * Finds an item in the current order and either increments its quantity or adds a new item.
+     * @param orders
+     * @param newItem
+     * @param unitPrice
+     * @return 
+     */
+    public ArrayList&lt;Food&gt; addOrMergeOrder(ArrayList&lt;Food&gt; orders, Food newItem, double unitPrice) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (newItem == null) return orders;</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        for (Food existingItem : orders) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (existingItem.getName() != null &amp;&amp; </span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                existingItem.getClass().equals(newItem.getClass()) &amp;&amp; </span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                existingItem.getName().equals(newItem.getName())) {</span>
+                
+                // 1. Merge Qty and Price (using your original methods)
+<span class="nc" id="L83">                existingItem.incrementQty(newItem.getQty()); </span>
+<span class="nc" id="L84">                existingItem.incrementPrice(newItem.getPrice()); </span>
+
+                // NOTE: We rely on the caller setting the total price correctly before calling this.
+<span class="nc" id="L87">                logger.log(Level.INFO, &quot;Merged order: {0}, new quantity: {1}&quot;, new Object[]{existingItem.getName(), existingItem.getQty()});</span>
+<span class="nc" id="L88">                return orders; </span>
+            }
+<span class="nc" id="L90">        }</span>
+        
+        // If no duplicate found, add new item (the newItem already has its total price set)
+<span class="nc" id="L93">        orders.add(newItem);</span>
+<span class="nc" id="L94">        logger.log(Level.INFO, &quot;New item added to order: {0}&quot;, newItem.getName());</span>
+<span class="nc" id="L95">        return orders;</span>
+    }
+    
+    public double calculateTotal(ArrayList&lt;Food&gt; orders) {
+<span class="nc" id="L99">        return orders.stream()</span>
+<span class="nc" id="L100">                     .mapToDouble(Food::getPrice) // price field stores total price in order context</span>
+<span class="nc" id="L101">                     .sum();</span>
+    }
+    
+    public boolean removeOrderItem(ArrayList&lt;Food&gt; orders, int index) {
+<span class="nc bnc" id="L105" title="All 4 branches missed.">        if (index &gt;= 0 &amp;&amp; index &lt; orders.size()) {</span>
+<span class="nc" id="L106">            String name = orders.get(index).getName();</span>
+<span class="nc" id="L107">            orders.remove(index);</span>
+<span class="nc" id="L108">            logger.log(Level.INFO, &quot;Removed order item at index {0}: {1}&quot;, new Object[]{index, name});</span>
+<span class="nc" id="L109">            return true;</span>
+        }
+<span class="nc" id="L111">        return false;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

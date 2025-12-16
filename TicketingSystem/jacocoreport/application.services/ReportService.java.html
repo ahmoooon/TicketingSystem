@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">application.services</a> &gt; <span class="el_source">ReportService.java</span></div><h1>ReportService.java</h1><pre class="source lang-java linenums">package application.services;
+
+import application.utilities.LoggerSetup;
+import application.utilities.PdfReportGenerator;
+import domain.Customer;
+import domain.Food;
+import domain.Payment;
+import domain.Ticket;
+import infrastructure.repositories.PaymentRepository;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Service for generating business reports.
+ * Supports both text and PDF output formats.
+ */
+public class ReportService {
+<span class="nc" id="L23">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    private final PaymentRepository paymentRepository;
+    
+<span class="nc" id="L26">    private final SimpleDateFormat dateFormat = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;);</span>
+    
+<span class="nc" id="L28">    public ReportService(PaymentRepository paymentRepository) {</span>
+<span class="nc" id="L29">        logger.info(&quot;ReportService initialized.&quot;);</span>
+<span class="nc" id="L30">        this.paymentRepository = paymentRepository;</span>
+<span class="nc" id="L31">    }</span>
+
+    // ========== TEXT REPORT METHODS (Existing) ==========
+    
+    /**
+     * Generates a detailed list of all registered customers.
+     */
+    public String getCustomerListReport(ArrayList&lt;Customer&gt; customer) {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (customer.isEmpty()) {</span>
+<span class="nc" id="L40">            return &quot;\n &lt;!&gt; There are no registered customer records! &lt;!&gt;&quot;;</span>
+        }
+        
+<span class="nc" id="L43">        String todayDate = dateFormat.format(new Date());</span>
+<span class="nc" id="L44">        StringBuilder report = new StringBuilder();</span>
+<span class="nc" id="L45">        int count = 0;</span>
+        
+<span class="nc" id="L47">        report.append(&quot;\n---&lt; Customer List Report &gt;---\n\n&quot;);</span>
+<span class="nc" id="L48">        report.append(&quot;Date    : &quot;).append(todayDate).append(&quot;\n&quot;);</span>
+<span class="nc" id="L49">        report.append(&quot;&lt; Customer List Registered &gt; \n\n&quot;);</span>
+<span class="nc" id="L50">        report.append(&quot;=========================================================\n&quot;);</span>
+<span class="nc" id="L51">        report.append(&quot;No. Customer Name                        Customer Password\n&quot;);</span>
+<span class="nc" id="L52">        report.append(&quot;=========================================================\n&quot;);</span>
+        
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        for (Customer c : customer) {</span>
+<span class="nc" id="L55">            report.append(String.format(&quot;%d   %s\t\t\t\t%s\n&quot;, ++count, c.getName(), c.getPassword()));</span>
+<span class="nc" id="L56">        }</span>
+        
+<span class="nc" id="L58">        report.append(&quot;=========================================================\n&quot;);</span>
+<span class="nc" id="L59">        report.append(String.format(&quot;Total Number of Customer: %d\n&quot;, count));</span>
+<span class="nc" id="L60">        report.append(&quot;=========================================================&quot;);</span>
+        
+<span class="nc" id="L62">        logger.info(&quot;Customer list report generated.&quot;);</span>
+<span class="nc" id="L63">        return report.toString();</span>
+    }
+
+    /**
+     * Generates a detailed report of all movie ticket purchases.
+     */
+    public String getMoviePurchaseReport() {
+<span class="nc" id="L70">        ArrayList&lt;Ticket&gt; ticketArr = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L71">        ArrayList&lt;Payment&gt; payments = paymentRepository.getAllPayments();</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        for (Payment p : payments) {</span>
+<span class="nc" id="L73">            ticketArr.addAll(p.getTicket());</span>
+<span class="nc" id="L74">        }</span>
+        
+<span class="nc bnc" id="L76" title="All 2 branches missed.">        if (ticketArr.isEmpty()) {</span>
+<span class="nc" id="L77">            return &quot;\n &lt;!&gt; There are no movie purchase records! &lt;!&gt;&quot;;</span>
+        }
+
+<span class="nc" id="L80">        String todayDate = dateFormat.format(new Date());</span>
+<span class="nc" id="L81">        StringBuilder report = new StringBuilder();</span>
+<span class="nc" id="L82">        int count = 0;</span>
+<span class="nc" id="L83">        double ticketSum = 0;</span>
+
+<span class="nc" id="L85">        report.append(&quot;\n---&lt; Movie Purchase Report &gt;---\n\n&quot;);</span>
+<span class="nc" id="L86">        report.append(&quot;Date    : &quot;).append(todayDate).append(&quot;\n&quot;);</span>
+<span class="nc" id="L87">        report.append(&quot;&lt; Movie Purchase Record &gt;\n\n&quot;);</span>
+<span class="nc" id="L88">        report.append(&quot;=============================================================\n&quot;);</span>
+<span class="nc" id="L89">        report.append(&quot;No. Movie Name                         Unit             Total Price\n&quot;);</span>
+<span class="nc" id="L90">        report.append(&quot;=============================================================\n&quot;);</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        for (Ticket t : ticketArr) {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">            if (t.getMovieName() != null) {</span>
+<span class="nc" id="L94">                double totalPrice = t.ticketPrice() * t.getTicketAmt();</span>
+<span class="nc" id="L95">                report.append(String.format(&quot;%d    %s\t\t%d\t\t\t%.2f\n&quot;, ++count, t.getMovieName(), t.getTicketAmt(), totalPrice));</span>
+<span class="nc" id="L96">                ticketSum += totalPrice;</span>
+            }
+<span class="nc" id="L98">        }</span>
+
+<span class="nc" id="L100">        report.append(&quot;=============================================================\n&quot;);</span>
+<span class="nc" id="L101">        report.append(String.format(&quot;Sum of Price: %.2f\n&quot;, ticketSum));</span>
+<span class="nc" id="L102">        report.append(&quot;=============================================================&quot;);</span>
+
+<span class="nc" id="L104">        logger.info(&quot;Movie purchase report generated.&quot;);</span>
+<span class="nc" id="L105">        return report.toString();</span>
+    }
+
+    /**
+     * Generates a detailed report of all F&amp;B purchases.
+     */
+    public String getFoodPurchaseReport() {
+<span class="nc" id="L112">        ArrayList&lt;Food&gt; foodArr = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L113">        ArrayList&lt;Payment&gt; payments = paymentRepository.getAllPayments();</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (Payment p : payments) {</span>
+<span class="nc" id="L115">            foodArr.addAll(p.getFood());</span>
+<span class="nc" id="L116">        }</span>
+        
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (foodArr.isEmpty()) {</span>
+<span class="nc" id="L119">            return &quot;\n &lt;!&gt; There are no food purchase records! &lt;!&gt;&quot;;</span>
+        }
+
+<span class="nc" id="L122">        String todayDate = dateFormat.format(new Date());</span>
+<span class="nc" id="L123">        StringBuilder report = new StringBuilder();</span>
+<span class="nc" id="L124">        int count = 0;</span>
+<span class="nc" id="L125">        double foodSum = 0;</span>
+
+<span class="nc" id="L127">        report.append(&quot;\n---&lt; Food Purchase Report &gt;---\n\n&quot;);</span>
+<span class="nc" id="L128">        report.append(&quot;Date    : &quot;).append(todayDate).append(&quot;\n&quot;);</span>
+<span class="nc" id="L129">        report.append(&quot;&lt; Food Purchase Record &gt;\n\n&quot;);</span>
+<span class="nc" id="L130">        report.append(&quot;=============================================================\n&quot;);</span>
+<span class="nc" id="L131">        report.append(&quot;No. Food Name                          Unit             Total Price\n&quot;);</span>
+<span class="nc" id="L132">        report.append(&quot;=============================================================\n&quot;);</span>
+
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        for (Food f : foodArr) {</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (f.getName() != null) {</span>
+<span class="nc" id="L136">                report.append(String.format(&quot;%d    %s\t\t%d\t\t%.2f\n&quot;, ++count, f.getName(), f.getQty(), f.getPrice()));</span>
+<span class="nc" id="L137">                foodSum += f.getPrice();</span>
+            }
+<span class="nc" id="L139">        }</span>
+
+<span class="nc" id="L141">        report.append(&quot;=============================================================\n&quot;);</span>
+<span class="nc" id="L142">        report.append(String.format(&quot;Sum of Price: %.2f\n&quot;, foodSum));</span>
+<span class="nc" id="L143">        report.append(&quot;=============================================================&quot;);</span>
+
+<span class="nc" id="L145">        logger.info(&quot;Food purchase report generated.&quot;);</span>
+<span class="nc" id="L146">        return report.toString();</span>
+    }
+    
+    /**
+     * Generates the consolidated Sales Summary Report.
+     */
+    public String generateSalesSummaryReport() {
+<span class="nc" id="L153">        ArrayList&lt;Payment&gt; payments = paymentRepository.getAllPayments();</span>
+<span class="nc bnc" id="L154" title="All 4 branches missed.">        if (payments == null || payments.isEmpty()) {</span>
+<span class="nc" id="L155">            return &quot;\n*** No Payment Data Available to Generate Report ***\n&quot;;</span>
+        }
+
+<span class="nc" id="L158">        double totalRevenue = 0.0;</span>
+<span class="nc" id="L159">        double totalTicketSales = 0.0;</span>
+<span class="nc" id="L160">        double totalFoodBeverageSales = 0.0;</span>
+<span class="nc" id="L161">        int totalTransactions = payments.size();</span>
+        
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        for (Payment payment : payments) {</span>
+<span class="nc" id="L164">            double ticketPrice = payment.getTotalTicketPrice();</span>
+<span class="nc" id="L165">            double fbPrice = payment.getTotalFoodPrice();</span>
+<span class="nc" id="L166">            double grandTotal = payment.getTotalPrice();</span>
+
+<span class="nc" id="L168">            totalTicketSales += ticketPrice;</span>
+<span class="nc" id="L169">            totalFoodBeverageSales += fbPrice;</span>
+<span class="nc" id="L170">            totalRevenue += grandTotal;</span>
+<span class="nc" id="L171">        }</span>
+
+<span class="nc" id="L173">        String report = String.format(&quot;&quot;&quot;</span>
+                                      
+                                      ==============================================
+                                             CINEMA SALES SUMMARY REPORT
+                                      ==============================================
+                                      Date: %s
+                                      Total Number of Transactions: %d
+                                      ----------------------------------------------
+                                      Total Ticket Sales:   RM %.2f
+                                      Total F&amp;B Sales:      RM %.2f
+                                      ----------------------------------------------
+                                      GRAND TOTAL REVENUE:  RM %.2f
+                                      ==============================================&quot;&quot;&quot;,
+<span class="nc" id="L186">            dateFormat.format(new Date()),</span>
+<span class="nc" id="L187">            totalTransactions,</span>
+<span class="nc" id="L188">            totalTicketSales,</span>
+<span class="nc" id="L189">            totalFoodBeverageSales,</span>
+<span class="nc" id="L190">            totalRevenue</span>
+        );
+
+<span class="nc" id="L193">        logger.info(&quot;Sales summary report generated.&quot;);</span>
+<span class="nc" id="L194">        return report;</span>
+    }
+    
+    // ========== PDF EXPORT METHODS (New) ==========
+    
+    /**
+     * Exports Customer List Report to PDF.
+     * 
+     * @param customer List of customers
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportCustomerListToPdf(ArrayList&lt;Customer&gt; customer, File outputFile) 
+            throws IOException {
+<span class="nc" id="L208">        String reportContent = getCustomerListReport(customer);</span>
+<span class="nc" id="L209">        PdfReportGenerator.generatePdfReport(reportContent, outputFile, &quot;Customer List Report&quot;);</span>
+<span class="nc" id="L210">        logger.info(&quot;Customer list exported to PDF: &quot; + outputFile.getName());</span>
+<span class="nc" id="L211">    }</span>
+    
+    /**
+     * Exports Movie Purchase Report to PDF.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportMoviePurchaseToPdf(File outputFile) throws IOException {
+<span class="nc" id="L220">        String reportContent = getMoviePurchaseReport();</span>
+<span class="nc" id="L221">        PdfReportGenerator.generatePdfReport(reportContent, outputFile, &quot;Movie Purchase Report&quot;);</span>
+<span class="nc" id="L222">        logger.info(&quot;Movie purchase report exported to PDF: &quot; + outputFile.getName());</span>
+<span class="nc" id="L223">    }</span>
+    
+    /**
+     * Exports Food Purchase Report to PDF.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportFoodPurchaseToPdf(File outputFile) throws IOException {
+<span class="nc" id="L232">        String reportContent = getFoodPurchaseReport();</span>
+<span class="nc" id="L233">        PdfReportGenerator.generatePdfReport(reportContent, outputFile, &quot;Food Purchase Report&quot;);</span>
+<span class="nc" id="L234">        logger.info(&quot;Food purchase report exported to PDF: &quot; + outputFile.getName());</span>
+<span class="nc" id="L235">    }</span>
+    
+    /**
+     * Exports Sales Summary Report to PDF.
+     * 
+     * @param outputFile Target PDF file
+     * @throws IOException if PDF generation fails
+     */
+    public void exportSalesSummaryToPdf(File outputFile) throws IOException {
+<span class="nc" id="L244">        String reportContent = generateSalesSummaryReport();</span>
+<span class="nc" id="L245">        PdfReportGenerator.generatePdfReport(reportContent, outputFile, &quot;Sales Summary Report&quot;);</span>
+<span class="nc" id="L246">        logger.info(&quot;Sales summary report exported to PDF: &quot; + outputFile.getName());</span>
+<span class="nc" id="L247">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

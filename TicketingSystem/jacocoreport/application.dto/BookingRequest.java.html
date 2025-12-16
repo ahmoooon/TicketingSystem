@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">application.dto</a> &gt; <span class="el_source">BookingRequest.java</span></div><h1>BookingRequest.java</h1><pre class="source lang-java linenums">package application.dto;
+
+import domain.valueobjects.SeatId;
+import java.time.LocalDate;
+import java.util.List;
+
+public class BookingRequest {
+    private final int movieId;
+    private final LocalDate date;
+    private final String showtimeTime;
+    private final int hallId; 
+    private final List&lt;SeatId&gt; seatIds;
+    
+<span class="nc" id="L14">    public BookingRequest(int movieId, LocalDate date, String showtimeTime, int hallId, List&lt;SeatId&gt; seatIds) {</span>
+<span class="nc" id="L15">        this.movieId = movieId;</span>
+<span class="nc" id="L16">        this.date = date;</span>
+<span class="nc" id="L17">        this.showtimeTime = showtimeTime;</span>
+<span class="nc" id="L18">        this.hallId = hallId;</span>
+<span class="nc" id="L19">        this.seatIds = seatIds;</span>
+<span class="nc" id="L20">    }</span>
+
+    // Getters
+<span class="nc" id="L23">    public int getMovieId() { return movieId; }</span>
+<span class="nc" id="L24">    public LocalDate getDate() { return date; }</span>
+<span class="nc" id="L25">    public String getShowtimeTime() { return showtimeTime; }</span>
+<span class="nc" id="L26">    public int getHallId() { return hallId; }</span>
+<span class="nc" id="L27">    public List&lt;SeatId&gt; getSeatIds() { return seatIds; }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

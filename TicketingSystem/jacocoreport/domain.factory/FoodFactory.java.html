@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FoodFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">domain.factory</a> &gt; <span class="el_source">FoodFactory.java</span></div><h1>FoodFactory.java</h1><pre class="source lang-java linenums">/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package domain.factory;
+
+/**
+ *
+ * @author zhili
+ */
+// FoodFactory.java - REVISED Factory Layer
+import application.utilities.LoggerSetup;
+import domain.Beverage;
+import domain.Food;
+import domain.HotFood;
+import domain.Popcorn;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+<span class="nc" id="L20">public class FoodFactory {</span>
+<span class="nc" id="L21">    private static final Logger logger = LoggerSetup.getLogger();</span>
+
+    /**
+     * Creates a concrete Food item for the static inventory menu.
+     * Crucially, this is the only place that calls the constructor
+     * that increments Food.lastNum, ensuring unique IDs for menu items.
+     * @param type The type of food (&quot;Popcorn&quot;, &quot;Beverage&quot;, &quot;HotFood&quot;).
+     * @param name The name of the item.
+     * @param price The unit price of the item.
+     * @return A new concrete Food object.
+     */
+    public static Food createMenuItem(String type, String name, double price) {
+<span class="nc bnc" id="L33" title="All 4 branches missed.">        switch (type.toUpperCase()) {</span>
+            case &quot;POPCORN&quot;:
+<span class="nc" id="L35">                return new Popcorn(name, price);</span>
+            case &quot;BEVERAGE&quot;:
+<span class="nc" id="L37">                return new Beverage(name, price);</span>
+            case &quot;HOTFOOD&quot;:
+<span class="nc" id="L39">                return new HotFood(name, price);</span>
+            default:
+<span class="nc" id="L41">                logger.log(Level.SEVERE, &quot;Attempted to create unknown food type: {0}&quot;, type);</span>
+<span class="nc" id="L42">                throw new IllegalArgumentException(&quot;Unknown food type: &quot; + type);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

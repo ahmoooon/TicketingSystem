@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileShowtimeRepository.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">infrastructure.repositories</a> &gt; <span class="el_source">FileShowtimeRepository.java</span></div><h1>FileShowtimeRepository.java</h1><pre class="source lang-java linenums">package infrastructure.repositories;
+
+import application.utilities.LoggerSetup;
+import domain.Movie;
+import domain.Showtime;
+import domain.CinemaHall;
+import domain.repositories.ShowtimeRepository;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+/**
+ * REFACTORED: Uses DataFileHandler approach instead of Gson.
+ * Manages hall configurations and showtime generation logic.
+ */
+public class FileShowtimeRepository implements ShowtimeRepository {
+    
+    private static final String HALLS_FILE = &quot;halls.json&quot;;
+    private static final int SHOWTIME_INTERVAL_MINUTES = 100;
+<span class="nc" id="L28">    private static final Logger logger = LoggerSetup.getLogger();</span>
+    
+    private final List&lt;CinemaHall&gt; hallConfigurations;
+
+<span class="nc" id="L32">    public FileShowtimeRepository() {</span>
+<span class="nc" id="L33">        this.hallConfigurations = loadHalls();</span>
+        
+        // Seed default halls if file doesn't exist
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (this.hallConfigurations.isEmpty()) {</span>
+<span class="nc" id="L37">            seedHalls();</span>
+        }
+        
+<span class="nc" id="L40">        logger.log(Level.INFO, &quot;FileShowtimeRepository initialized with {0} halls.&quot;, </span>
+<span class="nc" id="L41">                   hallConfigurations.size());</span>
+<span class="nc" id="L42">    }</span>
+    
+    // === HALL CONFIGURATION LOADING ===
+    
+    /**
+     * Loads hall configurations from JSON file.
+     * Format: {&quot;hallNum&quot;:1,&quot;hallType&quot;:&quot;Standard&quot;,&quot;rowAmt&quot;:5,&quot;colAmt&quot;:10}
+     */
+    private List&lt;CinemaHall&gt; loadHalls() {
+<span class="nc" id="L51">        List&lt;String&gt; jsonLines = DataFileHandler.loadFromJsonFile(HALLS_FILE);</span>
+        
+<span class="nc" id="L53">        return jsonLines.stream()</span>
+<span class="nc" id="L54">            .map(this::parseHallFromJson)</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">            .filter(h -&gt; h != null)</span>
+<span class="nc" id="L56">            .collect(Collectors.toList());</span>
+    }
+    
+    /**
+     * Parses a single CinemaHall from JSON string.
+     */
+    private CinemaHall parseHallFromJson(String json) {
+        try {
+<span class="nc" id="L64">            int hallNum = extractInt(json, &quot;hallNum&quot;);</span>
+<span class="nc" id="L65">            String hallType = extractString(json, &quot;hallType&quot;);</span>
+<span class="nc" id="L66">            int rowAmt = extractInt(json, &quot;rowAmt&quot;);</span>
+<span class="nc" id="L67">            int colAmt = extractInt(json, &quot;colAmt&quot;);</span>
+            
+<span class="nc" id="L69">            return new CinemaHall(hallNum, hallType, rowAmt, colAmt);</span>
+<span class="nc" id="L70">        } catch (Exception e) {</span>
+<span class="nc" id="L71">            logger.log(Level.SEVERE, &quot;Failed to parse hall JSON: {0}&quot;, json);</span>
+<span class="nc" id="L72">            return null;</span>
+        }
+    }
+    
+    /**
+     * Creates and saves default hall configuration.
+     */
+    private void seedHalls() {
+<span class="nc" id="L80">        hallConfigurations.add(new CinemaHall(1, CinemaHall.HALL_TYPE_STANDARD, 5, 10));</span>
+<span class="nc" id="L81">        hallConfigurations.add(new CinemaHall(2, CinemaHall.HALL_TYPE_IMAX, 8, 15));</span>
+<span class="nc" id="L82">        hallConfigurations.add(new CinemaHall(3, CinemaHall.HALL_TYPE_LOUNGE, 5, 5));</span>
+        
+<span class="nc" id="L84">        saveHalls();</span>
+<span class="nc" id="L85">        logger.info(&quot;Default halls seeded and saved.&quot;);</span>
+<span class="nc" id="L86">    }</span>
+    
+    /**
+     * Saves hall configurations to JSON file.
+     */
+    private void saveHalls() {
+<span class="nc" id="L92">        List&lt;String&gt; jsonLines = hallConfigurations.stream()</span>
+<span class="nc" id="L93">            .map(this::hallToJsonString)</span>
+<span class="nc" id="L94">            .collect(Collectors.toList());</span>
+        
+<span class="nc" id="L96">        DataFileHandler.saveToJsonFile(jsonLines, HALLS_FILE);</span>
+<span class="nc" id="L97">    }</span>
+    
+    /**
+     * Converts CinemaHall to JSON string.
+     */
+    private String hallToJsonString(CinemaHall hall) {
+<span class="nc" id="L103">        return String.format(</span>
+            &quot;{\&quot;hallNum\&quot;:%d,\&quot;hallType\&quot;:\&quot;%s\&quot;,\&quot;rowAmt\&quot;:%d,\&quot;colAmt\&quot;:%d}&quot;,
+<span class="nc" id="L105">            hall.getHallId(),</span>
+<span class="nc" id="L106">            hall.getHallType(),</span>
+<span class="nc" id="L107">            hall.getRowAmt(),</span>
+<span class="nc" id="L108">            hall.getColAmt()</span>
+        );
+    }
+    
+    // === SHOWTIME BUSINESS LOGIC ===
+    
+    /**
+     * Calculates a future date by adding days to current date.
+     */
+    private LocalDate calculateFutureDate(int daysFromNow) {
+<span class="nc" id="L118">        return LocalDate.now().plusDays(daysFromNow);</span>
+    }
+    
+    /**
+     * Retrieves hall configuration by hall ID.
+     */
+    private CinemaHall getHallById(int hallId) {
+<span class="nc" id="L125">        return hallConfigurations.stream()</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            .filter(h -&gt; h.getHallId() == hallId)</span>
+<span class="nc" id="L127">            .findFirst()</span>
+<span class="nc" id="L128">            .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Hall ID not found: &quot; + hallId));</span>
+    }
+    
+    @Override
+    public List&lt;Showtime&gt; findAvailableDates(Movie movie) {
+<span class="nc" id="L133">        List&lt;Showtime&gt; availableDates = new ArrayList&lt;&gt;();</span>
+        
+        // Generate next 3 days as available dates
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        for (int i = 1; i &lt;= 3; i++) {</span>
+<span class="nc" id="L137">            LocalDate date = calculateFutureDate(i);</span>
+<span class="nc" id="L138">            availableDates.add(new Showtime(</span>
+                movie, 
+<span class="nc" id="L140">                date.getYear(), </span>
+<span class="nc" id="L141">                date.getMonthValue(), </span>
+<span class="nc" id="L142">                date.getDayOfMonth(), </span>
+                null, 
+                null
+            ));
+        }
+        
+<span class="nc" id="L148">        return availableDates;</span>
+    }
+
+    @Override
+    public Optional&lt;Showtime&gt; findAvailableShowtime(Movie movie, LocalDate date, String timeString, int hallId) {
+<span class="nc" id="L153">        CinemaHall hall = getHallById(hallId);</span>
+        
+        // Generate valid times for the day
+<span class="nc" id="L156">        LocalTime startTime = LocalTime.of(10, 0);</span>
+<span class="nc" id="L157">        LocalTime endTime = LocalTime.of(22, 0);</span>
+        
+<span class="nc" id="L159">        List&lt;LocalTime&gt; generatedTimes = new Showtime(null, 1900, 1, 1, null, null)</span>
+<span class="nc" id="L160">                .generateShowtimes(startTime, endTime, SHOWTIME_INTERVAL_MINUTES);</span>
+            
+<span class="nc" id="L162">        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern(&quot;hh:mm a&quot;);</span>
+
+        // Validate that the requested time is in the generated list
+<span class="nc" id="L165">        boolean timeIsValid = generatedTimes.stream()</span>
+<span class="nc" id="L166">            .anyMatch(t -&gt; t.format(timeFormatter).equals(timeString));</span>
+            
+<span class="nc bnc" id="L168" title="All 2 branches missed.">        if (!timeIsValid) {</span>
+<span class="nc" id="L169">            logger.log(Level.WARNING, &quot;Invalid showtime requested: {0}&quot;, timeString);</span>
+<span class="nc" id="L170">            return Optional.empty(); </span>
+        }
+
+        // Create and return the showtime
+<span class="nc" id="L174">        Showtime showtime = new Showtime(</span>
+            movie, 
+<span class="nc" id="L176">            date.getYear(), </span>
+<span class="nc" id="L177">            date.getMonthValue(), </span>
+<span class="nc" id="L178">            date.getDayOfMonth(), </span>
+            timeString, 
+            hall 
+        );
+        
+<span class="nc" id="L183">        logger.log(Level.INFO, &quot;Showtime created: {0} at {1} in Hall {2}&quot;, </span>
+<span class="nc" id="L184">                   new Object[]{movie.getMovieName(), timeString, hallId});</span>
+        
+<span class="nc" id="L186">        return Optional.of(showtime);</span>
+    }
+    
+    // === Helper Methods for JSON Parsing ===
+    
+    private int extractInt(String json, String key) {
+<span class="nc" id="L192">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:&quot;;</span>
+<span class="nc" id="L193">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="nc" id="L194">        int end = json.indexOf(&quot;,&quot;, start);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (end == -1) end = json.indexOf(&quot;}&quot;, start);</span>
+        
+<span class="nc" id="L197">        return Integer.parseInt(json.substring(start, end).trim());</span>
+    }
+    
+    private String extractString(String json, String key) {
+<span class="nc" id="L201">        String searchKey = &quot;\&quot;&quot; + key + &quot;\&quot;:\&quot;&quot;;</span>
+<span class="nc" id="L202">        int start = json.indexOf(searchKey) + searchKey.length();</span>
+<span class="nc" id="L203">        int end = json.indexOf(&quot;\&quot;&quot;, start);</span>
+        
+<span class="nc" id="L205">        return json.substring(start, end);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

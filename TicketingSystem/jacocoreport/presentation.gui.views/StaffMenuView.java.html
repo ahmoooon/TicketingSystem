@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StaffMenuView.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCo Coverage Report</a> &gt; <a href="index.source.html" class="el_package">presentation.gui.views</a> &gt; <span class="el_source">StaffMenuView.java</span></div><h1>StaffMenuView.java</h1><pre class="source lang-java linenums">package presentation.gui.views;
+
+import application.services.CustomerService;
+import application.services.StaffService;
+import domain.Customer;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.FileChooser;
+import presentation.gui.ViewManager;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Optional;
+
+public class StaffMenuView extends BorderPane {
+    
+    private final ViewManager viewManager;
+    private final StaffService staffService;
+    private final CustomerService customerService;
+    private TableView&lt;Customer&gt; customerTable;
+    
+    // Track current report for PDF export
+<span class="nc" id="L29">    private String currentReportContent = &quot;&quot;;</span>
+<span class="nc" id="L30">    private String currentReportType = &quot;&quot;;</span>
+    
+    public StaffMenuView(ViewManager viewManager, StaffService staffService, 
+<span class="nc" id="L33">                        CustomerService customerService) {</span>
+<span class="nc" id="L34">        this.viewManager = viewManager;</span>
+<span class="nc" id="L35">        this.staffService = staffService;</span>
+<span class="nc" id="L36">        this.customerService = customerService;</span>
+<span class="nc" id="L37">        initializeUI();</span>
+<span class="nc" id="L38">    }</span>
+    
+    private void initializeUI() {
+<span class="nc" id="L41">        setTop(createTopBar());</span>
+        
+<span class="nc" id="L43">        VBox leftPanel = createLeftPanel();</span>
+<span class="nc" id="L44">        VBox rightPanel = createRightPanel();</span>
+        
+<span class="nc" id="L46">        HBox mainContent = new HBox(20, leftPanel, rightPanel);</span>
+<span class="nc" id="L47">        mainContent.setPadding(new Insets(20));</span>
+<span class="nc" id="L48">        HBox.setHgrow(leftPanel, Priority.ALWAYS);</span>
+        
+<span class="nc" id="L50">        setCenter(mainContent);</span>
+<span class="nc" id="L51">        setStyle(&quot;-fx-background-color: #ecf0f1;&quot;);</span>
+<span class="nc" id="L52">    }</span>
+    
+    private HBox createTopBar() {
+<span class="nc" id="L55">        Label titleLabel = new Label(&quot;Staff Portal&quot;);</span>
+<span class="nc" id="L56">        titleLabel.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 24));</span>
+<span class="nc" id="L57">        titleLabel.setStyle(&quot;-fx-text-fill: white;&quot;);</span>
+        
+<span class="nc" id="L59">        Button logoutBtn = new Button(&quot;Logout&quot;);</span>
+<span class="nc" id="L60">        logoutBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;&quot;);</span>
+<span class="nc" id="L61">        logoutBtn.setOnAction(e -&gt; viewManager.logout());</span>
+        
+<span class="nc" id="L63">        HBox topBar = new HBox(20, titleLabel, logoutBtn);</span>
+<span class="nc" id="L64">        topBar.setAlignment(Pos.CENTER_LEFT);</span>
+<span class="nc" id="L65">        topBar.setPadding(new Insets(20));</span>
+<span class="nc" id="L66">        topBar.setStyle(&quot;-fx-background-color: #34495e;&quot;);</span>
+<span class="nc" id="L67">        HBox.setHgrow(titleLabel, Priority.ALWAYS);</span>
+        
+<span class="nc" id="L69">        return topBar;</span>
+    }
+    
+    private VBox createLeftPanel() {
+<span class="nc" id="L73">        Label manageTitle = new Label(&quot;Customer Management&quot;);</span>
+<span class="nc" id="L74">        manageTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+<span class="nc" id="L76">        customerTable = new TableView&lt;&gt;();</span>
+<span class="nc" id="L77">        customerTable.setPrefHeight(400);</span>
+        
+<span class="nc" id="L79">        TableColumn&lt;Customer, Integer&gt; idCol = new TableColumn&lt;&gt;(&quot;ID&quot;);</span>
+<span class="nc" id="L80">        idCol.setCellValueFactory(new PropertyValueFactory&lt;&gt;(&quot;id&quot;));</span>
+<span class="nc" id="L81">        idCol.setPrefWidth(50);</span>
+        
+<span class="nc" id="L83">        TableColumn&lt;Customer, String&gt; nameCol = new TableColumn&lt;&gt;(&quot;Name&quot;);</span>
+<span class="nc" id="L84">        nameCol.setCellValueFactory(new PropertyValueFactory&lt;&gt;(&quot;name&quot;));</span>
+<span class="nc" id="L85">        nameCol.setPrefWidth(200);</span>
+        
+<span class="nc" id="L87">        TableColumn&lt;Customer, String&gt; passwordCol = new TableColumn&lt;&gt;(&quot;Password (Hashed)&quot;);</span>
+<span class="nc" id="L88">        passwordCol.setCellValueFactory(new PropertyValueFactory&lt;&gt;(&quot;password&quot;));</span>
+<span class="nc" id="L89">        passwordCol.setPrefWidth(250);</span>
+        
+<span class="nc" id="L91">        customerTable.getColumns().addAll(idCol, nameCol, passwordCol);</span>
+<span class="nc" id="L92">        refreshCustomerTable();</span>
+        
+<span class="nc" id="L94">        Button deleteBtn = new Button(&quot;Delete Selected Customer&quot;);</span>
+<span class="nc" id="L95">        deleteBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;&quot;);</span>
+<span class="nc" id="L96">        deleteBtn.setPrefWidth(200);</span>
+        
+<span class="nc" id="L98">        deleteBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L99">            Customer selected = customerTable.getSelectionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">            if (selected != null) {</span>
+<span class="nc" id="L101">                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);</span>
+<span class="nc" id="L102">                confirm.setTitle(&quot;Confirm Deletion&quot;);</span>
+<span class="nc" id="L103">                confirm.setHeaderText(&quot;Delete Customer&quot;);</span>
+<span class="nc" id="L104">                confirm.setContentText(&quot;Are you sure you want to delete customer: &quot; + selected.getName() + &quot;?&quot;);</span>
+                
+<span class="nc" id="L106">                Optional&lt;ButtonType&gt; result = confirm.showAndWait();</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">                if (result.isPresent() &amp;&amp; result.get() == ButtonType.OK) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">                    if (staffService.deleteCustomerAccount(selected.getName())) {</span>
+<span class="nc" id="L109">                        showInfo(&quot;Success&quot;, &quot;Customer account deleted successfully&quot;);</span>
+<span class="nc" id="L110">                        refreshCustomerTable();</span>
+                    } else {
+<span class="nc" id="L112">                        showError(&quot;Error&quot;, &quot;Failed to delete customer account&quot;);</span>
+                    }
+                }
+<span class="nc" id="L115">            } else {</span>
+<span class="nc" id="L116">                showError(&quot;No Selection&quot;, &quot;Please select a customer to delete&quot;);</span>
+            }
+<span class="nc" id="L118">        });</span>
+        
+<span class="nc" id="L120">        VBox leftPanel = new VBox(15, manageTitle, customerTable, deleteBtn);</span>
+<span class="nc" id="L121">        leftPanel.setPadding(new Insets(10));</span>
+        
+<span class="nc" id="L123">        return leftPanel;</span>
+    }
+    
+    private VBox createRightPanel() {
+<span class="nc" id="L127">        Label reportTitle = new Label(&quot;Reports&quot;);</span>
+<span class="nc" id="L128">        reportTitle.setFont(Font.font(&quot;Arial&quot;, FontWeight.BOLD, 18));</span>
+        
+        // Report buttons with icons
+<span class="nc" id="L131">        Button customerListBtn = createReportButton(&quot;📋 Customer List Report&quot;);</span>
+<span class="nc" id="L132">        Button moviePurchaseBtn = createReportButton(&quot;🎬 Movie Purchase Report&quot;);</span>
+<span class="nc" id="L133">        Button foodPurchaseBtn = createReportButton(&quot;🍿 Food Purchase Report&quot;);</span>
+<span class="nc" id="L134">        Button salesSummaryBtn = createReportButton(&quot;💰 Sales Summary Report&quot;);</span>
+        
+        // PDF Export button (disabled until report is generated)
+<span class="nc" id="L137">        Button exportPdfBtn = new Button(&quot;📄 Export to PDF&quot;);</span>
+<span class="nc" id="L138">        exportPdfBtn.setPrefWidth(250);</span>
+<span class="nc" id="L139">        exportPdfBtn.setStyle(&quot;-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;&quot;);</span>
+<span class="nc" id="L140">        exportPdfBtn.setDisable(true);</span>
+        
+<span class="nc" id="L142">        TextArea reportArea = new TextArea();</span>
+<span class="nc" id="L143">        reportArea.setEditable(false);</span>
+<span class="nc" id="L144">        reportArea.setPrefHeight(400);</span>
+<span class="nc" id="L145">        reportArea.setStyle(&quot;-fx-font-family: monospace; -fx-font-size: 11;&quot;);</span>
+        
+        // Report generation handlers
+<span class="nc" id="L148">        customerListBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L149">            String report = staffService.getCustomerListReport(customerService.getCustomerList());</span>
+<span class="nc" id="L150">            reportArea.setText(report);</span>
+<span class="nc" id="L151">            currentReportContent = report;</span>
+<span class="nc" id="L152">            currentReportType = &quot;CustomerList&quot;;</span>
+<span class="nc" id="L153">            exportPdfBtn.setDisable(false);</span>
+<span class="nc" id="L154">        });</span>
+        
+<span class="nc" id="L156">        moviePurchaseBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L157">            String report = staffService.getMoviePurchaseReport();</span>
+<span class="nc" id="L158">            reportArea.setText(report);</span>
+<span class="nc" id="L159">            currentReportContent = report;</span>
+<span class="nc" id="L160">            currentReportType = &quot;MoviePurchase&quot;;</span>
+<span class="nc" id="L161">            exportPdfBtn.setDisable(false);</span>
+<span class="nc" id="L162">        });</span>
+        
+<span class="nc" id="L164">        foodPurchaseBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L165">            String report = staffService.getFoodPurchaseReport();</span>
+<span class="nc" id="L166">            reportArea.setText(report);</span>
+<span class="nc" id="L167">            currentReportContent = report;</span>
+<span class="nc" id="L168">            currentReportType = &quot;FoodPurchase&quot;;</span>
+<span class="nc" id="L169">            exportPdfBtn.setDisable(false);</span>
+<span class="nc" id="L170">        });</span>
+        
+<span class="nc" id="L172">        salesSummaryBtn.setOnAction(e -&gt; {</span>
+<span class="nc" id="L173">            String report = staffService.getSalesSummaryReport();</span>
+<span class="nc" id="L174">            reportArea.setText(report);</span>
+<span class="nc" id="L175">            currentReportContent = report;</span>
+<span class="nc" id="L176">            currentReportType = &quot;SalesSummary&quot;;</span>
+<span class="nc" id="L177">            exportPdfBtn.setDisable(false);</span>
+<span class="nc" id="L178">        });</span>
+        
+        // PDF Export handler
+<span class="nc" id="L181">        exportPdfBtn.setOnAction(e -&gt; handlePdfExport());</span>
+        
+        // Add helpful instruction label
+<span class="nc" id="L184">        Label instructionLabel = new Label(&quot;💡 Generate a report first, then click 'Export to PDF'&quot;);</span>
+<span class="nc" id="L185">        instructionLabel.setStyle(&quot;-fx-font-size: 10; -fx-text-fill: #7f8c8d; -fx-font-style: italic;&quot;);</span>
+<span class="nc" id="L186">        instructionLabel.setWrapText(true);</span>
+        
+<span class="nc" id="L188">        VBox rightPanel = new VBox(10,</span>
+            reportTitle,
+            customerListBtn,
+            moviePurchaseBtn,
+            foodPurchaseBtn,
+            salesSummaryBtn,
+            new Separator(),
+            exportPdfBtn,
+            instructionLabel,
+            new Separator(),
+            new Label(&quot;Report Output:&quot;),
+            reportArea
+        );
+<span class="nc" id="L201">        rightPanel.setPadding(new Insets(10));</span>
+<span class="nc" id="L202">        rightPanel.setPrefWidth(500);</span>
+        
+<span class="nc" id="L204">        return rightPanel;</span>
+    }
+    
+    private Button createReportButton(String text) {
+<span class="nc" id="L208">        Button button = new Button(text);</span>
+<span class="nc" id="L209">        button.setPrefWidth(250);</span>
+<span class="nc" id="L210">        button.setStyle(&quot;-fx-background-color: #3498db; -fx-text-fill: white; -fx-cursor: hand;&quot;);</span>
+<span class="nc" id="L211">        return button;</span>
+    }
+    
+    /**
+     * Handles PDF export with file chooser dialog.
+     */
+    private void handlePdfExport() {
+<span class="nc bnc" id="L218" title="All 4 branches missed.">        if (currentReportContent.isEmpty() || currentReportType.isEmpty()) {</span>
+<span class="nc" id="L219">            showError(&quot;No Report&quot;, &quot;Please generate a report first before exporting to PDF&quot;);</span>
+<span class="nc" id="L220">            return;</span>
+        }
+        
+        // File chooser dialog
+<span class="nc" id="L224">        FileChooser fileChooser = new FileChooser();</span>
+<span class="nc" id="L225">        fileChooser.setTitle(&quot;Save PDF Report&quot;);</span>
+<span class="nc" id="L226">        fileChooser.setInitialFileName(generateFileName());</span>
+        
+        // Add PDF extension filter
+<span class="nc" id="L229">        FileChooser.ExtensionFilter pdfFilter = </span>
+            new FileChooser.ExtensionFilter(&quot;PDF Files (*.pdf)&quot;, &quot;*.pdf&quot;);
+<span class="nc" id="L231">        fileChooser.getExtensionFilters().add(pdfFilter);</span>
+        
+        // Set initial directory to user's documents folder
+<span class="nc" id="L234">        String userHome = System.getProperty(&quot;user.home&quot;);</span>
+<span class="nc" id="L235">        File documentsDir = new File(userHome, &quot;Documents&quot;);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">        if (documentsDir.exists()) {</span>
+<span class="nc" id="L237">            fileChooser.setInitialDirectory(documentsDir);</span>
+        }
+        
+        // Show save dialog
+<span class="nc" id="L241">        File selectedFile = fileChooser.showSaveDialog(getScene().getWindow());</span>
+        
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if (selectedFile != null) {</span>
+            // Ensure .pdf extension
+<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (!selectedFile.getName().toLowerCase().endsWith(&quot;.pdf&quot;)) {</span>
+<span class="nc" id="L246">                selectedFile = new File(selectedFile.getAbsolutePath() + &quot;.pdf&quot;);</span>
+            }
+            
+            try {
+                // Call appropriate export method based on report type
+<span class="nc bnc" id="L251" title="All 5 branches missed.">                switch (currentReportType) {</span>
+                    case &quot;CustomerList&quot;:
+<span class="nc" id="L253">                        staffService.exportCustomerListToPdf(</span>
+<span class="nc" id="L254">                            customerService.getCustomerList(), </span>
+                            selectedFile
+                        );
+<span class="nc" id="L257">                        break;</span>
+                    case &quot;MoviePurchase&quot;:
+<span class="nc" id="L259">                        staffService.exportMoviePurchaseToPdf(selectedFile);</span>
+<span class="nc" id="L260">                        break;</span>
+                    case &quot;FoodPurchase&quot;:
+<span class="nc" id="L262">                        staffService.exportFoodPurchaseToPdf(selectedFile);</span>
+<span class="nc" id="L263">                        break;</span>
+                    case &quot;SalesSummary&quot;:
+<span class="nc" id="L265">                        staffService.exportSalesSummaryToPdf(selectedFile);</span>
+                        break;
+                }
+                
+                // Success notification
+<span class="nc" id="L270">                showInfo(&quot;PDF Exported&quot;, </span>
+<span class="nc" id="L271">                    &quot;Report successfully exported to:\n&quot; + selectedFile.getAbsolutePath());</span>
+                
+<span class="nc" id="L273">            } catch (IOException ex) {</span>
+<span class="nc" id="L274">                showError(&quot;Export Failed&quot;, </span>
+<span class="nc" id="L275">                    &quot;Failed to export PDF: &quot; + ex.getMessage());</span>
+<span class="nc" id="L276">            }</span>
+        }
+<span class="nc" id="L278">    }</span>
+    
+    /**
+     * Generates a default filename based on report type and current date.
+     */
+    private String generateFileName() {
+<span class="nc" id="L284">        String timestamp = new java.text.SimpleDateFormat(&quot;yyyyMMdd_HHmmss&quot;).format(new java.util.Date());</span>
+<span class="nc" id="L285">        return String.format(&quot;YSCM_Cinema_%s_%s.pdf&quot;, currentReportType, timestamp);</span>
+    }
+    
+    private void refreshCustomerTable() {
+<span class="nc" id="L289">        ArrayList&lt;Customer&gt; customers = customerService.getCustomerList();</span>
+<span class="nc" id="L290">        customerTable.getItems().clear();</span>
+<span class="nc" id="L291">        customerTable.getItems().addAll(customers);</span>
+<span class="nc" id="L292">    }</span>
+    
+    private void showError(String title, String message) {
+<span class="nc" id="L295">        Alert alert = new Alert(Alert.AlertType.ERROR);</span>
+<span class="nc" id="L296">        alert.setTitle(title);</span>
+<span class="nc" id="L297">        alert.setContentText(message);</span>
+<span class="nc" id="L298">        alert.showAndWait();</span>
+<span class="nc" id="L299">    }</span>
+    
+    private void showInfo(String title, String message) {
+<span class="nc" id="L302">        Alert alert = new Alert(Alert.AlertType.INFORMATION);</span>
+<span class="nc" id="L303">        alert.setTitle(title);</span>
+<span class="nc" id="L304">        alert.setContentText(message);</span>
+<span class="nc" id="L305">        alert.showAndWait();</span>
+<span class="nc" id="L306">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
